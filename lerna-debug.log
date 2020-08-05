@@ -1,0 +1,20 @@
+0 silly argv {
+0 silly argv   _: [ 'import' ],
+0 silly argv   flatten: true,
+0 silly argv   lernaVersion: '3.22.1',
+0 silly argv   '$0': 'lerna',
+0 silly argv   dir: '../CasperLabs/explorer'
+0 silly argv }
+1 notice cli v3.22.1
+2 verbose rootPath /Users/abnerzheng/Github/Clarity
+3 error Error: Cannot find module '/Users/abnerzheng/Github/CasperLabs/explorer/package.json'
+3 error Require stack:
+3 error - /Users/abnerzheng/.nvm/versions/node/v12.5.0/lib/node_modules/lerna/node_modules/@lerna/import/index.js
+3 error - /Users/abnerzheng/.nvm/versions/node/v12.5.0/lib/node_modules/lerna/node_modules/@lerna/import/command.js
+3 error - /Users/abnerzheng/.nvm/versions/node/v12.5.0/lib/node_modules/lerna/index.js
+3 error - /Users/abnerzheng/.nvm/versions/node/v12.5.0/lib/node_modules/lerna/cli.js
+3 error     at Function.Module._resolveFilename (internal/modules/cjs/loader.js:625:15)
+3 error     at Function.Module._load (internal/modules/cjs/loader.js:527:27)
+3 error     at Module.require (internal/modules/cjs/loader.js:683:19)
+3 error     at require (internal/modules/cjs/helpers.js:16:16)
+3 error     at ImportCommand.initialize (/Users/abnerzheng/.nvm/versions/node/v12.5.0/lib/node_modules/lerna/node_modules/@lerna/import/index.js:57:25)
