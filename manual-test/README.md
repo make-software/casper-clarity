@@ -1,7 +1,6 @@
 # Manual Testing
 
-This directory holds tests of the client into the network
-with `CasperLabs/hack/docker`.
+This directory holds tests of the Clarity into the network with `CasperLabs/hack/docker` and assumes that `clarity` repo is at the same directory level as the CasperLabs repo.
 
  - Run `./build_casperlabs.sh` to build docker images.
  - Run `./standup.sh` to bring up 3 node network.
