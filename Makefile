@@ -6,12 +6,12 @@ SHELL := bash
 .SECONDARY:
 
 ## Build local docker image to casperlabs/explorer:latest
-docker-build/clarity: .make/docker-build/clarity
+docker-build/explorer: .make/docker-build/explorer
 
 build-contracts: \
 	contracts/faucet_stored.wasm
 
-build-clarity: .make/npm/clarity
+build-explorer: .make/npm/explorer
 
 contracts/faucet_stored.wasm:
 	cd smart-contract && make all && cd -
@@ -21,23 +21,23 @@ contracts/faucet_stored.wasm:
 	./docker-buildenv.sh "yarn run bootstrap"
 	mkdir -p $(dir $@) && touch $@
 
-.make/npm/clarity: \
+.make/npm/explorer: \
 	.make/npm/bootstrap \
-	.make/protoc/clarity \
+	.make/protoc/explorer \
 	build-contracts \
 	# CI=false so on Drone it won't fail on warnings (currently about href).
 	./docker-buildenv.sh "yarn run build"
 	mkdir -p $(dir $@) && touch $@
 
-.make/docker-build/clarity: \
+.make/docker-build/explorer: \
 		Dockerfile \
-		build-clarity
-	docker build -t casperlabs/clarity:latest .
+		build-explorer
+	docker build -t casperlabs/explorer:latest .
 	mkdir -p $(dir $@) && touch $@
 
 # Generate UI client code from Protobuf.
 # Installed via `npm install ts-protoc-gen --no-bin-links --save-dev`
-.make/protoc/clarity: \
+.make/protoc/explorer: \
 		.make/npm/bootstrap \
 		$(PROTO_SRC)
 	$(eval DIR_IN = ./protobuf)
