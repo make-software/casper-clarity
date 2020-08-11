@@ -1,5 +1,7 @@
 SHELL := bash
 
+DOCKER_TAG ?= latest
+
 # Don't delete intermediary files we touch under .make,
 # which are markers for things we have done.
 # https://stackoverflow.com/questions/5426934/why-this-makefile-removes-my-goal
@@ -37,7 +39,7 @@ contracts/faucet_stored.wasm:
 .make/docker-build/explorer: \
 		Dockerfile \
 		build-explorer
-	docker build -t casperlabs/explorer:latest .
+	docker build -t casperlabs/explorer:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
 
 # Generate UI client code from Protobuf.
@@ -78,5 +80,5 @@ contracts/faucet_stored.wasm:
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/grpcwebproxy: grpcwebproxy/Dockerfile
-	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:latest .
+	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
