@@ -67,6 +67,10 @@ trigger:
   - master
   - trying
   - staging
+  - "FEAT-*"
+  - "feat-*"
+  - "feature-*"
+  - "FEATURE-*"
 
 ---
 kind: pipeline
@@ -95,6 +99,10 @@ trigger:
   - master
   - trying
   - staging
+  - "FEAT-*"
+  - "feat-*"
+  - "feature-*"
+  - "FEATURE-*"
 
 depends_on:
 - build-publish
