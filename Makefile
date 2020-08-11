@@ -5,8 +5,13 @@ SHELL := bash
 # https://stackoverflow.com/questions/5426934/why-this-makefile-removes-my-goal
 .SECONDARY:
 
+docker-build-all: \
+	docker-build/explorer \
+	docker-build/grpcwebproxy
+
 ## Build local docker image to casperlabs/explorer:latest
 docker-build/explorer: .make/docker-build/explorer
+docker-build/grpcwebproxy: .make/docker-build/grpcwebproxy
 
 build-contracts: \
 	contracts/faucet_stored.wasm
@@ -70,4 +75,8 @@ contracts/faucet_stored.wasm:
 		sed -n '/google_api_annotations_pb/!p' $$f > $$f.tmp ; \
 		mv $$f.tmp $$f ; \
 	done
+	mkdir -p $(dir $@) && touch $@
+
+.make/docker-build/grpcwebproxy: grpcwebproxy/Dockerfile
+	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:latest .
 	mkdir -p $(dir $@) && touch $@
