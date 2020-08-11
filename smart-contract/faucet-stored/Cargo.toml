@@ -1,0 +1,20 @@
+[package]
+name = "faucet-stored"
+version = "0.1.0"
+authors = ["Mateusz Górski <mateusz@casperlabs.io>"]
+edition = "2018"
+
+[[bin]]
+name = "faucet_stored"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[features]
+std = ["casperlabs-contract/std", "casperlabs-types/std"]
+
+[dependencies]
+casperlabs-contract = "0.6.0"
+casperlabs-types = "0.6.0"
+faucet = { path = "../faucet", package = "faucet" }

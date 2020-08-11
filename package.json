@@ -1,0 +1,19 @@
+{
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "dev": "concurrently --kill-others --success first \"npm start --prefix ./packages/server\" \"npm run start --prefix ./packages/ui\"",
+    "test": "npm run test:sdk",
+    "test:sdk": "npm test --prefix ./packages/sdk",
+    "build": "lerna run build",
+    "publish": "lerna publish"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "lerna": "^3.22.1",
+    "concurrently": "^3.6.0"
+  }
+}
