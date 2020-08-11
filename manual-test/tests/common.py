@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 THIS_DIRECTORY = Path(os.path.dirname(os.path.realpath(__file__)))
-CASPERLABS_ROOT_DIRECTORY = THIS_DIRECTORY.parent.parent.parent
+CASPERLABS_ROOT_DIRECTORY = THIS_DIRECTORY.parent.parent.parent / "CasperLabs"
 
 HACK_DOCKER_DIRECTORY = CASPERLABS_ROOT_DIRECTORY / "hack" / "docker"
 KEYS_DIRECTORY = HACK_DOCKER_DIRECTORY / "keys"

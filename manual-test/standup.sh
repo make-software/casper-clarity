@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
-export CL_VERSION=latest
+TAG=${CL_VERSION:-"latest"}
+docker pull casperlabs/execution-engine:"$TAG"
+docker pull casperlabs/node:"$TAG"
+docker pull casperlabs/key-generator:"$TAG"
+
+export CL_VERSION="$TAG"
 export AUTH_MOCK_ENABLED=true
 
 # Stand up highway network
-cd ../../hack/docker || exit 1
+cd ../../CasperLabs/hack/docker || exit
 make up-all || exit 1
 
 # Sleep until network starts.
