@@ -82,3 +82,9 @@ contracts/faucet_stored.wasm:
 .make/docker-build/grpcwebproxy: grpcwebproxy/Dockerfile
 	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
+
+
+clean:
+	lerna clean -y
+	rm -rf node_modules
+	lerna run clean
