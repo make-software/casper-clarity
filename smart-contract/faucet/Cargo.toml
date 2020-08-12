@@ -1,0 +1,19 @@
+[package]
+name = "faucet"
+version = "0.1.0"
+authors = ["Mateusz Górski <mateusz@casperlabs.io>"]
+edition = "2018"
+
+[[bin]]
+name = "faucet"
+path = "src/bin/main.rs"
+doctest = false
+test = false
+bench = false
+
+[features]
+std = ["casperlabs-contract/std", "casperlabs-types/std"]
+
+[dependencies]
+casperlabs-contract = "0.6.0"
+casperlabs-types = "0.6.0"

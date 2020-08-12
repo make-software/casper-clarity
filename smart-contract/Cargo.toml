@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "faucet",
+    "faucet-stored"
+]
