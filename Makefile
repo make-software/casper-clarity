@@ -25,20 +25,20 @@ contracts/faucet_stored.wasm:
 
 # install all package and establish the dependencies of packages
 .make/npm/bootstrap:
-	./docker-buildenv.sh "yarn run bootstrap"
+	./docker-buildenv.sh "lerna bootstrap"
 	mkdir -p $(dir $@) && touch $@
 
 .make/npm/explorer: \
 	.make/npm/bootstrap \
 	.make/protoc/explorer \
-	build-contracts \
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	./docker-buildenv.sh "yarn run build"
+	./docker-buildenv.sh "lerna link && yarn run build"
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: \
 		Dockerfile \
-		build-explorer
+		build-explorer \
+		build-contracts
 	docker build -t casperlabs/explorer:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
 
