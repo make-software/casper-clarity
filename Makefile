@@ -1,5 +1,7 @@
 SHELL := bash
 
+DOCKER_TAG ?= latest
+
 # Don't delete intermediary files we touch under .make,
 # which are markers for things we have done.
 # https://stackoverflow.com/questions/5426934/why-this-makefile-removes-my-goal
@@ -21,23 +23,27 @@ build-explorer: .make/npm/explorer
 contracts/faucet_stored.wasm:
 	cd smart-contract && make all && cd -
 
-# install all package and establish the dependencies of packages
+# install all package
 .make/npm/bootstrap:
-	./docker-buildenv.sh "yarn run bootstrap"
+	./docker-buildenv.sh "yarn"
 	mkdir -p $(dir $@) && touch $@
 
 .make/npm/explorer: \
 	.make/npm/bootstrap \
 	.make/protoc/explorer \
-	build-contracts \
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	./docker-buildenv.sh "yarn run build"
+	./docker-buildenv.sh "\
+		  cd packages/sdk && yarn run build && cd - && \
+		  cd packages/ui && yarn run build && cd - && \
+		  cd packages/server && yarn run build && cd - \
+		"
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: \
 		Dockerfile \
-		build-explorer
-	docker build -t casperlabs/explorer:latest .
+		build-explorer \
+		build-contracts
+	docker build -t casperlabs/explorer:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
 
 # Generate UI client code from Protobuf.
@@ -78,5 +84,14 @@ contracts/faucet_stored.wasm:
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/grpcwebproxy: grpcwebproxy/Dockerfile
-	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:latest .
+	cd grpcwebproxy && docker build -t casperlabs/grpcwebproxy:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
+
+
+clean:
+	./docker-buildenv.sh "\
+		lerna clean -y && \
+		rm -rf node_modules && \
+		lerna run clean && \
+		rm -rf .make \
+	"

@@ -4,7 +4,7 @@
   "description": "CasperLabs Explorer Server",
   "main": "dist/server.js",
   "scripts": {
-    "clean:dist": "rm -rf dist",
+    "clean": "rm -rf dist",
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "~build": "tsc --watch",

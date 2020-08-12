@@ -1,0 +1,108 @@
+---
+platform:
+  os: linux
+  arch: amd64
+
+# Begin
+clone:
+  git-clone:
+    commands: |
+      set -ex
+      git clone -b ${DRONE_TAG:-$DRONE_BRANCH} $DRONE_REMOTE_URL .
+      if [ x$DRONE_PULL_REQUEST != x ]; then
+          git fetch origin refs/pull/$DRONE_PULL_REQUEST/head
+          EMAIL=ci git merge --no-edit FETCH_HEAD
+      fi
+      git rev-parse HEAD
+    image: "casperlabs/buildenv:latest"
+
+kind: pipeline
+name: build-publish
+
+steps:
+- name: build-docker-image
+  commands:
+  - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
+  - "make docker-build-all"
+  image: "casperlabs/buildenv:latest"
+  volumes:
+  - name: docker_sock
+    path: "/var/run/docker.sock"
+
+- name: docker-publish
+  commands:
+  - |
+      echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      docker tag casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER} casperlabs/explorer:latest
+      docker tag casperlabs/grpcwebproxy:DRONE-${DRONE_BUILD_NUMBER} casperlabs/grpcwebproxy:latest
+      docker push casperlabs/explorer:latest
+      docker push casperlabs/grpcwebproxy:latest
+  image: "casperlabs/buildenv:latest"
+  environment:
+    DOCKER_PASSWORD:
+      from_secret: docker_password
+    DOCKER_USERNAME:
+      from_secret: docker_username
+  volumes:
+  - name: docker_sock
+    path: "/var/run/docker.sock"
+  when:
+    event:
+    - push
+    branch:
+    - master
+  depends_on:
+  - build-docker-image
+
+volumes:
+- name: docker_sock
+  host:
+    path: "/var/run/docker.sock"
+
+trigger:
+  event:
+  - pull_request
+  - push
+  branch:
+  - master
+  - trying
+  - staging
+  - "FEAT-*"
+  - "feat-*"
+  - "feature-*"
+  - "FEATURE-*"
+
+---
+kind: pipeline
+name: failed-build-alert
+
+clone:
+  disable: true
+
+steps:
+- name: notify
+  image: plugins/slack
+  settings:
+    webhook:
+      from_secret: slack_webhook
+    template:
+    - |
+      clarity build status: *{{ uppercasefirst build.status }}*
+      Author: {{ build.author }}
+      Drone Build: <{{ build.link }}|#{{ build.number }}>
+      Commit Link: <https://github.com/{{repo.owner}}/{{repo.name}}/commit/{{build.commit}}|{{ truncate build.commit 10 }}>
+trigger:
+  status:
+  - failure
+  branch:
+  - dev
+  - master
+  - trying
+  - staging
+  - "FEAT-*"
+  - "feat-*"
+  - "feature-*"
+  - "FEATURE-*"
+
+depends_on:
+- build-publish
