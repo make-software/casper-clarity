@@ -23,16 +23,16 @@ build-explorer: .make/npm/explorer
 contracts/faucet_stored.wasm:
 	cd smart-contract && make all && cd -
 
-# install all package and establish the dependencies of packages
+# install all package
 .make/npm/bootstrap:
-	./docker-buildenv.sh "lerna bootstrap"
+	./docker-buildenv.sh "yarn"
 	mkdir -p $(dir $@) && touch $@
 
 .make/npm/explorer: \
 	.make/npm/bootstrap \
 	.make/protoc/explorer \
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	./docker-buildenv.sh "lerna link && yarn run build"
+	./docker-buildenv.sh "lerna bootstrap && lerna run build"
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: \
