@@ -32,7 +32,11 @@ contracts/faucet_stored.wasm:
 	.make/npm/bootstrap \
 	.make/protoc/explorer \
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	./docker-buildenv.sh "lerna bootstrap && lerna run build"
+	./docker-buildenv.sh "\
+		  cd packages/sdk && yarn run build && cd - && \
+		  cd packages/ui && yarn run build && cd - && \
+		  cd packages/server && yarn run build && cd - \
+		"
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: \
@@ -88,5 +92,6 @@ clean:
 	./docker-buildenv.sh "\
 		lerna clean -y && \
 		rm -rf node_modules && \
-		lerna run clean \
+		lerna run clean && \
+		rm -rf .make \
 	"
