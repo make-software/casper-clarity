@@ -85,6 +85,8 @@ contracts/faucet_stored.wasm:
 
 
 clean:
-	lerna clean -y
-	rm -rf node_modules
-	lerna run clean
+	./docker-buildenv.sh "\
+		lerna clean -y && \
+		rm -rf node_modules && \
+		lerna run clean \
+	"
