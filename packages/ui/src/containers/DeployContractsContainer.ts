@@ -469,7 +469,7 @@ export class DeployContractsContainer {
           return `Value should be a number`;
         }
         const v = JSBI.BigInt(value);
-        if (v < limit.min || v > limit.max) {
+        if (JSBI.lessThan(v, limit.min) || JSBI.greaterThan(v, limit.max)) {
           return `Value should be in [${limit.min.toString(10)}, ${limit.max.toString(10)}]`;
         }
         return false;
