@@ -43,11 +43,14 @@ export class BlockDAG extends React.Component<Props, {}> {
 
   constructor(props: Props) {
     super(props);
-    autorun(() => {
-      this.renderGraph();
-    }, {
-      delay: 400
-    })
+    autorun(
+      () => {
+        this.renderGraph();
+      },
+      {
+        delay: 400
+      }
+    );
   }
 
   render() {
@@ -191,14 +194,17 @@ export class BlockDAG extends React.Component<Props, {}> {
           // The first wheel event emits a start event; an end event is emitted when no wheel events are received for 150ms.
           // So if user press ctrlKey when fire first wheel event,
           // it enters the horizontal only zoom mode.
-          if(d3.event.sourceEvent && d3.event.sourceEvent.type === 'wheel'){
+          if (d3.event.sourceEvent && d3.event.sourceEvent.type === 'wheel') {
             isHorizontal = d3.event.sourceEvent.ctrlKey;
-            if(isHorizontal){
+            if (isHorizontal) {
               svg.attr('cursor', 'ew-resize');
-            }else{
+            } else {
               svg.attr('cursor', 'nesw-resize');
             }
-          }else if(d3.event.sourceEvent && d3.event.sourceEvent.type === "mousedown"){
+          } else if (
+            d3.event.sourceEvent &&
+            d3.event.sourceEvent.type === 'mousedown'
+          ) {
             svg.attr('cursor', 'grab');
           }
         })
@@ -257,17 +263,23 @@ export class BlockDAG extends React.Component<Props, {}> {
       .append('g')
       .attr('class', 'links')
       .selectAll('line')
-      .data(graph.links.filter((d:d3Link) => {
-        if (hideBallot) {
-          return isBlock(d.source.block) && isBlock(d.target.block);
-        } else {
-          return true;
-        }
-      }))
+      .data(
+        graph.links.filter((d: d3Link) => {
+          if (hideBallot) {
+            return isBlock(d.source.block) && isBlock(d.target.block);
+          } else {
+            return true;
+          }
+        })
+      )
       .enter()
       .append('line')
       .attr('stroke', (d: d3Link) =>
-        d.isOrphaned ? OrphanedLineColor : (d.isFinalized ? FinalizedLineColor : LineColor)
+        d.isOrphaned
+          ? OrphanedLineColor
+          : d.isFinalized
+          ? FinalizedLineColor
+          : LineColor
       )
       .attr('stroke-width', (d: d3Link) => (d.isMainParent ? 3 : 1))
       .attr('marker-end', 'url(#arrow)') // use the Arrow created above
@@ -295,8 +307,7 @@ export class BlockDAG extends React.Component<Props, {}> {
     node
       .append('circle')
       .attr('class', 'node')
-      .attr('r', (d: d3Node) =>
-        CircleRadius * (isBallot(d.block) ? 0.5 : 1.0))
+      .attr('r', (d: d3Node) => CircleRadius * (isBallot(d.block) ? 0.5 : 1.0))
       .attr('stroke', (d: d3Node) =>
         selectedId && d.id === selectedId ? '#E00' : eraColor(d.eraId)
       )
@@ -328,8 +339,8 @@ export class BlockDAG extends React.Component<Props, {}> {
         x.source.id === datum.id || x.target.id === datum.id
           ? 1
           : x.isJustification
-            ? 0
-            : 0.1
+          ? 0
+          : 0.1
       );
       hint.html(
         `Block: ${datum.id} @ ${datum.rank} <br /> Validator: ${datum.validator}`
@@ -440,10 +451,7 @@ const toGraph = (blocks: BlockInfo[]) => {
       title: shortHash(id),
       validator: validatorHash(block),
       eraId: keyBlockHash(block),
-      rank: block
-        .getSummary()!
-        .getHeader()!
-        .getJRank(),
+      rank: block.getSummary()!.getHeader()!.getJRank(),
       block: block
     };
   });
@@ -482,7 +490,8 @@ const toGraph = (blocks: BlockInfo[]) => {
           target: target,
           isMainParent: p === parents[0],
           isJustification: false,
-          isFinalized: (isChildFinalized || isChildBallot) && isFinalized(target.block),
+          isFinalized:
+            (isChildFinalized || isChildBallot) && isFinalized(target.block),
           // if child is an orphaned block, the link should be highlighted with OrphanedLineColor
           isOrphaned: isChildOrphaned
         };
@@ -498,7 +507,8 @@ const toGraph = (blocks: BlockInfo[]) => {
           target: target,
           isMainParent: false,
           isJustification: true,
-          isFinalized: (isChildFinalized || isChildBallot) && isFinalized(target.block),
+          isFinalized:
+            (isChildFinalized || isChildBallot) && isFinalized(target.block),
           isOrphaned: false
         };
       });
@@ -572,15 +582,11 @@ const isFinalized = (block: BlockInfo) =>
   block.getStatus()!.getFinality() === BlockInfo.Status.Finality.FINALIZED;
 
 const isOrphaned = (block: BlockInfo) =>
-  isBlock(block) && block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
+  isBlock(block) &&
+  block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
 
 const validatorHash = (block: BlockInfo) =>
-  encodeBase16(
-    block
-      .getSummary()!
-      .getHeader()!
-      .getValidatorPublicKey_asU8()
-  );
+  encodeBase16(block.getSummary()!.getHeader()!.getValidatorPublicKey_asU8());
 
 /** Shorten lines by a fixed amount so that the line doesn't stick out from under the arrows tip. */
 const shorten = (d: any, by: number) => {

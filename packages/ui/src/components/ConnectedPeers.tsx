@@ -1,12 +1,9 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import {
-  RefreshableComponent
-} from './Utils';
+import { RefreshableComponent } from './Utils';
 import DataTable from './DataTable';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import { Node } from 'casperlabs-grpc/io/casperlabs/comm/discovery/node_pb';
-
 
 interface Props {
   connectedPeersContainer: ConnectedPeersContainer;
@@ -22,7 +19,7 @@ export default class ConnectedPeers extends RefreshableComponent<Props, {}> {
     const { connectedPeersContainer } = this.props;
     return (
       <DataTable
-        title= "Connected Peers"
+        title="Connected Peers"
         refresh={() => this.refresh()}
         headers={['Host', 'Protocol Port', 'Chain Id', 'Version']}
         rows={connectedPeersContainer.peers}

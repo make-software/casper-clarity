@@ -157,11 +157,7 @@ const ExploreCard = (_: {}) => {
 
 const GraphQLCard = (_: {}) => {
   return (
-    <Card
-      background="info"
-      icon="flask"
-      to={window.config.graphql.url}
-    >
+    <Card background="info" icon="flask" to={window.config.graphql.url}>
       <CardMessage message="Try the GraphQL console!" />
     </Card>
   );

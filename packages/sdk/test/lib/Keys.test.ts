@@ -4,7 +4,6 @@ import { Ed25519 } from '../../src/lib/Keys';
 import { byteHash } from '../../src/lib/Contracts';
 
 describe('Ed25519', () => {
-
   it('calculates the public key hash', () => {
     const signKeyPair = Ed25519.newKeyPair();
     const name = Buffer.from('ED25519');
@@ -15,4 +14,3 @@ describe('Ed25519', () => {
     expect(Ed25519.publicKeyHash(signKeyPair.publicKey)).deep.equal(hash);
   });
 });
-

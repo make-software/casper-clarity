@@ -47,7 +47,7 @@ class MenuItem {
     public label: string,
     public icon?: string,
     public exact: boolean = false
-  ) { }
+  ) {}
 
   toRoute() {
     return <NavLink item={this} key={this.path} />;
@@ -60,7 +60,7 @@ class GroupedMenuItem {
     public label: string,
     public icon: string,
     public secondLevelChildren: MenuItem[]
-  ) { }
+  ) {}
 
   toRoute() {
     return (
@@ -74,9 +74,7 @@ class GroupedMenuItem {
           aria-controls={this.id}
         >
           <i className={`nav-link-icon fa fa-fw fa-${this.icon}`} />
-          <span className="nav-link-text">
-            {this.label}
-          </span>
+          <span className="nav-link-text">{this.label}</span>
           <div className="sidenav-collapse-arrow">
             <i className="fas fa-angle-down" />
           </div>
@@ -164,7 +162,7 @@ export default class App extends React.Component<AppProps, {}> {
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
     $('.navbar-sidenav .nav-item').click(function (e) {
-      $("#navbarResponsive").collapse('hide');
+      $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
@@ -191,14 +189,12 @@ export default class App extends React.Component<AppProps, {}> {
     $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body')
-        .stop()
-        .animate(
-          {
-            scrollTop: offset.top
-          },
-          1000
-        );
+      $('html, body').stop().animate(
+        {
+          scrollTop: offset.top
+        },
+        1000
+      );
       e.preventDefault();
     });
   }
@@ -242,8 +238,8 @@ const NavLink = (props: { item: MenuItem }) => {
 // Moved `withRouter` to a separate line.
 @observer
 class _Navigation extends React.Component<
-AppProps & RouteComponentProps<any>,
-{}
+  AppProps & RouteComponentProps<any>,
+  {}
 > {
   render() {
     return (
@@ -293,10 +289,10 @@ AppProps & RouteComponentProps<any>,
                   <i className="fa fa-fw fa-sign-out-alt"></i>Sign Out
                 </a>
               ) : (
-                  <a className="nav-link" onClick={_ => this.props.auth.login()}>
-                    <i className="fa fa-fw fa-sign-in-alt"></i>Sign In
-                  </a>
-                )}
+                <a className="nav-link" onClick={_ => this.props.auth.login()}>
+                  <i className="fa fa-fw fa-sign-in-alt"></i>Sign In
+                </a>
+              )}
             </li>
           </ul>
         </div>
@@ -317,26 +313,26 @@ function useQuery() {
 }
 
 // The white list of hostname that enable GA.
-const HOSTNAME_WHITE_LIST = ['testnet-explorer.casperlabs.io', 'clarity.casperlabs.io'];
+const HOSTNAME_WHITE_LIST = [
+  'testnet-explorer.casperlabs.io',
+  'clarity.casperlabs.io'
+];
 
 const ENABLE_GA = HOSTNAME_WHITE_LIST.includes(window.location.hostname);
 
 if (ENABLE_GA) {
-  ReactGA.initialize("UA-133833104-1");
+  ReactGA.initialize('UA-133833104-1');
 }
 
 // the hook to send pageView to GA.
 function usePageViews() {
   let location = useLocation();
 
-  useEffect(
-    () => {
-      if (ENABLE_GA) {
-        ReactGA.pageview(location.pathname);
-      }
-    },
-    [location]
-  );
+  useEffect(() => {
+    if (ENABLE_GA) {
+      ReactGA.pageview(location.pathname);
+    }
+  }, [location]);
 }
 
 // Render the appropriate page.
@@ -396,9 +392,12 @@ const Content = (props: AppProps) => {
               <Title title="Vesting Contract" />
               <Vesting {...props} />
             </Route>
-            <Route path={Pages.DeployContracts} render={_ => <DeployContractsForm {...props} />} />
+            <Route
+              path={Pages.DeployContracts}
+              render={_ => <DeployContractsForm {...props} />}
+            />
             <Route path={Pages.Deploys}>
-              <Title title={"Deploys"} />
+              <Title title={'Deploys'} />
               <AccountSelector {...props} />
             </Route>
             <Route path={Pages.Search}>
@@ -406,8 +405,8 @@ const Content = (props: AppProps) => {
               <Search {...props} />
             </Route>
             <Route path={Pages.Validators}>
-              <Title title="Validators"/>
-              <Validators validatorsContainer={props.validatorsContainer}/>
+              <Title title="Validators" />
+              <Validators validatorsContainer={props.validatorsContainer} />
             </Route>
             <Route path={Pages.ConnectedPeers}>
               <Title title="Connected Peers" />

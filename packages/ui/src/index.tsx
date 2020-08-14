@@ -69,8 +69,14 @@ const deploy = new DeployContainer(errors, casperService, balanceService);
 const deployInfoList = new DeployInfoListContainer(errors, casperService);
 const search = new SearchContainer(errors, casperService);
 const accountSelectorContainer = new AccountSelectorContainer();
-const connectedPeersContainer = new ConnectedPeersContainer(errors, diagnosticsService);
-const deployContractsContainer = new DeployContractsContainer(errors, casperService);
+const connectedPeersContainer = new ConnectedPeersContainer(
+  errors,
+  diagnosticsService
+);
+const deployContractsContainer = new DeployContractsContainer(
+  errors,
+  casperService
+);
 const validatorsContainer = new ValidatorsContainer(errors, casperService);
 
 ReactDOM.render(

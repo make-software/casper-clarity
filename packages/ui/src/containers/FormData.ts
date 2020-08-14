@@ -24,7 +24,7 @@ export abstract class AsyncCleanableFormData {
   // or null to indicate success.
   protected abstract check(): Promise<string | null>;
 
-  async clean(): Promise<boolean>{
+  async clean(): Promise<boolean> {
     this.error = await this.check();
     return this.error == null;
   }

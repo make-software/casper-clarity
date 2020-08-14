@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 
 export const Spinner = (msg: String) => (
   <div className="text-center">
-    <i className="fa fa-fw fa-spin fa-spinner"/>
+    <i className="fa fa-fw fa-spin fa-spinner" />
     {msg}...
   </div>
 );
@@ -32,8 +32,8 @@ export const Icon = (props: {
   );
 };
 
-export const SuccessIcon = () => <Icon name="check-circle" color="green"/>;
-export const FailIcon = () => <Icon name="times-circle" color="red"/>;
+export const SuccessIcon = () => <Icon name="check-circle" color="green" />;
+export const FailIcon = () => <Icon name="times-circle" color="red" />;
 
 export const IconButton = (props: {
   onClick: () => void;
@@ -45,12 +45,12 @@ export const IconButton = (props: {
     title={props.title}
     className="link icon-button"
   >
-    <Icon name={props.icon}/>
+    <Icon name={props.icon} />
   </button>
 );
 
 export const RefreshButton = (props: { refresh: () => void }) => (
-  <IconButton onClick={() => props.refresh()} title="Refresh" icon="redo"/>
+  <IconButton onClick={() => props.refresh()} title="Refresh" icon="redo" />
 );
 
 export const Button = (props: {
@@ -63,7 +63,9 @@ export const Button = (props: {
   <button
     type="button"
     onClick={_ => props.onClick()}
-    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${props.type || 'primary'}`}
+    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${
+      props.type || 'primary'
+    }`}
     disabled={props.disabled || false}
   >
     {props.title}
@@ -138,7 +140,7 @@ export const CommandLineHint = (props: { children: any }) => {
     <div className="card shadow mb-3">
       <div className="card-header bg-info">
         <h5 className="card-title font-weight-bold text-white">
-          <Icon name="terminal"/>
+          <Icon name="terminal" />
         </h5>
       </div>
       <div className="card-body">{props.children}</div>
@@ -181,40 +183,44 @@ export const Card = (props: {
     <div>
       <a className="card-title">{props.title}</a>
       <div className="float-right">
-        {props.refresh && (
-          <RefreshButton refresh={() => props.refresh!()}/>
-        )}
+        {props.refresh && <RefreshButton refresh={() => props.refresh!()} />}
       </div>
     </div>
   );
   return (
     <div className={`card mb-3 ${props.accordionId ? 'accordion' : 'ac'}`}>
       {props.accordionId ? (
-        <div className="card-header" id={`collapse-header-${props.accordionId}`} data-toggle="collapse"
-             data-target={`#${props.accordionId}`}
-             aria-expanded="true" aria-controls={props.accordionId}>
+        <div
+          className="card-header"
+          id={`collapse-header-${props.accordionId}`}
+          data-toggle="collapse"
+          data-target={`#${props.accordionId}`}
+          aria-expanded="true"
+          aria-controls={props.accordionId}
+        >
           {cardHeader}
         </div>
       ) : (
-        <div className="card-header">
-          {cardHeader}
-        </div>
+        <div className="card-header">{cardHeader}</div>
       )}
       {props.accordionId ? (
-          <div id={`${props.accordionId}-parent`}>
-            <div id={props.accordionId} className="collapse show"
-                 aria-labelledby={`collapse-header-${props.accordionId}`}
-                 data-parent={`#${props.accordionId}-parent`}>
-              <div className="card-body">{props.children}</div>
-            </div>
+        <div id={`${props.accordionId}-parent`}>
+          <div
+            id={props.accordionId}
+            className="collapse show"
+            aria-labelledby={`collapse-header-${props.accordionId}`}
+            data-parent={`#${props.accordionId}-parent`}
+          >
+            <div className="card-body">{props.children}</div>
           </div>
-        ) :
-        (
-          <div className="card-body">{props.children}</div>
-        )
-      }
+        </div>
+      ) : (
+        <div className="card-body">{props.children}</div>
+      )}
       {props.footerMessage && (
-        <div className="card-footer small text-muted">{props.footerMessage}</div>
+        <div className="card-footer small text-muted">
+          {props.footerMessage}
+        </div>
       )}
     </div>
   );

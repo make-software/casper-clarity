@@ -17,7 +17,7 @@ export interface Props<T> {
 }
 
 @observer
-export default class DataTable<T> extends React.Component<Props<T>,{}> {
+export default class DataTable<T> extends React.Component<Props<T>, {}> {
   render() {
     return (
       <div className="card mb-3">

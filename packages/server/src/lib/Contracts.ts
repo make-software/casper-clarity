@@ -1,11 +1,14 @@
-import { Deploy } from "casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb";
-import { Args, ByteArray } from "casperlabs-sdk";
+import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
+import { Args, ByteArray } from 'casperlabs-sdk';
 
 export class CallFaucet {
-  public static args(accountPublicKeyHash: ByteArray, amount: bigint): Deploy.Arg[] {
+  public static args(
+    accountPublicKeyHash: ByteArray,
+    amount: bigint
+  ): Deploy.Arg[] {
     return Args.Args(
-      ["target", Args.BytesValue(accountPublicKeyHash)],
-      ["amount", Args.BigIntValue(amount)]
+      ['target', Args.BytesValue(accountPublicKeyHash)],
+      ['amount', Args.BigIntValue(amount)]
     );
   }
 }

@@ -122,24 +122,24 @@ const StatusTable = observer(
     onRefresh: () => void;
     lastRefresh?: Date;
   }) => (
-      <DataTable
-        title="Recent Faucet Requests"
-        refresh={() => props.onRefresh()}
-        rows={props.requests}
-        headers={['Timestamp', 'Account', 'Deploy Hash', 'Status']}
-        renderRow={(request: FaucetRequest, idx: number) => {
-          return (
-            <tr key={idx}>
-              <td>{request.timestamp.toLocaleString()}</td>
-              <td>{request.account.name}</td>
-              <td>{encodeBase16(request.deployHash)}</td>
-              <StatusCell request={request} />
-            </tr>
-          );
-        }}
-        footerMessage={<span>Wait until the deploy is included in a block.</span>}
-      />
-    )
+    <DataTable
+      title="Recent Faucet Requests"
+      refresh={() => props.onRefresh()}
+      rows={props.requests}
+      headers={['Timestamp', 'Account', 'Deploy Hash', 'Status']}
+      renderRow={(request: FaucetRequest, idx: number) => {
+        return (
+          <tr key={idx}>
+            <td>{request.timestamp.toLocaleString()}</td>
+            <td>{request.account.name}</td>
+            <td>{encodeBase16(request.deployHash)}</td>
+            <StatusCell request={request} />
+          </tr>
+        );
+      }}
+      footerMessage={<span>Wait until the deploy is included in a block.</span>}
+    />
+  )
 );
 
 const StatusCell = observer((props: { request: FaucetRequest }) => {
@@ -164,10 +164,10 @@ const StatusCell = observer((props: { request: FaucetRequest }) => {
           errm === 'Exit code: 1'
             ? '. It looks like you already funded this account!'
             : errm === 'Exit code: 2'
-              ? '. It looks like the faucet ran out of funds!'
-              : '';
+            ? '. It looks like the faucet ran out of funds!'
+            : '';
         return [
-          <FailIcon/>,
+          <FailIcon />,
           `Failed in block ${blockHash(failure)}: ${errm + hint}`
         ];
       }

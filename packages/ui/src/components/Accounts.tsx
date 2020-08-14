@@ -11,7 +11,8 @@ import { Button, IconButton, ListInline, RefreshableComponent } from './Utils';
 import Modal from './Modal';
 import { FileSelect, Form, SelectField, TextField } from './Forms';
 import {
-  base64to16, decodeBase64,
+  base64to16,
+  decodeBase64,
   DeployUtil,
   encodeBase16,
   encodeBase64
@@ -66,7 +67,9 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <TextField
               id="id-public-key-base16"
               label="Public Key (Base16)"
-              fieldState={encodeBase16(decodeBase64(newAccountForm.publicKeyBase64.value))}
+              fieldState={encodeBase16(
+                decodeBase64(newAccountForm.publicKeyBase64.value)
+              )}
               readonly={true}
             />
             <TextField

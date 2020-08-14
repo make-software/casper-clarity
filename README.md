@@ -6,17 +6,21 @@ The purpose of the explorer is to help users interact with the blockchain:
 - Create accounts (public/private key pairs)
 - Ask the faucet for tokens on devnet
 - Explore the block DAG
+- Deploy contracts
+
+## Install
+
+You could use `yarn run bootstarp` to install all dependencies
 
 ## Build
 
-You can use `npm` in the `ui`, `server` and `sdk` directories to build and interactively develop the components.
+You can use `yarn` in the `ui`, `server` and `sdk` directories to build and interactively develop the components.
 
-To package the whole thing into a docker image, run `make docker-build/explorer` in the project root directory.
+To package the whole thing into a docker image, run `docker-build/clarity` in the project root directory.
 
 ## Test
 
-To test the faucet we need the node running and ready to accept deploys.
-We also have to fund it with initial tokens and send one deploy in the name of the genesis account which will transfer funds to the faucet.
+To test the faucet we need the node running and ready to accept deploys. We also have to fund it with initial tokens and send one deploy in the name of the genesis account which will transfer funds to the faucet.
 
 We can use the `contracts/transfer` to donate the initial amount of funds to the faucet. Contracts will be built together with the docker image, but you can build them separately by running `make .make/explorer/contracts` in the top level directory.
 
@@ -44,15 +48,11 @@ npm start
 
 A new browser window will automatically open pointing at the app running at http://localhost:8000
 
-The server should serve the config that will route traffic to the `grpcwebproxy` container running in Docker,
-while we can work on the UI and see it reload after each change. Check out the `server` README for details
-about how it can be configured to tell the UI to connect to a remote server like devnet.
-
+The server should serve the config that will route traffic to the `grpcwebproxy` container running in Docker, while we can work on the UI and see it reload after each change. Check out the `server` README for details about how it can be configured to tell the UI to connect to a remote server like devnet.
 
 ### Fund the Faucet
 
-If we were not using the `faucet-account` that's created in the `hack/docker` setup as the Faucet account,
-we'd have to establish the an account by transfering some tokens to it that it can later pass on. Here's how to do it:
+If we were not using the `faucet-account` that's created in the `hack/docker` setup as the Faucet account, we'd have to establish the an account by transfering some tokens to it that it can later pass on. Here's how to do it:
 
 Generate the necessary contracts first:
 
@@ -105,8 +105,7 @@ $ docker logs --tail 1 node-0
 18:13:45.264 [grpc-default-executor-2] INFO  i.c.casper.MultiParentCasperImpl - Received Deploy 7401ecbe8b2c4e4de2c1e6422fddcfd1ae9d128058e2e6dba97ba62fc51db734 (f78786150599b50a1353476f5e2f12cd13c214e512096741c48e7ec63639af56 / 1)
 ```
 
-The auto-propose feature is by default not enabled in the `hack/docker` setup,
-so you have to manually trigger proposal.
+The auto-propose feature is by default not enabled in the `hack/docker` setup, so you have to manually trigger proposal.
 
 ```console
 $ ./client.sh node-0 propose
@@ -223,11 +222,8 @@ unit {
 }
 ```
 
-Alas, that's not the balance. We'll have to figure out how to get there,
-apparently there's an indirection from the purse to a local address we
-can't easily see.
+Alas, that's not the balance. We'll have to figure out how to get there, apparently there's an indirection from the purse to a local address we can't easily see.
 
 ### Create an account
 
-You can access the explorer at https://localhost:8443 to create accounts
-and ask the faucet for tokens.
+You can access the explorer at https://localhost:8443 to create accounts and ask the faucet for tokens.
