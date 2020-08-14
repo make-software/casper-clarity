@@ -27,7 +27,24 @@ import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
 
-type SupportedType = CLType.SimpleMap[keyof CLType.SimpleMap] | 'Bytes';
+export type ComplexType =
+  | 'Bytes'
+  | 'Bytes (Fixed Length)'
+  | 'Tuple'
+  | 'Map'
+  | 'List'
+  | 'FixedList';
+
+type SupportedType = CLType.SimpleMap[keyof CLType.SimpleMap] | ComplexType;
+
+export const ComplexTypesString = [
+  'Bytes',
+  'Bytes (Fixed Length)',
+  'Tuple',
+  'Map',
+  'List',
+  'FixedList'
+];
 
 export enum KeyType {
   ADDRESS = 'Address',
@@ -77,6 +94,12 @@ export type DeployArgument = {
   // and if type == ArgumentType.BIG_INT, then the type of secondType is BitWidth
   // otherwise second equals to null
   secondType: FieldState<KeyType | BitWidth | null>;
+  // List, the length of inner deploy arguments list is 1.
+  listInnerDeployArgs: FormDeployArguments;
+  // Tuple, the length of it is variant, could be 1, 2 and 3
+  tupleInnerDeployArgs: FormDeployArguments;
+  // Map, the length of it is fixed, 2 for key and value.
+  mapInnerDeployArgs: FormDeployArguments;
   URefAccessRight: FieldState<
     Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
   >; // null if type != ArgumentType.KEY
@@ -101,6 +124,7 @@ interface RawDeployArguments {
   name: string;
   type: SupportedType;
   secondType: KeyType | BitWidth | null;
+  innerDeployArgs: RawDeployArguments[];
   URefAccessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap];
   value: string;
 }
@@ -202,10 +226,13 @@ export class DeployContractsContainer {
   @action.bound
   addNewEditingDeployArgument() {
     this.editing = true;
-    this.editingDeployArguments.$.push(this.newDeployArgument());
+    this.editingDeployArguments.$.push(
+      DeployContractsContainer.newDeployArgument()
+    );
   }
 
-  private newDeployArgument(
+  public static newDeployArgument(
+    hasInnerDeployArgs: boolean = true,
     name: string = '',
     type: SupportedType = CLType.Simple.BOOL,
     secondType: KeyType | BitWidth | null = null,
@@ -213,12 +240,24 @@ export class DeployContractsContainer {
       .URef.AccessRights.NONE,
     value: string = ''
   ) {
+    const listInnerArgs = new FormState<FormDeployArgument[]>([]);
+    const tupleInnerArgs = new FormState<FormDeployArgument[]>([]);
+    const mapInnerArgs = new FormState<FormDeployArgument[]>([]);
+    if (hasInnerDeployArgs) {
+      listInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      tupleInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+    }
     return new FormState({
       name: new FieldState<string>(name)
         .disableAutoValidation()
         .validators(valueRequired),
       type: new FieldState<SupportedType>(type),
       secondType: new FieldState<KeyType | BitWidth | null>(secondType),
+      listInnerDeployArgs: listInnerArgs,
+      tupleInnerDeployArgs: tupleInnerArgs,
+      mapInnerDeployArgs: mapInnerArgs,
       URefAccessRight: new FieldState<
         Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
       >(accessRight),
@@ -227,7 +266,7 @@ export class DeployContractsContainer {
         .validators(valueRequired)
     })
       .compose()
-      .validators(this.validateDeployArgument);
+      .validators(DeployContractsContainer.validateDeployArgument);
   }
 
   @action.bound
@@ -399,11 +438,54 @@ export class DeployContractsContainer {
     const argValueStr: string = arg.$.value.value;
     const type = arg.$.type.$;
     let clValueInstance: CLValueInstance;
-    if (type === 'Bytes') {
-      clValueInstance = this.buildBytesTypeArg(argValueStr);
-    } else {
-      const simpleType = type as CLType.SimpleMap[keyof CLType.SimpleMap];
-      clValueInstance = this.buildSimpleTypeArg(simpleType, argValueStr, arg);
+    switch (type) {
+      case 'Bytes':
+        clValueInstance = this.buildBytesTypeArg(argValueStr);
+        break;
+      case 'Bytes (Fixed Length)':
+        clValueInstance = this.buildBytesFixedLengthTypeArg(argValueStr);
+        break;
+      case 'Tuple':
+        clValueInstance = this.buildTupleTypeArg(
+          arg.$.tupleInnerDeployArgs,
+          argValueStr
+        );
+        break;
+      case 'Map':
+        clValueInstance = this.buildTupleTypeArg(
+          arg.$.tupleInnerDeployArgs,
+          argValueStr
+        );
+        break;
+
+      case 'List':
+        clValueInstance = this.buildTupleTypeArg(
+          arg.$.tupleInnerDeployArgs,
+          argValueStr
+        );
+        break;
+      case 'FixedList':
+        clValueInstance = this.buildTupleTypeArg(
+          arg.$.tupleInnerDeployArgs,
+          argValueStr
+        );
+        break;
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+        const simpleType = type as CLType.SimpleMap[keyof CLType.SimpleMap];
+        clValueInstance = this.buildSimpleTypeArg(simpleType, argValueStr, arg);
+        break;
     }
 
     const deployArg = new Deploy.Arg();
@@ -413,6 +495,69 @@ export class DeployContractsContainer {
   }
 
   private buildBytesTypeArg(argValueStr: string): CLValueInstance {
+    const innerType = new CLType();
+    innerType.setSimpleType(CLType.Simple.U8);
+    const listType = new CLType.List();
+    listType.setInner(innerType);
+    const bytes = decodeBase16(argValueStr);
+
+    const clType = new CLType();
+    clType.setListType(listType);
+
+    const value = new CLValueInstance.Value();
+    value.setBytesValue(bytes);
+
+    const clValueInstance = new CLValueInstance();
+    clValueInstance.setClType(clType);
+    clValueInstance.setValue(value);
+    return clValueInstance;
+  }
+
+  private buildTupleTypeArg(
+    tupleInnerDeployArgs: FormDeployArguments,
+    argValueStr: string
+  ) {
+    let length = tupleInnerDeployArgs.$.length;
+
+    const value = new CLValueInstance.Value();
+    const type: CLType = new CLType();
+    const tupleTypes = tupleInnerDeployArgs.$.map(a => {
+      if (a.$.type.value in CLType.Simple) {
+        const clType = new CLType();
+        clType.setSimpleType(
+          a.$.type.value as CLType.SimpleMap[keyof CLType.SimpleMap]
+        );
+        return clType;
+      }
+      throw new Error();
+    });
+
+    if (length === 1) {
+      const tuple1Type = new CLType.Tuple1();
+      tuple1Type.setType0(tupleTypes[0]);
+      type.setTuple1Type(tuple1Type);
+    } else if (length === 2) {
+      const tuple2Type = new CLType.Tuple2();
+      tuple2Type.setType0(tupleTypes[0]);
+      tuple2Type.setType1(tupleTypes[1]);
+      type.setTuple2Type(tuple2Type);
+    } else if (length === 3) {
+      const tuple3Type = new CLType.Tuple3();
+      tuple3Type.setType0(tupleTypes[0]);
+      tuple3Type.setType1(tupleTypes[1]);
+      tuple3Type.setType2(tupleTypes[2]);
+      type.setTuple3Type(tuple3Type);
+    } else {
+      throw new Error();
+    }
+
+    const clValueInstance = new CLValueInstance();
+    clValueInstance.setClType(type);
+    clValueInstance.setValue();
+    return clValueInstance;
+  }
+
+  private buildBytesFixedLengthTypeArg(argValueStr: string): CLValueInstance {
     const innerType = new CLType();
     innerType.setSimpleType(CLType.Simple.U8);
     const fixedListType = new CLType.FixedList();
@@ -520,7 +665,7 @@ export class DeployContractsContainer {
    * If a truthy string is returned it represents a validation error.
    * @param deployArgument
    */
-  private validateDeployArgument(
+  private static validateDeployArgument(
     deployArgument: DeployArgument
   ): string | false {
     const value = deployArgument.value.$;
@@ -540,7 +685,7 @@ export class DeployContractsContainer {
           return `Value should be a number`;
         }
         const v = JSBI.BigInt(value);
-        if (JSBI.lessThan(v, limit.min) || JSBI.greaterThan(v, limit.max)) {
+        if (v < limit.min || v > limit.max) {
           return `Value should be in [${limit.min.toString(
             10
           )}, ${limit.max.toString(10)}]`;
@@ -592,7 +737,8 @@ export class DeployContractsContainer {
       this.deployArguments.reset();
 
       value.editingDeployArguments?.forEach(arg => {
-        const deployArgument = this.newDeployArgument(
+        const deployArgument = DeployContractsContainer.newDeployArgument(
+          true,
           arg.name,
           arg.type,
           arg.secondType,
@@ -603,7 +749,8 @@ export class DeployContractsContainer {
       });
 
       value.deployArguments?.forEach(arg => {
-        const deployArgument = this.newDeployArgument(
+        const deployArgument = DeployContractsContainer.newDeployArgument(
+          true,
           arg.name,
           arg.type,
           arg.secondType,
@@ -624,6 +771,18 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
+          innerDeployArgs: value.tupleInnerDeployArgs.$.map(
+            (a: FormState<DeployArgument>) => {
+              return {
+                name: a.$.name.value,
+                type: a.$.type.value,
+                secondType: a.$.secondType.value,
+                innerDeployArgs: [] as RawDeployArguments[],
+                URefAccessRight: a.$.URefAccessRight.value,
+                value: a.$.value.value
+              };
+            }
+          ),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };
@@ -640,6 +799,16 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
+          innerDeployArgs: value.tupleInnerDeployArgs.$.map(a => {
+            return {
+              name: a.$.name.value,
+              type: a.$.type.value,
+              secondType: a.$.secondType.value,
+              innerDeployArgs: [] as RawDeployArguments[],
+              URefAccessRight: a.$.URefAccessRight.value,
+              value: a.$.value.value
+            };
+          }),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };

@@ -4,13 +4,15 @@ import {
   Button,
   Card,
   FailIcon,
+  Icon,
   ListInline,
   Spinner,
   SuccessIcon
 } from './Utils';
 import React from 'react';
 import {
-  BitWidth,
+  ComplexType,
+  ComplexTypesString,
   DeployContractsContainer,
   FormDeployArgument,
   KeyType
@@ -203,111 +205,236 @@ export class DeployContractsForm extends React.Component<Props, {}> {
   }
 }
 
-const ArgumentRow = observer(
+const TupleArgumentCol = observer(
+  (props: { infix: string; deployArguments: FormDeployArgument[] }) => {
+    return (
+      <div style={{ display: 'flex', flexGrow: 1, flexDirection: 'column' }}>
+        {props.deployArguments.map((argument, index) => {
+          return (
+            <div
+              style={{ alignItems: 'center', display: 'flex' }}
+              className={'mb-2'}
+            >
+              <span className={'ml-3 mr-1'}>Tuple {index}: </span>
+              <TypeSelectCol
+                supportComplexType={false}
+                infix={props.infix}
+                deployArgument={argument}
+              />
+              <i
+                className={
+                  'fa fa-fw fa-' + (index === 0 ? 'null' : 'minus-circle')
+                }
+                style={{
+                  color: 'red'
+                }}
+                onClick={() => {
+                  props.deployArguments.splice(index, 1);
+                }}
+              />
+            </div>
+          );
+        })}
+        {props.deployArguments.length < 3 && (
+          <button
+            type="button"
+            onClick={_ => {
+              props.deployArguments.push(
+                DeployContractsContainer.newDeployArgument(false)
+              );
+            }}
+            className={`btn btn-xs btn-success mr-4`}
+            style={{ width: '140px', alignSelf: 'flex-end' }}
+          >
+            <Icon name={'plus-circle'} />
+            Add more
+          </button>
+        )}
+      </div>
+    );
+  }
+);
+
+const MapArgumentCol = observer(
   (props: {
     infix: string;
+    keyDeployArgument: FormDeployArgument;
+    valueDeployArgument: FormDeployArgument;
+  }) => {
+    return (
+      <div style={{ display: 'flex', flexGrow: 1, flexDirection: 'column' }}>
+        <div
+          style={{ alignItems: 'center', display: 'flex' }}
+          className={'mb-2'}
+        >
+          <span className={'ml-3 mr-2'} style={{ width: '3rem' }}>
+            Key:
+          </span>
+          <TypeSelectCol
+            supportComplexType={false}
+            infix={props.infix}
+            deployArgument={props.keyDeployArgument}
+          />
+        </div>
+        <div
+          style={{ alignItems: 'center', display: 'flex' }}
+          className={'mb-2'}
+        >
+          <span className={'ml-3 mr-2'} style={{ width: '3rem' }}>
+            Value:
+          </span>
+          <TypeSelectCol
+            supportComplexType={false}
+            infix={props.infix}
+            deployArgument={props.valueDeployArgument}
+          />
+        </div>
+      </div>
+    );
+  }
+);
+
+const ListArgumentCol = observer(
+  (props: {
+    infix: string;
+    isFixedList: boolean;
     deployArgument: FormDeployArgument;
-    onProductTableUpdate: () => void;
+  }) => {
+    return (
+      <React.Fragment>
+        <TypeSelectCol {...props} supportComplexType={false} />
+        {props.isFixedList && (
+          <TextField
+            id={props.infix + 'List-Arg-Len'}
+            fieldState={props.deployArgument.$.name}
+            placeholder={'Length of FixedList'}
+          />
+        )}
+      </React.Fragment>
+    );
+  }
+);
+
+const TypeSelectCol = observer(
+  (props: {
+    infix: string;
+    supportComplexType: boolean;
+    deployArgument: FormDeployArgument;
     onDelEvent?: (deployArgument: FormDeployArgument) => void;
   }) => {
     const firstTypeValue = props.deployArgument.$.type.value;
     const secondTypeValue = props.deployArgument.$.secondType.value;
+    const tupleInnerArgs = props.deployArgument.$.tupleInnerDeployArgs.$;
+    const listInnerArgs = props.deployArgument.$.listInnerDeployArgs.$;
+    const mapInnerArgs = props.deployArgument.$.mapInnerDeployArgs.$;
     return (
-      <tr>
-        <td>
-          <TextField
-            id={`argument-${props.infix}-name`}
-            fieldState={props.deployArgument.$.name}
-          />
-        </td>
-        <td>
-          <div className="row">
-            <div className="col pl-0 pr-1">
-              <select
-                className="form-control"
-                value={props.deployArgument.$.type.value}
-                onChange={e => {
-                  let v = e.target.value;
-                  if (v === 'Bytes') {
-                    props.deployArgument.$.type.onChange(v);
-                  } else {
-                    props.deployArgument.$.type.onChange(
-                      parseInt(e.target.value) as any
-                    );
-                  }
-                }}
-              >
-                {Object.keys(CLType.Simple)
-                  .filter(
-                    opt => (CLType.Simple as any)[opt] !== CLType.Simple.UNIT
-                  )
-                  .map(opt => (
-                    <option key={opt} value={(CLType.Simple as any)[opt]}>
-                      {opt}
-                    </option>
-                  ))}
-                <option value={'Bytes'}>BYTES</option>
-              </select>
-            </div>
-            {firstTypeValue === CLType.Simple.KEY && (
-              <div className="col pl-0 pr-1">
-                <select
-                  className="form-control"
-                  value={props.deployArgument.$.secondType.$?.toString()}
-                  onChange={e => {
-                    props.deployArgument.$.secondType.onChange(
-                      e.target.value as KeyType
-                    );
-                  }}
-                >
-                  {(firstTypeValue === CLType.Simple.KEY &&
-                    Object.keys(KeyType).map(opt => (
-                      <option key={opt} value={(KeyType as any)[opt]}>
-                        {(KeyType as any)[opt]}
-                      </option>
-                    ))) ||
-                    Object.keys(BitWidth)
-                      .filter(opt => {
-                        return typeof (BitWidth as any)[opt] === 'number';
-                      })
-                      .map(opt => (
-                        <option key={opt} value={(BitWidth as any)[opt]}>
-                          {(BitWidth as any)[opt]}
-                        </option>
-                      ))}
-                </select>
-              </div>
-            )}
-            {((firstTypeValue === CLType.Simple.KEY &&
-              secondTypeValue === KeyType.UREF) ||
-              firstTypeValue === CLType.Simple.UREF) && (
-              <div className="col pl-0 pr-0">
-                <select
-                  className="form-control"
-                  value={props.deployArgument.$.URefAccessRight.$ as number}
-                  onChange={e => {
-                    props.deployArgument.$.URefAccessRight.onChange(
-                      parseInt(e.target.value) as any
-                    );
-                  }}
-                >
-                  {Object.keys(Key.URef.AccessRights).map(opt => (
-                    <option
-                      key={opt}
-                      value={(Key.URef.AccessRights as any)[opt]}
-                    >
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+      <React.Fragment>
+        <div className="col pl-0 pr-1">
+          <select
+            className="form-control"
+            value={props.deployArgument.$.type.value}
+            onChange={e => {
+              let v = e.target.value;
+              if (ComplexTypesString.includes(v)) {
+                props.deployArgument.$.type.onChange(v as ComplexType);
+              } else {
+                props.deployArgument.$.type.onChange(
+                  parseInt(e.target.value) as any
+                );
+              }
+            }}
+          >
+            {Object.keys(CLType.Simple)
+              .filter(opt => (CLType.Simple as any)[opt] !== CLType.Simple.UNIT)
+              .map(opt => (
+                <option key={opt} value={(CLType.Simple as any)[opt]}>
+                  {opt}
+                </option>
+              ))}
+            {props.supportComplexType &&
+              ComplexTypesString.map(t => <option value={t}>{t}</option>)}
+          </select>
+        </div>
+        {firstTypeValue === CLType.Simple.KEY && (
+          <div className="col pl-0 pr-1">
+            <select
+              className="form-control"
+              value={props.deployArgument.$.secondType.$?.toString()}
+              onChange={e => {
+                props.deployArgument.$.secondType.onChange(
+                  e.target.value as KeyType
+                );
+              }}
+            >
+              {firstTypeValue === CLType.Simple.KEY &&
+                Object.keys(KeyType).map(opt => (
+                  <option key={opt} value={(KeyType as any)[opt]}>
+                    {(KeyType as any)[opt]}
+                  </option>
+                ))}
+            </select>
           </div>
-        </td>
-        <td>
-          <div>
-            <input
-              className={`
+        )}
+        {((firstTypeValue === CLType.Simple.KEY &&
+          secondTypeValue === KeyType.UREF) ||
+          firstTypeValue === CLType.Simple.UREF) && (
+          <div className="col pl-0 pr-0">
+            <select
+              className="form-control"
+              value={props.deployArgument.$.URefAccessRight.$ as number}
+              onChange={e => {
+                props.deployArgument.$.URefAccessRight.onChange(
+                  parseInt(e.target.value) as any
+                );
+              }}
+            >
+              {Object.keys(Key.URef.AccessRights).map(opt => (
+                <option key={opt} value={(Key.URef.AccessRights as any)[opt]}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {firstTypeValue === 'List' && (
+          <ListArgumentCol
+            isFixedList={false}
+            deployArgument={listInnerArgs[0]}
+            infix={props.infix + '-Inner-'}
+          />
+        )}
+        {firstTypeValue === 'FixedList' && (
+          <ListArgumentCol
+            isFixedList={true}
+            deployArgument={props.deployArgument.$.listInnerDeployArgs.$[0]}
+            infix={props.infix + '-Inner-'}
+          />
+        )}
+        {firstTypeValue === 'Map' && (
+          <MapArgumentCol
+            keyDeployArgument={mapInnerArgs[0]}
+            valueDeployArgument={mapInnerArgs[1]}
+            infix={props.infix + '-Inner-'}
+          />
+        )}
+        {firstTypeValue === 'Tuple' && (
+          <TupleArgumentCol
+            deployArguments={tupleInnerArgs}
+            infix={props.infix + '-Inner-'}
+          />
+        )}
+      </React.Fragment>
+    );
+  }
+);
+
+const ValueInputCol = observer(
+  (props: { deployArgument: FormDeployArgument }) => {
+    return (
+      <td>
+        <div>
+          <input
+            className={`
               form-control
               ${
                 !props.deployArgument.$.value.hasBeenValidated
@@ -318,25 +445,49 @@ const ArgumentRow = observer(
                   : ''
               }
             `}
-              type="text"
-              value={props.deployArgument.$.value.value}
-              onChange={e => {
-                props.deployArgument.$.value.onChange(e.target.value);
-              }}
-              onBlur={() => {
-                props.deployArgument.enableAutoValidationAndValidate();
-                props.deployArgument.$.value.enableAutoValidationAndValidate();
-              }}
-            />
-            {(props.deployArgument.$.value.hasError ||
-              props.deployArgument.hasFormError) && (
-              <div className="invalid-feedback">
-                {props.deployArgument.$.value.error ||
-                  props.deployArgument.formError}
-              </div>
-            )}
+            type="text"
+            value={props.deployArgument.$.value.value}
+            onChange={e => {
+              props.deployArgument.$.value.onChange(e.target.value);
+            }}
+            onBlur={() => {
+              props.deployArgument.enableAutoValidationAndValidate();
+              props.deployArgument.$.value.enableAutoValidationAndValidate();
+            }}
+          />
+          {(props.deployArgument.$.value.hasError ||
+            props.deployArgument.hasFormError) && (
+            <div className="invalid-feedback">
+              {props.deployArgument.$.value.error ||
+                props.deployArgument.formError}
+            </div>
+          )}
+        </div>
+      </td>
+    );
+  }
+);
+
+const ArgumentRow = observer(
+  (props: {
+    infix: string;
+    deployArgument: FormDeployArgument;
+    onDelEvent?: (deployArgument: FormDeployArgument) => void;
+  }) => {
+    return (
+      <tr>
+        <td>
+          <TextField
+            id={`argument-${props.infix}-name`}
+            fieldState={props.deployArgument.$.name}
+          />
+        </td>
+        <td>
+          <div className={'row'}>
+            <TypeSelectCol supportComplexType={true} {...props} />
           </div>
         </td>
+        <ValueInputCol deployArgument={props.deployArgument} />
         {props.onDelEvent && (
           <td style={{ borderTop: 'none' }}>
             <input
@@ -360,9 +511,9 @@ const ArgumentTable = observer(
       <table className="table">
         <thead>
           <tr>
-            <th style={{ width: '20%' }}>Name</th>
-            <th style={{ width: '30%' }}>Type</th>
-            <th style={{ width: '40%' }}>Value</th>
+            <th style={{ width: '15%' }}>Name</th>
+            <th style={{ width: '50%' }}>Type</th>
+            <th style={{ width: '35%' }}>Value</th>
           </tr>
         </thead>
         <tbody>
@@ -378,7 +529,6 @@ const ArgumentTable = observer(
                   key={idx}
                   deployArgument={deployArgument}
                   infix={`saved-${idx}`}
-                  onProductTableUpdate={() => {}}
                   onDelEvent={
                     props.deployContractsContainer.removeDeployArgument
                   }
@@ -393,7 +543,6 @@ const ArgumentTable = observer(
                   key={idx}
                   infix={`editing-${idx}`}
                   deployArgument={deployArgument}
-                  onProductTableUpdate={() => {}}
                 />
               )
             )}
