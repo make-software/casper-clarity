@@ -53,7 +53,7 @@ class _AccountSelector extends React.Component<Props, {}> {
                 <div style={{ position: 'relative' }}>
                   <input
                     {...getInputProps({
-                      placeholder: 'Enter Account Public Key Hash',
+                      placeholder: 'Enter Account Hash',
                       className: 'form-control'
                     })}
                   />

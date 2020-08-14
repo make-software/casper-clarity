@@ -21,7 +21,7 @@ build-contracts: \
 build-explorer: .make/npm/explorer
 
 contracts/faucet_stored.wasm:
-	cd smart-contract && make all && cd -
+	./docker-buildenv.sh "cd smart-contract && make all"
 
 # install all package
 .make/npm/bootstrap:

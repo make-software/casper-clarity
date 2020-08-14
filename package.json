@@ -13,7 +13,8 @@
     "packages/*"
   ],
   "devDependencies": {
-    "lerna": "^3.22.1",
-    "concurrently": "^3.6.0"
+    "concurrently": "^3.6.0",
+    "husky": "^4.2.5",
+    "lerna": "^3.22.1"
   }
 }

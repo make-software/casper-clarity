@@ -11,9 +11,6 @@ import { Button, IconButton, ListInline, RefreshableComponent } from './Utils';
 import Modal from './Modal';
 import { FileSelect, Form, SelectField, TextField } from './Forms';
 import {
-  base64to16,
-  decodeBase64,
-  DeployUtil,
   encodeBase16,
   encodeBase64
 } from 'casperlabs-sdk';
@@ -57,7 +54,7 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               placeholder="Human readable alias"
             />
             <TextField
-              id="id-public-key-hash-base16"
+              id="id-account-hash-base16"
               label="Account Hash"
               fieldState={encodeBase16(
                 publicKeyHashForEd25519(newAccountForm.publicKeyBase64.value)
@@ -114,8 +111,8 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               placeholder="Human readable alias"
             />
             <TextField
-              id="id-public-key-hash-base16"
-              label="Public Key Hash (Base16)"
+              id="id-account-hash-base16"
+              label="Account Hash"
               fieldState={encodeBase16(
                 publicKeyHashForEd25519(importAccountForm.publicKeyBase64.value)
               )}
