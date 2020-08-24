@@ -559,9 +559,9 @@ export class DeployContractsContainer {
         )
       );
     });
-    if (argsTupleList.length == 1) {
+    if (argsTupleList.length === 1) {
       return Args.Instances.tuple1(argsTupleList[0]);
-    } else if (length === 2) {
+    } else if (argsTupleList.length === 2) {
       return Args.Instances.tuple2(argsTupleList[0], argsTupleList[1]);
     } else {
       return Args.Instances.tuple3(
