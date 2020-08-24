@@ -496,8 +496,8 @@ export class DeployContractsContainer {
           );
           break;
         case 'Map':
-          clValueInstance = this.buildTupleTypeArg(
-            arg.$.tupleInnerDeployArgs,
+          clValueInstance = this.buildMapTypeArg(
+            arg.$.mapInnerDeployArgs.$,
             argValueStr
           );
           break;
@@ -509,9 +509,10 @@ export class DeployContractsContainer {
           );
           break;
         case 'FixedList':
-          clValueInstance = this.buildTupleTypeArg(
-            arg.$.tupleInnerDeployArgs,
-            argValueStr
+          clValueInstance = this.buildListTypeArg(
+            arg.$.listInnerDeployArgs.$,
+            argValueStr,
+            true
           );
           break;
         case 0:
@@ -800,5 +801,37 @@ export class DeployContractsContainer {
     } else {
       return Args.Instances.list(argsList);
     }
+  }
+
+  private buildMapTypeArg(
+    mapInnerDeployArgs: FormDeployArgument[],
+    argValueInJson: any
+  ) {
+    const keyType = mapInnerDeployArgs[0].$.type.$;
+    const valueType = mapInnerDeployArgs[1].$.type.$;
+    if (!this.isSimpleType(keyType) || !this.isSimpleType(valueType)) {
+      throw new Error("Don't support nest types in Map instance");
+    }
+    const keySecondType = mapInnerDeployArgs[0].$.secondType.$;
+    const keyURefAccessRight = mapInnerDeployArgs[0].$.URefAccessRight.$;
+
+    const valueSecondType = mapInnerDeployArgs[1].$.secondType.$;
+    const valueURefAccessRight = mapInnerDeployArgs[1].$.URefAccessRight.$;
+    const mapEntries = argValueInJson.map((arg: any) => {
+      const key = this.buildSimpleArgs(
+        keyType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        keySecondType,
+        arg.key,
+        keyURefAccessRight
+      );
+      const value = this.buildSimpleArgs(
+        valueType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        valueSecondType,
+        arg.value,
+        valueURefAccessRight
+      );
+      return [key, value];
+    });
+    return Args.Instances.map(mapEntries);
   }
 }
