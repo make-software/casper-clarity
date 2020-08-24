@@ -540,26 +540,6 @@ export class DeployContractsContainer {
     return clValueInstance;
   }
 
-  private buildBytesFixedLengthTypeArg(argValueStr: string): CLValueInstance {
-    const innerType = new CLType();
-    innerType.setSimpleType(CLType.Simple.U8);
-    const fixedListType = new CLType.FixedList();
-    fixedListType.setInner(innerType);
-    const bytes = decodeBase16(argValueStr);
-    fixedListType.setLen(bytes.length);
-
-    const clType = new CLType();
-    clType.setFixedListType(fixedListType);
-
-    const value = new CLValueInstance.Value();
-    value.setBytesValue(bytes);
-
-    const clValueInstance = new CLValueInstance();
-    clValueInstance.setClType(clType);
-    clValueInstance.setValue(value);
-    return clValueInstance;
-  }
-
   private buildKeyOrUrefInstance(
     simpleType: number,
     argValueStr: string,
