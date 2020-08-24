@@ -54,19 +54,13 @@ export enum KeyType {
   UREF = 'URef'
 }
 
-export enum BitWidth {
-  B_128 = 128,
-  B_256 = 256,
-  B_512 = 512
-}
-
 export type DeployArgument = {
   name: FieldState<string>;
   type: FieldState<SupportedType>;
   // if type == ArgumentType.Key then the type of secondType is KeyType
   // and if type == ArgumentType.BIG_INT, then the type of secondType is BitWidth
   // otherwise second equals to null
-  secondType: FieldState<KeyType | BitWidth | null>;
+  secondType: FieldState<KeyType | null>;
   // List, the length of inner deploy arguments list is 1.
   listInnerDeployArgs: FormDeployArguments;
   // Tuple, the length of it is variant, could be 1, 2 and 3
@@ -96,7 +90,7 @@ export type FormDeployConfiguration = FormState<DeployConfiguration>;
 interface RawDeployArguments {
   name: string;
   type: SupportedType;
-  secondType: KeyType | BitWidth | null;
+  secondType: KeyType | null;
   innerDeployArgs: RawDeployArguments[];
   URefAccessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap];
   value: string;
@@ -208,7 +202,7 @@ export class DeployContractsContainer {
     hasInnerDeployArgs: boolean = true,
     name: string = '',
     type: SupportedType = CLType.Simple.BOOL,
-    secondType: KeyType | BitWidth | null = null,
+    secondType: KeyType | null = null,
     accessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap] = Key
       .URef.AccessRights.NONE,
     value: string = ''
@@ -227,7 +221,7 @@ export class DeployContractsContainer {
         .disableAutoValidation()
         .validators(...(hasInnerDeployArgs ? [valueRequired] : [])),
       type: new FieldState<SupportedType>(type),
-      secondType: new FieldState<KeyType | BitWidth | null>(secondType),
+      secondType: new FieldState<KeyType | null>(secondType),
       listInnerDeployArgs: listInnerArgs,
       tupleInnerDeployArgs: tupleInnerArgs,
       mapInnerDeployArgs: mapInnerArgs,
@@ -413,81 +407,128 @@ export class DeployContractsContainer {
     }
   }
 
-  private buildArgument(arg: FormState<DeployArgument>) {
-    const argValueStr: string = arg.$.value.value;
-    const type = arg.$.type.$;
-    let clValueInstance: CLValueInstance;
-    const argValueStrInJson = JSON.parse(argValueStr);
-    switch (type) {
-      case 'Bytes':
-        clValueInstance = Args.Instances.bytes(decodeBase16(argValueStrInJson));
-        break;
-      case 'Bytes (Fixed Length)':
-        clValueInstance = Args.Instances.bytesFixedLength(
-          decodeBase16(argValueStrInJson)
-        );
-        break;
-      case 'Tuple':
-        clValueInstance = this.buildTupleTypeArg(
-          arg.$.tupleInnerDeployArgs,
-          argValueStr
-        );
-        break;
-      case 'Map':
-        clValueInstance = this.buildTupleTypeArg(
-          arg.$.tupleInnerDeployArgs,
-          argValueStr
-        );
-        break;
-      case 'List':
-        clValueInstance = this.buildTupleTypeArg(
-          arg.$.tupleInnerDeployArgs,
-          argValueStr
-        );
-        break;
-      case 'FixedList':
-        clValueInstance = this.buildTupleTypeArg(
-          arg.$.tupleInnerDeployArgs,
-          argValueStr
-        );
-        break;
+  private isSimpleType(t: SupportedType) {
+    return t in CLType.Simple;
+  }
+
+  private buildSimpleArgs(
+    firstType: CLType.SimpleMap[keyof CLType.SimpleMap],
+    secondType: KeyType | null,
+    argValueInJson: any,
+    uRefAccessRight?: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
+  ) {
+    let clValueInstance;
+    switch (firstType) {
       case CLType.Simple.BOOL:
-        clValueInstance = Args.Instances.bool(argValueStrInJson);
+        clValueInstance = Args.Instances.bool(argValueInJson);
         break;
       case CLType.Simple.I32:
-        clValueInstance = Args.Instances.i32(argValueStrInJson);
+        clValueInstance = Args.Instances.i32(argValueInJson);
         break;
       case CLType.Simple.I64:
-        clValueInstance = Args.Instances.i64(argValueStrInJson);
+        clValueInstance = Args.Instances.i64(argValueInJson);
         break;
       case CLType.Simple.U8:
-        clValueInstance = Args.Instances.u8(argValueStrInJson);
+        clValueInstance = Args.Instances.u8(argValueInJson);
         break;
       case CLType.Simple.U32:
-        clValueInstance = Args.Instances.u32(argValueStrInJson);
+        clValueInstance = Args.Instances.u32(argValueInJson);
         break;
       case CLType.Simple.U64:
-        clValueInstance = Args.Instances.u64(argValueStrInJson);
+        clValueInstance = Args.Instances.u64(argValueInJson);
         break;
       case CLType.Simple.U128:
-        clValueInstance = Args.Instances.u128(argValueStrInJson);
+        clValueInstance = Args.Instances.u128(argValueInJson);
         break;
       case CLType.Simple.U256:
-        clValueInstance = Args.Instances.u256(argValueStrInJson);
+        clValueInstance = Args.Instances.u256(argValueInJson);
         break;
       case CLType.Simple.U512:
-        clValueInstance = Args.Instances.u512(argValueStrInJson);
+        clValueInstance = Args.Instances.u512(argValueInJson);
         break;
       case CLType.Simple.UNIT:
         clValueInstance = Args.Instances.unit();
         break;
       case CLType.Simple.STRING:
-        clValueInstance = Args.Instances.string(argValueStrInJson);
+        clValueInstance = Args.Instances.string(argValueInJson);
         break;
       case CLType.Simple.KEY:
       case CLType.Simple.UREF:
-        clValueInstance = this.buildKeyOrUrefInstance(type, argValueStr, arg);
+        clValueInstance = this.buildKeyOrUrefInstance(
+          firstType,
+          secondType,
+          argValueInJson,
+          uRefAccessRight
+        );
         break;
+    }
+    return clValueInstance;
+  }
+
+  private buildArgument(arg: FormState<DeployArgument>) {
+    const argValueStr: string = arg.$.value.value;
+    const type = arg.$.type.$;
+    let clValueInstance: CLValueInstance;
+    const argValueStrInJson = JSON.parse(argValueStr);
+    if (this.isSimpleType(type)) {
+      clValueInstance = this.buildSimpleArgs(
+        type as CLType.SimpleMap[keyof CLType.SimpleMap],
+        arg.$.secondType.$,
+        argValueStrInJson,
+        arg.$.URefAccessRight.$
+      );
+    } else {
+      switch (type) {
+        case 'Bytes':
+          clValueInstance = Args.Instances.bytes(
+            decodeBase16(argValueStrInJson)
+          );
+          break;
+        case 'Bytes (Fixed Length)':
+          clValueInstance = Args.Instances.bytesFixedLength(
+            decodeBase16(argValueStrInJson)
+          );
+          break;
+        case 'Tuple':
+          clValueInstance = this.buildTupleTypeArg(
+            arg.$.tupleInnerDeployArgs,
+            argValueStr
+          );
+          break;
+        case 'Map':
+          clValueInstance = this.buildTupleTypeArg(
+            arg.$.tupleInnerDeployArgs,
+            argValueStr
+          );
+          break;
+        case 'List':
+          clValueInstance = this.buildListTypeArg(
+            arg.$.listInnerDeployArgs.$,
+            argValueStr,
+            false
+          );
+          break;
+        case 'FixedList':
+          clValueInstance = this.buildTupleTypeArg(
+            arg.$.tupleInnerDeployArgs,
+            argValueStr
+          );
+          break;
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+          throw new Error('Failed creating arguments');
+      }
     }
 
     const deployArg = new Deploy.Arg();
@@ -541,15 +582,16 @@ export class DeployContractsContainer {
   }
 
   private buildKeyOrUrefInstance(
-    simpleType: number,
+    firstType: number,
+    secondType: KeyType | null,
     argValueStr: string,
-    arg: FormState<DeployArgument>
+    uRefAccessRight?: 1 | 4 | 7 | 6 | 5 | 0 | 2 | 3 | undefined
   ): CLValueInstance {
     const value = new CLValueInstance.Value();
     const clType = new CLType();
-    if (simpleType === CLType.Simple.KEY) {
+    if (firstType === CLType.Simple.KEY) {
       const key = new Key();
-      let keyType = arg.$.secondType.value as KeyType;
+      let keyType = secondType as KeyType;
       let valueInByteArray = decodeBase16(argValueStr);
       switch (keyType) {
         case KeyType.ADDRESS:
@@ -565,7 +607,7 @@ export class DeployContractsContainer {
         case KeyType.UREF:
           const uRef = new Key.URef();
           uRef.setUref(valueInByteArray);
-          uRef.setAccessRights(arg.$.URefAccessRight.value!);
+          uRef.setAccessRights(uRefAccessRight!);
           key.setUref(uRef);
           break;
       }
@@ -573,7 +615,7 @@ export class DeployContractsContainer {
       clType.setSimpleType(CLType.Simple.KEY);
     } else {
       const URef = new Key.URef();
-      URef.setAccessRights(arg.$.URefAccessRight.value!);
+      URef.setAccessRights(uRefAccessRight!);
       URef.setUref(decodeBase16(argValueStr));
       value.setUref(URef);
       clType.setSimpleType(CLType.Simple.UREF);
@@ -732,5 +774,31 @@ export class DeployContractsContainer {
       DeployContractsContainer.PersistentKey,
       JSON.stringify(state)
     );
+  }
+
+  private buildListTypeArg(
+    listInnerDeployArgs: FormDeployArgument[],
+    argValueInJson: any,
+    isFixedList: boolean
+  ) {
+    const firstType = listInnerDeployArgs[0].$.type.$;
+    if (!this.isSimpleType(firstType)) {
+      throw new Error("Don't support nest types");
+    }
+    const secondType = listInnerDeployArgs[0].$.secondType.$;
+    const uRefAccessRight = listInnerDeployArgs[0].$.URefAccessRight.$;
+    const argsList = argValueInJson.map((arg: any) => {
+      return this.buildSimpleArgs(
+        firstType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        secondType,
+        arg,
+        uRefAccessRight
+      );
+    });
+    if (isFixedList) {
+      return Args.Instances.fixedList(argsList);
+    } else {
+      return Args.Instances.list(argsList);
+    }
   }
 }
