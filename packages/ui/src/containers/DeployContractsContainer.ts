@@ -491,7 +491,7 @@ export class DeployContractsContainer {
           break;
         case 'Tuple':
           clValueInstance = this.buildTupleTypeArg(
-            arg.$.tupleInnerDeployArgs,
+            arg.$.tupleInnerDeployArgs.$,
             argValueStr
           );
           break;
@@ -539,47 +539,37 @@ export class DeployContractsContainer {
   }
 
   private buildTupleTypeArg(
-    tupleInnerDeployArgs: FormDeployArguments,
-    argValueStr: string
+    tupleInnerDeployArgs: FormDeployArgument[],
+    argValueStr: any
   ) {
-    let length = tupleInnerDeployArgs.$.length;
-
-    const value = new CLValueInstance.Value();
-    const type: CLType = new CLType();
-    const tupleTypes = tupleInnerDeployArgs.$.map(a => {
-      if (a.$.type.value in CLType.Simple) {
-        const clType = new CLType();
-        clType.setSimpleType(
-          a.$.type.value as CLType.SimpleMap[keyof CLType.SimpleMap]
-        );
-        return clType;
+    const argsTupleList: CLValueInstance[] = [];
+    tupleInnerDeployArgs.forEach((arg, i) => {
+      const type = arg.$.type.$;
+      if (!this.isSimpleType(type)) {
+        throw new Error("Don't support nest types in Tuple instance");
       }
-      throw new Error();
+      const secondType = arg.$.secondType.$;
+      const uRefAccessRight = arg.$.URefAccessRight.$;
+      argsTupleList.push(
+        this.buildSimpleArgs(
+          type as CLType.SimpleMap[keyof CLType.SimpleMap],
+          secondType,
+          argValueStr[i],
+          uRefAccessRight
+        )
+      );
     });
-
-    if (length === 1) {
-      const tuple1Type = new CLType.Tuple1();
-      tuple1Type.setType0(tupleTypes[0]);
-      type.setTuple1Type(tuple1Type);
+    if (argsTupleList.length == 1) {
+      return Args.Instances.tuple1(argsTupleList[0]);
     } else if (length === 2) {
-      const tuple2Type = new CLType.Tuple2();
-      tuple2Type.setType0(tupleTypes[0]);
-      tuple2Type.setType1(tupleTypes[1]);
-      type.setTuple2Type(tuple2Type);
-    } else if (length === 3) {
-      const tuple3Type = new CLType.Tuple3();
-      tuple3Type.setType0(tupleTypes[0]);
-      tuple3Type.setType1(tupleTypes[1]);
-      tuple3Type.setType2(tupleTypes[2]);
-      type.setTuple3Type(tuple3Type);
+      return Args.Instances.tuple2(argsTupleList[0], argsTupleList[1]);
     } else {
-      throw new Error();
+      return Args.Instances.tuple3(
+        argsTupleList[0],
+        argsTupleList[1],
+        argsTupleList[2]
+      );
     }
-
-    const clValueInstance = new CLValueInstance();
-    clValueInstance.setClType(type);
-    clValueInstance.setValue();
-    return clValueInstance;
   }
 
   private buildKeyOrUrefInstance(
