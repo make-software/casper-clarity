@@ -26,6 +26,7 @@ import {
 import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
+import { DeployArgumentParser } from '../lib/DeployArgumentParser';
 
 export type ComplexType =
   | 'Bytes'
@@ -57,35 +58,6 @@ export enum BitWidth {
   B_256 = 256,
   B_512 = 512
 }
-
-const powerOf2 = (n: number): JSBI => {
-  return JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(n));
-};
-
-const numberLimitForUnsigned = (bit: number) => {
-  return {
-    min: JSBI.BigInt(0),
-    max: JSBI.subtract(powerOf2(bit), JSBI.BigInt(1))
-  };
-};
-
-const numberLimitForSigned = (bit: number) => {
-  return {
-    min: JSBI.multiply(JSBI.BigInt(-1), powerOf2(bit - 1)),
-    max: JSBI.subtract(powerOf2(bit - 1), JSBI.BigInt(1))
-  };
-};
-
-const NumberLimit = {
-  [CLType.Simple.U8]: numberLimitForUnsigned(8),
-  [CLType.Simple.U32]: numberLimitForUnsigned(32),
-  [CLType.Simple.U64]: numberLimitForUnsigned(64),
-  [CLType.Simple.U128]: numberLimitForUnsigned(128),
-  [CLType.Simple.U256]: numberLimitForUnsigned(256),
-  [CLType.Simple.U512]: numberLimitForUnsigned(512),
-  [CLType.Simple.I32]: numberLimitForSigned(32),
-  [CLType.Simple.I64]: numberLimitForSigned(64)
-};
 
 export type DeployArgument = {
   name: FieldState<string>;
@@ -249,10 +221,10 @@ export class DeployContractsContainer {
       mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
       mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
     }
-    return new FormState({
+    const formState = new FormState({
       name: new FieldState<string>(name)
         .disableAutoValidation()
-        .validators(valueRequired),
+        .validators(...(hasInnerDeployArgs ? [valueRequired] : [])),
       type: new FieldState<SupportedType>(type),
       secondType: new FieldState<KeyType | BitWidth | null>(secondType),
       listInnerDeployArgs: listInnerArgs,
@@ -263,10 +235,15 @@ export class DeployContractsContainer {
       >(accessRight),
       value: new FieldState<string>(value)
         .disableAutoValidation()
-        .validators(valueRequired)
+        .validators(...(hasInnerDeployArgs ? [valueRequired] : []))
     })
       .compose()
-      .validators(DeployContractsContainer.validateDeployArgument);
+      .validators(
+        ...(hasInnerDeployArgs
+          ? [DeployContractsContainer.validateDeployArgument]
+          : [])
+      );
+    return formState;
   }
 
   @action.bound
@@ -285,6 +262,7 @@ export class DeployContractsContainer {
   @action.bound
   async saveEditingDeployArguments() {
     const res = await this.editingDeployArguments.validate();
+    console.log(this.editingDeployArguments.$.length);
     if (!res.hasError) {
       while (this.editingDeployArguments.$.length) {
         this.deployArguments.$.push(this.editingDeployArguments.$.shift()!);
@@ -669,6 +647,12 @@ export class DeployContractsContainer {
     deployArgument: DeployArgument
   ): string | false {
     const value = deployArgument.value.$;
+    let valueInJson;
+    try {
+      valueInJson = JSON.parse(value);
+    } catch (e) {
+      return e.message;
+    }
     switch (deployArgument.type.$) {
       case CLType.Simple.U8:
       case CLType.Simple.U32:
@@ -678,37 +662,19 @@ export class DeployContractsContainer {
       case CLType.Simple.U128:
       case CLType.Simple.U256:
       case CLType.Simple.U512:
-        let limit: { min: JSBI; max: JSBI } = (NumberLimit as any)[
-          deployArgument.type.value
-        ];
-        if (!validator.isNumeric(value)) {
-          return `Value should be a number`;
-        }
-        const v = JSBI.BigInt(value);
-        if (v < limit.min || v > limit.max) {
-          return `Value should be in [${limit.min.toString(
-            10
-          )}, ${limit.max.toString(10)}]`;
-        }
-        return false;
+        return DeployArgumentParser.validateBigInt(
+          valueInJson,
+          deployArgument.type.$
+        );
       case CLType.Simple.STRING:
-        return false;
+        return DeployArgumentParser.validateString(valueInJson);
       case CLType.Simple.BOOL:
-        if (!validator.isBoolean(value)) {
-          return `Value should be true or false`;
-        }
-        return false;
+        return DeployArgumentParser.validateBoolean(valueInJson);
       case CLType.Simple.KEY:
       case CLType.Simple.UREF:
-        if (!validator.isHexadecimal(value)) {
-          return `Value should be base16`;
-        }
-        return false;
+        return DeployArgumentParser.validateBase16String(valueInJson);
       case 'Bytes':
-        if (!validator.isHexadecimal(value)) {
-          return `Value should be base16`;
-        }
-        return false;
+        return DeployArgumentParser.validateBase16String(valueInJson);
     }
     return false;
   }
