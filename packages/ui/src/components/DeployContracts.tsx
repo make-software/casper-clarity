@@ -303,13 +303,6 @@ const ListArgumentCol = observer(
     return (
       <React.Fragment>
         <TypeSelectCol {...props} supportComplexType={false} />
-        {props.isFixedList && (
-          <TextField
-            id={props.infix + 'List-Arg-Len'}
-            fieldState={props.deployArgument.$.name}
-            placeholder={'Length of FixedList'}
-          />
-        )}
       </React.Fragment>
     );
   }
