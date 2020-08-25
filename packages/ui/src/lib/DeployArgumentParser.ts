@@ -138,6 +138,58 @@ export class DeployArgumentParser {
     return false;
   }
 
+  public static validateDeployArgument(deployArgument: DeployArgument) {
+    const value = deployArgument.value.$;
+    let valueInJson;
+    try {
+      valueInJson = JSON.parse(value);
+    } catch (e) {
+      return e.message;
+    }
+
+    switch (deployArgument.type.$) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+      case 'Bytes':
+      case 'Bytes (Fixed Length)':
+        return DeployArgumentParser.validateSimpleType(
+          deployArgument,
+          valueInJson
+        );
+      case 'Tuple':
+        return DeployArgumentParser.validateTuple(
+          deployArgument.tupleInnerDeployArgs.$,
+          valueInJson
+        );
+      case 'Map':
+        return DeployArgumentParser.validateMap(
+          deployArgument.mapInnerDeployArgs.$,
+          valueInJson
+        );
+      case 'List':
+        return DeployArgumentParser.validateList(
+          deployArgument.listInnerDeployArgs.$,
+          valueInJson
+        );
+      case 'FixedList':
+        return DeployArgumentParser.validateList(
+          deployArgument.listInnerDeployArgs.$,
+          valueInJson
+        );
+    }
+  }
+
   private static validateSimpleType(
     deployArgument: DeployArgument,
     argValueInJson: any
@@ -147,6 +199,12 @@ export class DeployArgumentParser {
       return `${argValueInJson} is not a simple type`;
     }
     switch (deployArgument.type.$) {
+      case CLType.Simple.UNIT:
+      case 'Tuple':
+      case 'Map':
+      case 'List':
+      case 'FixedList':
+        return `don't support ${deployArgument.type.$}`;
       case CLType.Simple.U8:
       case CLType.Simple.U32:
       case CLType.Simple.U64:
@@ -167,6 +225,8 @@ export class DeployArgumentParser {
       case CLType.Simple.UREF:
         return DeployArgumentParser.validateBase16String(argValueInJson);
       case 'Bytes':
+        return DeployArgumentParser.validateBase16String(argValueInJson);
+      case 'Bytes (Fixed Length)':
         return DeployArgumentParser.validateBase16String(argValueInJson);
     }
     return false;
@@ -352,6 +412,7 @@ export class DeployArgumentParser {
         case 10:
         case 11:
         case 12:
+          // type from CLType.Simple
           throw new Error('Failed creating arguments');
       }
     }

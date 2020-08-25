@@ -413,7 +413,7 @@ export class Instances {
     return t;
   }
 
-  static map(eles: Array<[CLValueInstance, CLValueInstance]>) {
+  static map(eles: [CLValueInstance, CLValueInstance][]) {
     for (let i = 0; i < eles.length - 1; i++) {
       if (
         eles[i][0]?.getClType()?.toString() !==
