@@ -1,12 +1,28 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { Args, CasperService, decodeBase16, DeployUtil, encodeBase16, Signer } from 'casperlabs-sdk';
+import {
+  Args,
+  CasperService,
+  decodeBase16,
+  DeployUtil,
+  encodeBase16,
+  Signer
+} from 'casperlabs-sdk';
 import { FieldState, FormState } from 'formstate';
-import { numberGreaterThan, validateBase16, validateInt, valueRequired } from '../lib/FormsValidator';
+import {
+  numberGreaterThan,
+  validateBase16,
+  validateInt,
+  valueRequired
+} from '../lib/FormsValidator';
 import $ from 'jquery';
 import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
-import { CLType, CLValueInstance, Key } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
+import {
+  CLType,
+  CLValueInstance,
+  Key
+} from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
@@ -208,7 +224,9 @@ export class DeployContractsContainer {
       listInnerDeployArgs: listInnerArgs,
       tupleInnerDeployArgs: tupleInnerArgs,
       mapInnerDeployArgs: mapInnerArgs,
-      URefAccessRight: new FieldState<Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]>(accessRight),
+      URefAccessRight: new FieldState<
+        Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
+      >(accessRight),
       value: new FieldState<string>(value)
         .disableAutoValidation()
         .validators(...(hasInnerDeployArgs ? [valueRequired] : []))
@@ -778,7 +796,10 @@ export class DeployContractsContainer {
   ) {
     const keyType = mapInnerDeployArgs[0].$.type.$;
     const valueType = mapInnerDeployArgs[1].$.type.$;
-    if (!DeployContractsContainer.isSimpleType(keyType) || !DeployContractsContainer.isSimpleType(valueType)) {
+    if (
+      !DeployContractsContainer.isSimpleType(keyType) ||
+      !DeployContractsContainer.isSimpleType(valueType)
+    ) {
       throw new Error("Don't support nest types in Map instance");
     }
     const keySecondType = mapInnerDeployArgs[0].$.secondType.$;
