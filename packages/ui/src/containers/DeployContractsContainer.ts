@@ -405,7 +405,7 @@ export class DeployContractsContainer {
   }
 
   private static isSimpleType(t: SupportedType) {
-    return t in CLType.Simple;
+    return Object.values(CLType.Simple).includes(t);
   }
 
   private static buildSimpleArgs(
@@ -489,26 +489,26 @@ export class DeployContractsContainer {
         case 'Tuple':
           clValueInstance = this.buildTupleTypeArg(
             arg.$.tupleInnerDeployArgs.$,
-            argValueStr
+            argValueStrInJson
           );
           break;
         case 'Map':
           clValueInstance = this.buildMapTypeArg(
             arg.$.mapInnerDeployArgs.$,
-            argValueStr
+            argValueStrInJson
           );
           break;
         case 'List':
           clValueInstance = this.buildListTypeArg(
             arg.$.listInnerDeployArgs.$,
-            argValueStr,
+            argValueStrInJson,
             false
           );
           break;
         case 'FixedList':
           clValueInstance = this.buildListTypeArg(
             arg.$.listInnerDeployArgs.$,
-            argValueStr,
+            argValueStrInJson,
             true
           );
           break;

@@ -345,7 +345,11 @@ const TypeSelectCol = observer(
                 </option>
               ))}
             {props.supportComplexType &&
-              ComplexTypesString.map(t => <option value={t}>{t}</option>)}
+              ComplexTypesString.map((t, idx) => (
+                <option key={idx} value={t}>
+                  {t}
+                </option>
+              ))}
           </select>
         </div>
         {firstTypeValue === CLType.Simple.KEY && (
