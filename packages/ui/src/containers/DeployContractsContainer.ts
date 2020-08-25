@@ -1,29 +1,12 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import {
-  Args,
-  CasperService,
-  decodeBase16,
-  DeployUtil,
-  encodeBase16,
-  Signer
-} from 'casperlabs-sdk';
+import { Args, CasperService, decodeBase16, DeployUtil, encodeBase16, Signer } from 'casperlabs-sdk';
 import { FieldState, FormState } from 'formstate';
-import {
-  numberGreaterThan,
-  validateBase16,
-  validateInt,
-  valueRequired
-} from '../lib/FormsValidator';
-import validator from 'validator';
+import { numberGreaterThan, validateBase16, validateInt, valueRequired } from '../lib/FormsValidator';
 import $ from 'jquery';
 import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
-import {
-  CLType,
-  CLValueInstance,
-  Key
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
+import { CLType, CLValueInstance, Key } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
@@ -216,7 +199,7 @@ export class DeployContractsContainer {
       mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
       mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
     }
-    const formState = new FormState({
+    return new FormState({
       name: new FieldState<string>(name)
         .disableAutoValidation()
         .validators(...(hasInnerDeployArgs ? [valueRequired] : [])),
@@ -225,9 +208,7 @@ export class DeployContractsContainer {
       listInnerDeployArgs: listInnerArgs,
       tupleInnerDeployArgs: tupleInnerArgs,
       mapInnerDeployArgs: mapInnerArgs,
-      URefAccessRight: new FieldState<
-        Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
-      >(accessRight),
+      URefAccessRight: new FieldState<Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]>(accessRight),
       value: new FieldState<string>(value)
         .disableAutoValidation()
         .validators(...(hasInnerDeployArgs ? [valueRequired] : []))
@@ -238,7 +219,6 @@ export class DeployContractsContainer {
           ? [DeployContractsContainer.validateDeployArgument]
           : [])
       );
-    return formState;
   }
 
   @action.bound
@@ -358,7 +338,6 @@ export class DeployContractsContainer {
     } else {
       const config = deployConfigurationForm.value;
       const args = deployArguments.value;
-      let type: DeployUtil.ContractType;
       let session: ByteArray | string;
 
       let argsProto = args.map((arg: FormState<DeployArgument>) => {
@@ -407,11 +386,11 @@ export class DeployContractsContainer {
     }
   }
 
-  private isSimpleType(t: SupportedType) {
+  private static isSimpleType(t: SupportedType) {
     return t in CLType.Simple;
   }
 
-  private buildSimpleArgs(
+  private static buildSimpleArgs(
     firstType: CLType.SimpleMap[keyof CLType.SimpleMap],
     secondType: KeyType | null,
     argValueInJson: any,
@@ -454,7 +433,7 @@ export class DeployContractsContainer {
         break;
       case CLType.Simple.KEY:
       case CLType.Simple.UREF:
-        clValueInstance = this.buildKeyOrUrefInstance(
+        clValueInstance = DeployContractsContainer.buildKeyOrUrefInstance(
           firstType,
           secondType,
           argValueInJson,
@@ -470,8 +449,8 @@ export class DeployContractsContainer {
     const type = arg.$.type.$;
     let clValueInstance: CLValueInstance;
     const argValueStrInJson = JSON.parse(argValueStr);
-    if (this.isSimpleType(type)) {
-      clValueInstance = this.buildSimpleArgs(
+    if (DeployContractsContainer.isSimpleType(type)) {
+      clValueInstance = DeployContractsContainer.buildSimpleArgs(
         type as CLType.SimpleMap[keyof CLType.SimpleMap],
         arg.$.secondType.$,
         argValueStrInJson,
@@ -545,13 +524,13 @@ export class DeployContractsContainer {
     const argsTupleList: CLValueInstance[] = [];
     tupleInnerDeployArgs.forEach((arg, i) => {
       const type = arg.$.type.$;
-      if (!this.isSimpleType(type)) {
+      if (!DeployContractsContainer.isSimpleType(type)) {
         throw new Error("Don't support nest types in Tuple instance");
       }
       const secondType = arg.$.secondType.$;
       const uRefAccessRight = arg.$.URefAccessRight.$;
       argsTupleList.push(
-        this.buildSimpleArgs(
+        DeployContractsContainer.buildSimpleArgs(
           type as CLType.SimpleMap[keyof CLType.SimpleMap],
           secondType,
           argValueStr[i],
@@ -572,7 +551,7 @@ export class DeployContractsContainer {
     }
   }
 
-  private buildKeyOrUrefInstance(
+  private static buildKeyOrUrefInstance(
     firstType: number,
     secondType: KeyType | null,
     argValueStr: string,
@@ -773,13 +752,13 @@ export class DeployContractsContainer {
     isFixedList: boolean
   ) {
     const firstType = listInnerDeployArgs[0].$.type.$;
-    if (!this.isSimpleType(firstType)) {
+    if (!DeployContractsContainer.isSimpleType(firstType)) {
       throw new Error("Don't support nest types");
     }
     const secondType = listInnerDeployArgs[0].$.secondType.$;
     const uRefAccessRight = listInnerDeployArgs[0].$.URefAccessRight.$;
     const argsList = argValueInJson.map((arg: any) => {
-      return this.buildSimpleArgs(
+      return DeployContractsContainer.buildSimpleArgs(
         firstType as CLType.SimpleMap[keyof CLType.SimpleMap],
         secondType,
         arg,
@@ -799,7 +778,7 @@ export class DeployContractsContainer {
   ) {
     const keyType = mapInnerDeployArgs[0].$.type.$;
     const valueType = mapInnerDeployArgs[1].$.type.$;
-    if (!this.isSimpleType(keyType) || !this.isSimpleType(valueType)) {
+    if (!DeployContractsContainer.isSimpleType(keyType) || !DeployContractsContainer.isSimpleType(valueType)) {
       throw new Error("Don't support nest types in Map instance");
     }
     const keySecondType = mapInnerDeployArgs[0].$.secondType.$;
@@ -808,13 +787,13 @@ export class DeployContractsContainer {
     const valueSecondType = mapInnerDeployArgs[1].$.secondType.$;
     const valueURefAccessRight = mapInnerDeployArgs[1].$.URefAccessRight.$;
     const mapEntries = argValueInJson.map((arg: any) => {
-      const key = this.buildSimpleArgs(
+      const key = DeployContractsContainer.buildSimpleArgs(
         keyType as CLType.SimpleMap[keyof CLType.SimpleMap],
         keySecondType,
         arg.key,
         keyURefAccessRight
       );
-      const value = this.buildSimpleArgs(
+      const value = DeployContractsContainer.buildSimpleArgs(
         valueType as CLType.SimpleMap[keyof CLType.SimpleMap],
         valueSecondType,
         arg.value,
