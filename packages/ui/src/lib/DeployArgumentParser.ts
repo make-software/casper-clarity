@@ -61,7 +61,82 @@ export class DeployArgumentParser {
   static validateTuple(
     tupleInnerDeployArgs: FormDeployArgument[],
     argValueInJson: any
-  ) {}
+  ) {
+    if (typeof argValueInJson !== typeof []) {
+      return `The input value is not a valid array`;
+    }
+
+    if (tupleInnerDeployArgs.length != argValueInJson.length) {
+      return `length of tuple is not correct`;
+    }
+
+    for (let i = 0; i < tupleInnerDeployArgs.length; i++) {
+      const validateSimpleType = DeployArgumentParser.validateSimpleType(
+        tupleInnerDeployArgs[i].$,
+        argValueInJson[i]
+      );
+      if (validateSimpleType !== false) {
+        return `tuple[${i}] is not correct: ${validateSimpleType}`;
+      }
+    }
+    return false;
+  }
+
+  static validateMap(
+    mapInnerDeployArgs: FormDeployArgument[],
+    argValueInJson: any
+  ) {
+    if (typeof argValueInJson !== typeof []) {
+      return `The input value is not a valid array`;
+    }
+    for (let i = 0; i < argValueInJson.lenght; i++) {
+      const mapEntry = argValueInJson[i];
+      if (mapEntry['key'] === undefined) {
+        return `map[${i}] doesn't have key`;
+      }
+      if (mapEntry['value'] === undefined) {
+        return `map[${i}] doesn't have value`;
+      }
+      const validateKey = DeployArgumentParser.validateSimpleType(
+        mapInnerDeployArgs[0].$,
+        argValueInJson[i].key
+      );
+
+      if (validateKey !== false) {
+        return `the key of map[${i}] is not correct: ${validateKey}`;
+      }
+
+      const validateValue = DeployArgumentParser.validateSimpleType(
+        mapInnerDeployArgs[1].$,
+        argValueInJson[i].value
+      );
+
+      if (validateValue !== false) {
+        return `the value of map[${i}] is not correct: ${validateValue}`;
+      }
+    }
+    return false;
+  }
+
+  static validateList(
+    listInnerDeployArgs: FormDeployArgument[],
+    argValueInJson: any
+  ) {
+    if (typeof argValueInJson !== typeof []) {
+      return `The input value is not a valid array`;
+    }
+    for (let i = 0; i < argValueInJson.length; i++) {
+      const validateSimpleType = DeployArgumentParser.validateSimpleType(
+        listInnerDeployArgs[0].$,
+        argValueInJson[i]
+      );
+
+      if (validateSimpleType !== false) {
+        return `list[${i}] is not correct: ${validateSimpleType}`;
+      }
+    }
+    return false;
+  }
 
   private static validateSimpleType(
     deployArgument: DeployArgument,
@@ -96,12 +171,6 @@ export class DeployArgumentParser {
     }
     return false;
   }
-
-  static parseMap() {}
-
-  static parseList() {}
-
-  static parseBool() {}
 
   static validateBase16String(v: any): string | false {
     const valid = typeof v === typeof 's';
