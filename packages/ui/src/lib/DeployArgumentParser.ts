@@ -58,7 +58,44 @@ const BigIntTypeToString = {
 // All validator method follow this rule:
 // When there is a error, returns a message, otherwise returns false.
 export class DeployArgumentParser {
-  static parseTuple() {}
+  static validateTuple(
+    tupleInnerDeployArgs: FormDeployArgument[],
+    argValueInJson: any
+  ) {}
+
+  private static validateSimpleType(
+    deployArgument: DeployArgument,
+    argValueInJson: any
+  ): string | false {
+    const type = deployArgument.type.$;
+    if (!DeployArgumentParser.isSimpleType(type)) {
+      return `${argValueInJson} is not a simple type`;
+    }
+    switch (deployArgument.type.$) {
+      case CLType.Simple.U8:
+      case CLType.Simple.U32:
+      case CLType.Simple.U64:
+      case CLType.Simple.I32:
+      case CLType.Simple.I64:
+      case CLType.Simple.U128:
+      case CLType.Simple.U256:
+      case CLType.Simple.U512:
+        return DeployArgumentParser.validateBigInt(
+          argValueInJson,
+          deployArgument.type.$
+        );
+      case CLType.Simple.STRING:
+        return DeployArgumentParser.validateString(argValueInJson);
+      case CLType.Simple.BOOL:
+        return DeployArgumentParser.validateBoolean(argValueInJson);
+      case CLType.Simple.KEY:
+      case CLType.Simple.UREF:
+        return DeployArgumentParser.validateBase16String(argValueInJson);
+      case 'Bytes':
+        return DeployArgumentParser.validateBase16String(argValueInJson);
+    }
+    return false;
+  }
 
   static parseMap() {}
 

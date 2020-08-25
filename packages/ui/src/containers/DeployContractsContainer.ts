@@ -36,7 +36,9 @@ export type ComplexType =
   | 'List'
   | 'FixedList';
 
-export type SupportedType = CLType.SimpleMap[keyof CLType.SimpleMap] | ComplexType;
+export type SupportedType =
+  | CLType.SimpleMap[keyof CLType.SimpleMap]
+  | ComplexType;
 
 export const ComplexTypesString = [
   'Bytes',
@@ -234,7 +236,7 @@ export class DeployContractsContainer {
       .compose()
       .validators(
         ...(hasInnerDeployArgs
-          ? [DeployContractsContainer.validateDeployArgument]
+          ? [DeployArgumentParser.validateDeployArgument]
           : [])
       );
   }
@@ -359,7 +361,7 @@ export class DeployContractsContainer {
       let session: ByteArray | string;
 
       let argsProto = args.map((arg: FormState<DeployArgument>) => {
-        return this.buildArgument(arg);
+        return DeployArgumentParser.buildArgument(arg);
       });
       const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
 
@@ -402,47 +404,6 @@ export class DeployContractsContainer {
       }
       return Promise.resolve(null);
     }
-  }
-
-  /**
-   * Implement validator for DeployArgument which can be used in formstate library,
-   * If a truthy string is returned it represents a validation error.
-   * @param deployArgument
-   */
-  private static validateDeployArgument(
-    deployArgument: DeployArgument
-  ): string | false {
-    const value = deployArgument.value.$;
-    let valueInJson;
-    try {
-      valueInJson = JSON.parse(value);
-    } catch (e) {
-      return e.message;
-    }
-    switch (deployArgument.type.$) {
-      case CLType.Simple.U8:
-      case CLType.Simple.U32:
-      case CLType.Simple.U64:
-      case CLType.Simple.I32:
-      case CLType.Simple.I64:
-      case CLType.Simple.U128:
-      case CLType.Simple.U256:
-      case CLType.Simple.U512:
-        return DeployArgumentParser.validateBigInt(
-          valueInJson,
-          deployArgument.type.$
-        );
-      case CLType.Simple.STRING:
-        return DeployArgumentParser.validateString(valueInJson);
-      case CLType.Simple.BOOL:
-        return DeployArgumentParser.validateBoolean(valueInJson);
-      case CLType.Simple.KEY:
-      case CLType.Simple.UREF:
-        return DeployArgumentParser.validateBase16String(valueInJson);
-      case 'Bytes':
-        return DeployArgumentParser.validateBase16String(valueInJson);
-    }
-    return false;
   }
 
   @action
