@@ -8,6 +8,7 @@ import {
 } from './Utils';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
+import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
 import Pages from './Pages';
 import { encodeBase16 } from 'casperlabs-sdk';
@@ -56,6 +57,9 @@ class _BlockList extends React.Component<Props, {}> {
         }
         refresh={() => this.refresh()}
         subscribeToggleStore={dag.toggleableSubscriber.subscribeToggleStore}
+        filterToggleStore={dag.hideBallotsToggleStore}
+        filterTtl='Only show blocks'
+        filterLbl='Hide Ballots'
         headers={[
           'Block Hash',
           'j-Rank',
@@ -92,6 +96,10 @@ class _BlockList extends React.Component<Props, {}> {
               </td>
             </tr>
           );
+        }}
+        filterRow={(block: BlockInfo) => {
+          let msgType=block.getSummary()?.getHeader()?.getMessageType(); 
+          return msgType==Block.MessageType.BLOCK;
         }}
         footerMessage={
           <DagStepButtons
