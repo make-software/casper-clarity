@@ -4,7 +4,7 @@ import { Ed25519 } from '../../src/lib/Keys';
 import { byteHash } from '../../src/lib/Contracts';
 
 describe('Ed25519', () => {
-  it('calculates the public key hash', () => {
+  it('calculates the account hash', () => {
     const signKeyPair = Ed25519.newKeyPair();
     const name = Buffer.from('ED25519');
     const sep = decodeBase16('00');

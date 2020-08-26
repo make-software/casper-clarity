@@ -96,7 +96,7 @@ class GroupedMenuItem {
 
 const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(Pages.Home, 'Home', 'home', true),
-  new MenuItem(Pages.Accounts, 'Account Keys', 'address-book'),
+  new MenuItem(Pages.Accounts, 'Accounts', 'address-book'),
   new MenuItem(Pages.Faucet, 'Faucet', 'coins'),
   new MenuItem(Pages.DeployContracts, 'Deploy Contract', 'rocket'),
   new MenuItem(Pages.Explorer, 'Explorer', 'project-diagram'),
@@ -189,12 +189,14 @@ export default class App extends React.Component<AppProps, {}> {
     $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body').stop().animate(
-        {
-          scrollTop: offset.top
-        },
-        1000
-      );
+      $('html, body')
+        .stop()
+        .animate(
+          {
+            scrollTop: offset.top
+          },
+          1000
+        );
       e.preventDefault();
     });
   }

@@ -51,7 +51,7 @@ export class AuthContainer {
     | null = null;
   @observable selectedAccount: UserAccount | null = null;
 
-  // Balance for each public key.
+  // Balance for each account hash.
   @observable balances = new ObservableValueMap<AccountB64, AccountBalance>();
 
   // How often to query balances. Lots of state queries to get one.

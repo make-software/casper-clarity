@@ -11,9 +11,6 @@ import { Button, IconButton, ListInline, RefreshableComponent } from './Utils';
 import Modal from './Modal';
 import { FileSelect, Form, SelectField, TextField } from './Forms';
 import {
-  base64to16,
-  decodeBase64,
-  DeployUtil,
   encodeBase16,
   encodeBase64
 } from 'casperlabs-sdk';
@@ -57,18 +54,10 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               placeholder="Human readable alias"
             />
             <TextField
-              id="id-public-key-hash-base16"
-              label="Public Key Hash (Base16)"
+              id="id-account-hash-base16"
+              label="Account Hash"
               fieldState={encodeBase16(
                 publicKeyHashForEd25519(newAccountForm.publicKeyBase64.value)
-              )}
-              readonly={true}
-            />
-            <TextField
-              id="id-public-key-base16"
-              label="Public Key (Base16)"
-              fieldState={encodeBase16(
-                decodeBase64(newAccountForm.publicKeyBase64.value)
               )}
               readonly={true}
             />
@@ -122,8 +111,8 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               placeholder="Human readable alias"
             />
             <TextField
-              id="id-public-key-hash-base16"
-              label="Public Key Hash (Base16)"
+              id="id-account-hash-base16"
+              label="Account Hash"
               fieldState={encodeBase16(
                 publicKeyHashForEd25519(importAccountForm.publicKeyBase64.value)
               )}
@@ -145,7 +134,7 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
           title="Accounts"
           refresh={() => this.refresh(true)}
           rows={this.props.auth.accounts}
-          headers={['Name', 'Public Key Hash (Base16)', 'Balance', '']}
+          headers={['Name', 'Account Hash', 'Balance', '']}
           renderRow={(account: UserAccount) => {
             let publicKeyHash = getPublicKeyHash(account);
             const balance = this.props.auth.balances.get(
@@ -168,20 +157,20 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               </tr>
             );
           }}
-          footerMessage={
-            <span>
-              You can create a new account here, which is basically an Ed25519
-              public key. Don't worry, the private key will never leave the
-              browser, we'll save it straight to disk on your machine.
-            </span>
-          }
         />
         {modalAccountForm}
         <ListInline>
-          <Button
-            title="Create Account Key"
-            onClick={() => this.props.auth.configureNewAccount()}
-          />
+          <span
+            className="d-inline-block"
+            tabIndex={0}
+            data-toggle="tooltip"
+            title="Click this to create Ed25519 Key Pair. Be sure to save the Public and Private Key files on local disk."
+          >
+            <Button
+              title="Create Account Key"
+              onClick={() => this.props.auth.configureNewAccount()}
+            />
+          </span>
           <Button
             onClick={() => this.props.auth.configureImportAccount()}
             title="Import Account Key"

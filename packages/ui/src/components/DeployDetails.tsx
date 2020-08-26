@@ -149,7 +149,7 @@ const deployAttrs: (deploy: DeployInfo) => Array<[string, any]> = (
   return [
     ['Deploy Hash', id],
     [
-      'Account Public Key Hash',
+      'Account Hash',
       encodeBase16(header.getAccountPublicKeyHash_asU8())
     ],
     ['Timestamp', new Date(header.getTimestamp()).toISOString()],

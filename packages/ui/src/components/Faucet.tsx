@@ -15,7 +15,7 @@ import {
 } from './Utils';
 import DataTable from './DataTable';
 import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { base64to16, encodeBase16, decodeBase64 } from 'casperlabs-sdk';
+import { encodeBase16, decodeBase64 } from 'casperlabs-sdk';
 
 interface Props {
   auth: AuthContainer;
@@ -73,8 +73,8 @@ const FaucetForm = observer(
             onChange={x => auth.selectAccountByName(x)}
           />
           <TextField
-            id="id-public-key-hash-base16"
-            label="Public Key Hash (Base16)"
+            id="id-account-hash"
+            label="Account Hash"
             fieldState={
               (auth.selectedAccount &&
                 getPublicKeyHashBase16(auth.selectedAccount)) ||
