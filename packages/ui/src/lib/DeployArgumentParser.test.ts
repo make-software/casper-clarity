@@ -3,7 +3,10 @@ import { expect } from 'chai';
 import { DeployArgumentParser } from '../../src/lib/DeployArgumentParser';
 import { CLType } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import { encodeBase16 } from 'casperlabs-sdk';
-import { DeployContractsContainer } from '../containers/DeployContractsContainer';
+import {
+  BytesTypeStr,
+  DeployContractsContainer
+} from '../containers/DeployContractsContainer';
 
 describe('DeployArgumentParser', () => {
   it('should validate bool value correctly', () => {
@@ -65,7 +68,7 @@ describe('DeployArgumentParser', () => {
     );
   });
 
-  it('should validate list types', () => {
+  it('should validate list', () => {
     // List<string>
     const innerDeployArg = DeployContractsContainer.newDeployArgument(
       false,
@@ -102,7 +105,7 @@ describe('DeployArgumentParser', () => {
     ).to.include('list[0] is not correct: true is not a valid string literal');
   });
 
-  it('should validate tuple types', () => {
+  it('should validate tuple', () => {
     // string
     const stringArgType = DeployContractsContainer.newDeployArgument(
       false,
@@ -121,7 +124,7 @@ describe('DeployArgumentParser', () => {
     const bytesArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      'Bytes'
+      BytesTypeStr
     );
 
     expect(
@@ -157,6 +160,61 @@ describe('DeployArgumentParser', () => {
       )
     ).to.include(
       'tuple[0] is not correct: true is not a valid base16 encoded string'
+    );
+  });
+
+  it('should validate map', () => {
+    // string
+    const stringArgType = DeployContractsContainer.newDeployArgument(
+      false,
+      '',
+      CLType.Simple.STRING
+    );
+
+    // bytes
+    const bytesArgType = DeployContractsContainer.newDeployArgument(
+      false,
+      '',
+      BytesTypeStr
+    );
+
+    // number
+    DeployContractsContainer.newDeployArgument(false, '', CLType.Simple.I32);
+    expect(
+      DeployArgumentParser.validateMap(
+        [bytesArgType, stringArgType],
+        [
+          [encodeBase16(Buffer.from('A')), 'A'],
+          [encodeBase16(Buffer.from('B')), 'B']
+        ]
+      )
+    ).to.be.false;
+
+    // success when creating empty map
+    expect(DeployArgumentParser.validateMap([bytesArgType, stringArgType], []))
+      .to.false;
+
+    expect(
+      DeployArgumentParser.validateMap(
+        [bytesArgType, stringArgType],
+        [[encodeBase16(Buffer.from('test'))]]
+      )
+    ).to.include('length of the MapEntry[0] is not 2');
+
+    expect(
+      DeployArgumentParser.validateMap(
+        [bytesArgType, stringArgType],
+        [[encodeBase16(Buffer.from('test')), 1, 1]]
+      )
+    ).to.include('length of the MapEntry[0] is not 2');
+
+    expect(
+      DeployArgumentParser.validateMap(
+        [bytesArgType, stringArgType],
+        [[encodeBase16(Buffer.from('test')), 1]]
+      )
+    ).to.include(
+      'the value of MapEntry[0] is not correct: 1 is not a valid string literal'
     );
   });
 });

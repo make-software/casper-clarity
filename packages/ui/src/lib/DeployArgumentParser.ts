@@ -91,28 +91,26 @@ export class DeployArgumentParser {
     }
     for (let i = 0; i < argValueInJson.length; i++) {
       const mapEntry = argValueInJson[i];
-      if (mapEntry['key'] === undefined) {
-        return `map[${i}] doesn't have key`;
+      if (mapEntry.length !== 2) {
+        return `length of the MapEntry[${i}] is not 2`;
       }
-      if (mapEntry['value'] === undefined) {
-        return `map[${i}] doesn't have value`;
-      }
+
       const validateKey = DeployArgumentParser.validateSimpleType(
         mapInnerDeployArgs[0].$,
-        argValueInJson[i].key
+        argValueInJson[i][0]
       );
 
       if (validateKey !== false) {
-        return `the key of map[${i}] is not correct: ${validateKey}`;
+        return `the key of MapEntry[${i}] is not correct: ${validateKey}`;
       }
 
       const validateValue = DeployArgumentParser.validateSimpleType(
         mapInnerDeployArgs[1].$,
-        argValueInJson[i].value
+        argValueInJson[i][1]
       );
 
       if (validateValue !== false) {
-        return `the value of map[${i}] is not correct: ${validateValue}`;
+        return `the value of MapEntry[${i}] is not correct: ${validateValue}`;
       }
     }
     return false;
