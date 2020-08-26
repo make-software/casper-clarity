@@ -25,7 +25,10 @@ export interface ValidatorInfo {
 export class ValidatorsContainer {
   @observable latestFinalizedBlock: BlockInfo | null = null;
   // collect ValidatorInfo for each bonded validator
-  @observable validatorInfoMaps: Map<ValidatorIdBase64, ValidatorInfo> = new Map();
+  @observable validatorInfoMaps: Map<
+    ValidatorIdBase64,
+    ValidatorInfo
+  > = new Map();
   toggleableSubscriber: ToggleableSubscriber;
 
   constructor(
@@ -38,7 +41,7 @@ export class ValidatorsContainer {
         blockFinalized: true
       },
       this.casperService,
-      (e) => {
+      e => {
         this.subscriberHandler(e);
       },
       () => true,
@@ -54,7 +57,9 @@ export class ValidatorsContainer {
 
   @computed
   get validatorInfos() {
-    return Array.from(this.validatorInfoMaps.values()).filter((info) => this.bondedValidators.has(info.id));
+    return Array.from(this.validatorInfoMaps.values()).filter(info =>
+      this.bondedValidators.has(info.id)
+    );
   }
 
   /*
@@ -96,12 +101,15 @@ export class ValidatorsContainer {
 
   @action.bound
   private async getValidatorInfos() {
-    let latestRankNMsgs = await this.casperService.getBlockInfos(computeN(this.bondedValidators.size), 0);
+    let latestRankNMsgs = await this.casperService.getBlockInfos(
+      computeN(this.bondedValidators.size),
+      0
+    );
 
     this.upsert(latestRankNMsgs);
 
     await this.getValidationInfoByJustifications();
-  };
+  }
 
   /**
    * for every validator that still doesn't have any info, use the justifications in the LFB,
@@ -111,14 +119,20 @@ export class ValidatorsContainer {
   private async getValidationInfoByJustifications() {
     let bondedValidators = this.bondedValidators;
 
-    let justifications: Array<Block.Justification> = this.latestFinalizedBlock?.getSummary()?.getHeader()?.getJustificationsList() ?? new Array<Block.Justification>();
-    let promises = justifications.filter(j => {
-      // only request BlockInfo for those validators who has bonded but still don't have any info
-      let vId = j.getValidatorPublicKeyHash_asB64();
-      return bondedValidators.has(vId) && !this.validatorInfoMaps.has(vId);
-    }).map(j => {
-      return this.casperService.getBlockInfo(j.getLatestBlockHash());
-    });
+    let justifications: Array<Block.Justification> =
+      this.latestFinalizedBlock
+        ?.getSummary()
+        ?.getHeader()
+        ?.getJustificationsList() ?? new Array<Block.Justification>();
+    let promises = justifications
+      .filter(j => {
+        // only request BlockInfo for those validators who has bonded but still don't have any info
+        let vId = j.getValidatorPublicKeyHash_asB64();
+        return bondedValidators.has(vId) && !this.validatorInfoMaps.has(vId);
+      })
+      .map(j => {
+        return this.casperService.getBlockInfo(j.getLatestBlockHash());
+      });
 
     let blockInfos: BlockInfo[] = await Promise.all(promises);
 
@@ -133,19 +147,21 @@ export class ValidatorsContainer {
       }
     } else if (e.hasNewFinalizedBlock()) {
       this.errors.capture(
-        this.casperService.getBlockInfo(e.getNewFinalizedBlock()!.getBlockHash()).then(LFB => {
-          this.latestFinalizedBlock = LFB;
-          let bondedValidators = this.bondedValidators;
-          let forceRequestByJustification = false;
-          bondedValidators.forEach(vId => {
-            if (!this.validatorInfoMaps.has(vId)) {
-              forceRequestByJustification = true;
+        this.casperService
+          .getBlockInfo(e.getNewFinalizedBlock()!.getBlockHash())
+          .then(LFB => {
+            this.latestFinalizedBlock = LFB;
+            let bondedValidators = this.bondedValidators;
+            let forceRequestByJustification = false;
+            bondedValidators.forEach(vId => {
+              if (!this.validatorInfoMaps.has(vId)) {
+                forceRequestByJustification = true;
+              }
+            });
+            if (forceRequestByJustification) {
+              this.getValidationInfoByJustifications();
             }
-          });
-          if (forceRequestByJustification) {
-            this.getValidationInfoByJustifications();
-          }
-        })
+          })
       );
     }
   }

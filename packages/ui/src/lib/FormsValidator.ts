@@ -6,13 +6,16 @@ import { decodeBase16 } from 'casperlabs-sdk';
 
 export const valueRequired = (val: any) => !val && 'Value required';
 
-export const numberGreaterThan: (n: number) => (val: number) => string | false = (n: number) => {
+export const numberGreaterThan: (
+  n: number
+) => (val: number) => string | false = (n: number) => {
   return (val: number) => {
     return !(val > n) && `Value should bigger than ${n}`;
   };
 };
 
-export const validateInt = (n: number) => !validator.isInt(n.toString()) && 'Value should be an Integer';
+export const validateInt = (n: number) =>
+  !validator.isInt(n.toString()) && 'Value should be an Integer';
 
 export const validateBase16 = (val: string) => {
   try {

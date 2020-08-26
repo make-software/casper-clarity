@@ -26,7 +26,7 @@ export class BlockContainer {
     private errors: ErrorContainer,
     private casperService: CasperService,
     private balanceService: BalanceService
-  ) { }
+  ) {}
 
   /** Call whenever the page switches to a new block. */
   @action
@@ -44,9 +44,11 @@ export class BlockContainer {
   async loadBlock() {
     if (this.blockHash == null) return;
     await this.errors.capture(
-      this.casperService.getBlockInfo(this.blockHash, BlockInfo.View.FULL).then(block => {
-        this.block = block;
-      })
+      this.casperService
+        .getBlockInfo(this.blockHash, BlockInfo.View.FULL)
+        .then(block => {
+          this.block = block;
+        })
     );
   }
 
@@ -59,11 +61,7 @@ export class BlockContainer {
     // Try to retrieve equal amounts of ranks of the DAG
     // before and after the selected block.
     const maxRank =
-      this.block
-        .getSummary()!
-        .getHeader()!
-        .getJRank() +
-      this.depth / 2;
+      this.block.getSummary()!.getHeader()!.getJRank() + this.depth / 2;
 
     // Adjust the depth so it doesn't result in a negative start value.
     let depth = Math.min(maxRank + 1, this.depth);

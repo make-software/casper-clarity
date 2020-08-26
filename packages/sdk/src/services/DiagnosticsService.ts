@@ -10,10 +10,7 @@ export default class DiagnosticsService {
    *
    * @param url Point at either at a URL on a different port where grpcwebproxy is listening, or use nginx to serve the UI files, the API and gRPC all on the same port without CORS.
    */
-  constructor(
-    private url: string
-  ) {
-  }
+  constructor(private url: string) {}
 
   /**
    * Get the connected peer nodes
@@ -35,4 +32,4 @@ export default class DiagnosticsService {
       });
     });
   }
-};
+}

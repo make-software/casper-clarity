@@ -1,7 +1,7 @@
 $font-family-base: 'Sarabun', sans-serif;
 // https://startbootstrap.com/template-overviews/sb-admin/
 @import 'sb-admin/sb-admin.scss';
-@import "~bootstrap/scss/bootstrap";
+@import '~bootstrap/scss/bootstrap';
 @import 'account-selector';
 @import 'toggle-button';
 
@@ -93,8 +93,8 @@ div.svg-hint {
     color: white !important;
     background-color: #962521;
   }
-  li.nav-item:hover{
-    background-color: #E1372D;
+  li.nav-item:hover {
+    background-color: #e1372d;
   }
 }
 
@@ -112,9 +112,8 @@ footer.sticky-footer {
 //  background-color: #b70404!important;
 //}
 
-
-.accordion .card-header>div:after {
-  content: "\f068";
+.accordion .card-header > div:after {
+  content: '\f068';
   font-family: 'Font Awesome 5 Free';
   float: right;
   font-style: normal;
@@ -122,10 +121,10 @@ footer.sticky-footer {
   text-decoration: inherit;
 }
 
-.accordion .card-header.collapsed>div:after {
-  content: "\f067";
+.accordion .card-header.collapsed > div:after {
+  content: '\f067';
 }
 
-.navbar-nav.ml-auto>.nav-item:last-child{
-  margin-right: 33px!important;
+.navbar-nav.ml-auto > .nav-item:last-child {
+  margin-right: 33px !important;
 }

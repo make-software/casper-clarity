@@ -1,11 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import DagContainer, { DagStep } from '../containers/DagContainer';
-import {
-  IconButton,
-  ListInline,
-  shortHash
-} from './Utils';
+import { IconButton, ListInline, shortHash } from './Utils';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
@@ -39,10 +35,16 @@ class _BlockList extends React.Component<Props, {}> {
 
   // when receive new props of depth and maxRank, we need parse them and set related state variables.
   componentWillReceiveProps(nextProps: Props) {
-    if (this.props.depth === nextProps.depth && this.props.maxRank === nextProps.maxRank) {
+    if (
+      this.props.depth === nextProps.depth &&
+      this.props.maxRank === nextProps.maxRank
+    ) {
       return;
     }
-    this.props.dag.refreshWithDepthAndMaxRank(nextProps.maxRank, nextProps.depth);
+    this.props.dag.refreshWithDepthAndMaxRank(
+      nextProps.maxRank,
+      nextProps.depth
+    );
   }
 
   render() {

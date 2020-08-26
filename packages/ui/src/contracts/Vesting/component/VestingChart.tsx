@@ -8,7 +8,7 @@ interface Props {
 
 class VestingChart extends Component<Props, {}> {
   render() {
-    return <Line data={this.chartData()} options={this.chartOptions()}/>;
+    return <Line data={this.chartData()} options={this.chartOptions()} />;
   }
 
   chartData() {
@@ -55,7 +55,6 @@ class VestingChart extends Component<Props, {}> {
             }
           }
         ]
-
       }
     };
   }

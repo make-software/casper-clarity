@@ -37,7 +37,7 @@
     "mobx": "^5.11.0",
     "mobx-react": "^6.1.1",
     "moment": "^2.24.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^4.14.1",
     "popper.js": "^1.15.0",
     "prettier": "^1.18.2",
     "react": "^16.8.6",
@@ -75,27 +75,10 @@
       "last 1 safari version"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "prettier": {
-    "singleQuote": true,
-    "arrowParens": "avoid",
-    "trailingComma": "none"
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
-      "prettier --single-quote --write",
-      "git add"
-    ]
-  },
   "devDependencies": {
     "@types/lodash": "^4.14.149",
     "@types/react-helmet": "^5.0.15",
-    "@types/validator": "^12.0.1",
-    "husky": "^2.7.0"
+    "@types/validator": "^12.0.1"
   },
   "proxy": "http://localhost:8001/"
 }

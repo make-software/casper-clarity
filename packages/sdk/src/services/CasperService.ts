@@ -350,14 +350,7 @@ export default class CasperService {
       const balanceUref = await this.getBlockState(
         blockHash,
         mainPurseQuery
-      ).then(
-        res =>
-          res
-            .getClValue()!
-            .getValue()!
-            .getKey()!
-            .getUref()!
-      );
+      ).then(res => res.getClValue()!.getValue()!.getKey()!.getUref()!);
 
       return balanceUref;
     } catch (err) {
@@ -385,11 +378,7 @@ export default class CasperService {
   ): Promise<number> {
     const balanceQuery = QueryUref(balanceUref);
     const balance = await this.getBlockState(blockHash, balanceQuery).then(
-      res =>
-        res
-          .getClValue()!
-          .getValue()!
-          .getU512()!
+      res => res.getClValue()!.getValue()!.getU512()!
     );
     return Number(balance.getValue());
   }

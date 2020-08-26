@@ -17,7 +17,9 @@ export const isConnected: () => boolean = () => {
  *
  * @throws Error if haven't connected to CasperLabs Signer browser extension.
  */
-export const getSelectedPublicKeyBase64: () => Promise<string | undefined> = () => {
+export const getSelectedPublicKeyBase64: () => Promise<
+  string | undefined
+> = () => {
   throwIfNotConnected();
   return window.casperlabsHelper!.getSelectedPublicKeyBase64();
 };
@@ -31,13 +33,18 @@ export const getSelectedPublicKeyBase64: () => Promise<string | undefined> = () 
  * @throws Error if haven't connected to CasperLabs Signer browser extension.
  * @throws Error if publicKeyBase64 is not the same as the key that Signer used to sign the message
  */
-export const sign: (messageBase16: string, publicKeyBase64?: string) => Promise<string> = (messageBase16: string, publicKeyBase64?: string) => {
+export const sign: (
+  messageBase16: string,
+  publicKeyBase64?: string
+) => Promise<string> = (messageBase16: string, publicKeyBase64?: string) => {
   throwIfNotConnected();
   return window.casperlabsHelper!.sign(messageBase16, publicKeyBase64);
 };
 
 const throwIfNotConnected = () => {
   if (!isConnected()) {
-    throw new Error('No CasperLabs Signer browser plugin detected or it is not ready');
+    throw new Error(
+      'No CasperLabs Signer browser plugin detected or it is not ready'
+    );
   }
 };

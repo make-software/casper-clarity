@@ -28,16 +28,14 @@ export class Ed25519 {
    */
   public static newKeyPair() {
     return nacl.sign_keyPair();
- }
+  }
 
   /**
    * Compute a unique hash from the algorithm name(Ed25519 here) and a public key, used for accounts.
    */
   public static publicKeyHash: (
     publicKey: ByteArray
-  ) => ByteArray = publicKeyHashUtil(
-    'ed25519'
-  );
+  ) => ByteArray = publicKeyHashUtil('ed25519');
 
   /**
    * Parse the key pair from publicKey file and privateKey file
