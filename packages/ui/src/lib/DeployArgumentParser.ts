@@ -123,7 +123,7 @@ export class DeployArgumentParser {
     argValueInJson: any
   ) {
     if (typeof argValueInJson !== typeof []) {
-      return `The input value is not a valid array`;
+      return `the input value is not a valid array`;
     }
     for (let i = 0; i < argValueInJson.length; i++) {
       const validateSimpleType = DeployArgumentParser.validateSimpleType(
@@ -196,7 +196,7 @@ export class DeployArgumentParser {
   ): string | false {
     const type = deployArgument.type.$;
     if (!DeployArgumentParser.isSimpleType(type)) {
-      return `${argValueInJson} is not a simple type`;
+      return `${JSON.stringify(argValueInJson)} is not a simple type`;
     }
     switch (deployArgument.type.$) {
       case CLType.Simple.UNIT:
@@ -234,21 +234,21 @@ export class DeployArgumentParser {
 
   static validateBase16String(v: any): string | false {
     const valid = typeof v === typeof 's';
-    if (!valid || validator.isHexadecimal(v)) {
-      return `${v} is not valid base16 encoded string`;
+    if (!valid || !validator.isHexadecimal(v)) {
+      return `${JSON.stringify(v)} is not a valid base16 encoded string`;
     }
     return false;
   }
 
-  static validateString(v: any): string | false {
+  private static validateString(v: any): string | false {
     const valid = typeof v === typeof 's';
     if (!valid) {
-      return `${v} is not a valid string literal`;
+      return `${JSON.stringify(v)} is not a valid string literal`;
     }
     return false;
   }
 
-  static validateBoolean(v: any): string | false {
+  private static validateBoolean(v: any): string | false {
     const valid = typeof v === 'boolean';
     if (!valid) {
       return `${v} is not a valid boolean literal`;
@@ -256,12 +256,12 @@ export class DeployArgumentParser {
     return false;
   }
 
-  static validateBigInt(
+  private static validateBigInt(
     v: any,
     type: CLType.SimpleMap[keyof CLType.SimpleMap]
   ) {
     if (typeof v !== 'number') {
-      return `${v} is not a valid number literal`;
+      return `${JSON.stringify(v)} is not a valid number literal`;
     }
     v = v as number;
     switch (type) {
@@ -279,7 +279,7 @@ export class DeployArgumentParser {
           JSBI.lessThan(value, limit.min) ||
           JSBI.greaterThan(value, limit.max)
         ) {
-          return `Value ${v} is not valid ${
+          return `Value ${JSON.stringify(v)} is not a valid ${
             BigIntTypeToString[type]
           }, which should be in [${limit.min.toString(
             10
