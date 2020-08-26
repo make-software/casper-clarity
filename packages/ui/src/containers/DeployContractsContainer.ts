@@ -2,7 +2,6 @@ import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
 import {
-  Args,
   CasperService,
   decodeBase16,
   DeployUtil,
@@ -20,7 +19,6 @@ import $ from 'jquery';
 import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import {
   CLType,
-  CLValueInstance,
   Key
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import { decodeBase64 } from 'tweetnacl-ts';

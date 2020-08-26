@@ -66,7 +66,7 @@ export class DeployArgumentParser {
       return `The input value is not a valid array`;
     }
 
-    if (tupleInnerDeployArgs.length != argValueInJson.length) {
+    if (tupleInnerDeployArgs.length !== argValueInJson.length) {
       return `length of tuple is not correct`;
     }
 
