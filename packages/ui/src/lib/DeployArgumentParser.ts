@@ -89,7 +89,7 @@ export class DeployArgumentParser {
     if (typeof argValueInJson !== typeof []) {
       return `The input value is not a valid array`;
     }
-    for (let i = 0; i < argValueInJson.lenght; i++) {
+    for (let i = 0; i < argValueInJson.length; i++) {
       const mapEntry = argValueInJson[i];
       if (mapEntry['key'] === undefined) {
         return `map[${i}] doesn't have key`;
