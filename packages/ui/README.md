@@ -17,7 +17,7 @@ npx create-react-app ui --typescript
 
 In the project directory, you can run:
 
-### `npm start`
+### `yarn start`
 
 Runs the app in the development mode.<br> Open [http://localhost:8000](http://localhost:8000) to view it in the browser. You can change the port in the `.env` file or by setting the `PORT` env var.
 
@@ -27,11 +27,11 @@ If we add `"proxy": "http://localhost:8001/"` to `package.json` we get transpare
 
 To change the code in the `sdk` and see the effect you can run `npm run ~build` in that directory and reload the page.
 
-### `npm test`
+### `yarn test`
 
 Launches the test runner in the interactive watch mode.<br> See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+### `yarn run build`
 
 Builds the app for production to the `build` folder.<br> It correctly bundles React in production mode and optimizes the build for the best performance.
 
@@ -39,7 +39,7 @@ The build is minified and the filenames include the hashes.<br> Your app is read
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
+### `yarn run eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
