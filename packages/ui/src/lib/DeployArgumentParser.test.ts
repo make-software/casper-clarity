@@ -56,7 +56,9 @@ describe('DeployArgumentParser', () => {
 
   it('should validate bytes', () => {
     expect(
-      DeployArgumentParser.validateBase16String(encodeBase16('a valid string'))
+      DeployArgumentParser.validateBase16String(
+        encodeBase16(Buffer.from('a valid string'))
+      )
     ).to.be.false;
     expect(DeployArgumentParser.validateBase16String('ghi')).to.include(
       'is not a valid'
@@ -98,5 +100,63 @@ describe('DeployArgumentParser', () => {
     expect(
       DeployArgumentParser.validateList(listInnerDeployArgs, [true, 'A'])
     ).to.include('list[0] is not correct: true is not a valid string literal');
+  });
+
+  it('should validate tuple types', () => {
+    // string
+    const stringArgType = DeployContractsContainer.newDeployArgument(
+      false,
+      '',
+      CLType.Simple.STRING
+    );
+
+    // bool
+    const boolArgType = DeployContractsContainer.newDeployArgument(
+      false,
+      '',
+      CLType.Simple.BOOL
+    );
+
+    // bytes
+    const bytesArgType = DeployContractsContainer.newDeployArgument(
+      false,
+      '',
+      'Bytes'
+    );
+
+    expect(
+      DeployArgumentParser.validateTuple(
+        [bytesArgType],
+        [encodeBase16(Buffer.from('test'))]
+      )
+    ).to.be.false;
+
+    expect(
+      DeployArgumentParser.validateTuple(
+        [bytesArgType, stringArgType, boolArgType],
+        [encodeBase16(Buffer.from('test')), 'test', true]
+      )
+    ).to.false;
+
+    // fail for empty list
+    expect(
+      DeployArgumentParser.validateTuple([bytesArgType], [])
+    ).to.be.include('length of tuple is not correct');
+
+    expect(
+      DeployArgumentParser.validateTuple(
+        [bytesArgType],
+        [encodeBase16(Buffer.from('test')), 1]
+      )
+    ).to.include('length of tuple is not correct');
+
+    expect(
+      DeployArgumentParser.validateTuple(
+        [bytesArgType, stringArgType, boolArgType],
+        [true, 'test', encodeBase16(Buffer.from('test'))]
+      )
+    ).to.include(
+      'tuple[0] is not correct: true is not a valid base16 encoded string'
+    );
   });
 });

@@ -194,10 +194,6 @@ export class DeployArgumentParser {
     deployArgument: DeployArgument,
     argValueInJson: any
   ): string | false {
-    const type = deployArgument.type.$;
-    if (!DeployArgumentParser.isSimpleType(type)) {
-      return `${JSON.stringify(argValueInJson)} is not a simple type`;
-    }
     switch (deployArgument.type.$) {
       case CLType.Simple.UNIT:
       case 'Tuple':
@@ -292,7 +288,11 @@ export class DeployArgumentParser {
   }
 
   private static isSimpleType(t: SupportedType) {
-    return Object.values(CLType.Simple).includes(t);
+    return (
+      Object.values(CLType.Simple).includes(t) ||
+      t === 'Bytes' ||
+      t === 'Bytes (Fixed Length)'
+    );
   }
 
   private static buildSimpleArgs(
@@ -354,67 +354,61 @@ export class DeployArgumentParser {
     const type = arg.$.type.$;
     let clValueInstance: CLValueInstance;
     const argValueStrInJson = JSON.parse(argValueStr);
-    if (DeployArgumentParser.isSimpleType(type)) {
-      clValueInstance = DeployArgumentParser.buildSimpleArgs(
-        type as CLType.SimpleMap[keyof CLType.SimpleMap],
-        arg.$.secondType.$,
-        argValueStrInJson,
-        arg.$.URefAccessRight.$
-      );
-    } else {
-      switch (type) {
-        case 'Bytes':
-          clValueInstance = Args.Instances.bytes(
-            decodeBase16(argValueStrInJson)
-          );
-          break;
-        case 'Bytes (Fixed Length)':
-          clValueInstance = Args.Instances.bytesFixedLength(
-            decodeBase16(argValueStrInJson)
-          );
-          break;
-        case 'Tuple':
-          clValueInstance = DeployArgumentParser.buildTupleTypeArg(
-            arg.$.tupleInnerDeployArgs.$,
-            argValueStrInJson
-          );
-          break;
-        case 'Map':
-          clValueInstance = DeployArgumentParser.buildMapTypeArg(
-            arg.$.mapInnerDeployArgs.$,
-            argValueStrInJson
-          );
-          break;
-        case 'List':
-          clValueInstance = DeployArgumentParser.buildListTypeArg(
-            arg.$.listInnerDeployArgs.$,
-            argValueStrInJson,
-            false
-          );
-          break;
-        case 'FixedList':
-          clValueInstance = this.buildListTypeArg(
-            arg.$.listInnerDeployArgs.$,
-            argValueStrInJson,
-            true
-          );
-          break;
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-          // type from CLType.Simple
-          throw new Error('Failed creating arguments');
-      }
+    switch (type) {
+      case 'Bytes':
+        clValueInstance = Args.Instances.bytes(decodeBase16(argValueStrInJson));
+        break;
+      case 'Bytes (Fixed Length)':
+        clValueInstance = Args.Instances.bytesFixedLength(
+          decodeBase16(argValueStrInJson)
+        );
+        break;
+      case 'Tuple':
+        clValueInstance = DeployArgumentParser.buildTupleTypeArg(
+          arg.$.tupleInnerDeployArgs.$,
+          argValueStrInJson
+        );
+        break;
+      case 'Map':
+        clValueInstance = DeployArgumentParser.buildMapTypeArg(
+          arg.$.mapInnerDeployArgs.$,
+          argValueStrInJson
+        );
+        break;
+      case 'List':
+        clValueInstance = DeployArgumentParser.buildListTypeArg(
+          arg.$.listInnerDeployArgs.$,
+          argValueStrInJson,
+          false
+        );
+        break;
+      case 'FixedList':
+        clValueInstance = this.buildListTypeArg(
+          arg.$.listInnerDeployArgs.$,
+          argValueStrInJson,
+          true
+        );
+        break;
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+        clValueInstance = DeployArgumentParser.buildSimpleArgs(
+          type as CLType.SimpleMap[keyof CLType.SimpleMap],
+          arg.$.secondType.$,
+          argValueStrInJson,
+          arg.$.URefAccessRight.$
+        );
+        break;
     }
 
     const deployArg = new Deploy.Arg();
