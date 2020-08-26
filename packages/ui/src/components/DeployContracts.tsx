@@ -11,6 +11,8 @@ import {
 } from './Utils';
 import React from 'react';
 import {
+  BytesFixedTypeStr,
+  BytesTypeStr,
   ComplexType,
   ComplexTypesString,
   DeployContractsContainer,
@@ -328,7 +330,11 @@ const TypeSelectCol = observer(
             value={props.deployArgument.$.type.value}
             onChange={e => {
               let v = e.target.value;
-              if (ComplexTypesString.includes(v)) {
+              if (
+                ComplexTypesString.includes(v) ||
+                v === BytesTypeStr ||
+                v === BytesFixedTypeStr
+              ) {
                 props.deployArgument.$.type.onChange(v as ComplexType);
               } else {
                 props.deployArgument.$.type.onChange(
@@ -344,6 +350,14 @@ const TypeSelectCol = observer(
                   {opt}
                 </option>
               ))}
+            <React.Fragment>
+              <option key={BytesTypeStr} value={BytesTypeStr}>
+                {BytesTypeStr}
+              </option>
+              <option key={BytesFixedTypeStr} value={BytesFixedTypeStr}>
+                {BytesFixedTypeStr}
+              </option>
+            </React.Fragment>
             {props.supportComplexType &&
               ComplexTypesString.map((t, idx) => (
                 <option key={idx} value={t}>

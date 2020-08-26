@@ -26,26 +26,19 @@ import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
 import { DeployArgumentParser } from '../lib/DeployArgumentParser';
 
-export type ComplexType =
+export const BytesTypeStr = 'Bytes';
+export const BytesFixedTypeStr = 'Bytes (Fixed Length)';
+
+export type SimpleType =
   | 'Bytes'
   | 'Bytes (Fixed Length)'
-  | 'Tuple'
-  | 'Map'
-  | 'List'
-  | 'FixedList';
+  | CLType.SimpleMap[keyof CLType.SimpleMap];
 
-export type SupportedType =
-  | CLType.SimpleMap[keyof CLType.SimpleMap]
-  | ComplexType;
+export type ComplexType = 'Tuple' | 'Map' | 'List' | 'FixedList';
 
-export const ComplexTypesString = [
-  'Bytes',
-  'Bytes (Fixed Length)',
-  'Tuple',
-  'Map',
-  'List',
-  'FixedList'
-];
+export type SupportedType = SimpleType | ComplexType;
+
+export const ComplexTypesString = ['Tuple', 'Map', 'List', 'FixedList'];
 
 export enum KeyType {
   ADDRESS = 'Address',
