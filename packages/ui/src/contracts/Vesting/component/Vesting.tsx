@@ -2,7 +2,15 @@ import React, { ReactNode } from 'react';
 import { observer } from 'mobx-react';
 import { Form, SelectField, TextField } from '../../../components/Forms';
 import AuthContainer from '../../../containers/AuthContainer';
-import { Button, Card, CLX, Icon, ListInline, Loading, RefreshableComponent } from '../../../components/Utils';
+import {
+  Button,
+  Card,
+  CLX,
+  Icon,
+  ListInline,
+  Loading,
+  RefreshableComponent
+} from '../../../components/Utils';
 import VestingChart from './VestingChart';
 import moment from 'moment';
 import { VestingContainer, VestingDetail } from '../container/VestingContainer';
@@ -37,11 +45,13 @@ class Vesting extends RefreshableComponent<Props, {}> {
                 <VestingChart vestingDetail={vesting.vestingDetails} />
               </div>
             </Card>
-            <VestingDetails hash={vesting.selectedVestingHash!.hashBase16}
+            <VestingDetails
+              hash={vesting.selectedVestingHash!.hashBase16}
               vestingDetail={vesting.vestingDetails}
-              refresh={
-                () => vesting.init(vesting.selectedVestingHash!.hashBase16)
-              } />
+              refresh={() =>
+                vesting.init(vesting.selectedVestingHash!.hashBase16)
+              }
+            />
           </div>
         )}
       </div>
@@ -54,13 +64,11 @@ class Vesting extends RefreshableComponent<Props, {}> {
  * including selecting, adding and removing hashes.
  */
 const VestingHashesManageForm = observer(
-  (props: {
-    vestingContainer: VestingContainer;
-  }) => {
+  (props: { vestingContainer: VestingContainer }) => {
     const { vestingContainer } = props;
 
     // The modal for importing new hash, showed once users click the `Add New` button.
-    const modalImporting = (vestingContainer.isFormOpen &&
+    const modalImporting = vestingContainer.isFormOpen && (
       <Modal
         id="addNewVestingHash"
         title="Add new hash of vesting contract"
@@ -88,30 +96,37 @@ const VestingHashesManageForm = observer(
     );
 
     return (
-      <Card
-        title="Vesting Contracts"
-      >
+      <Card title="Vesting Contracts">
         <Form>
           <SelectField
             id="id-vesting-name"
             label="Name"
             placeholder="Select hash of the vesting contract"
-            value={(vestingContainer.selectedVestingHash && vestingContainer.selectedVestingHash.name) || null}
+            value={
+              (vestingContainer.selectedVestingHash &&
+                vestingContainer.selectedVestingHash.name) ||
+              null
+            }
             options={vestingContainer.options}
             onChange={x => {
               let oldSelected = vestingContainer.selectedVestingHash;
               vestingContainer.selectVestingHashByName(x);
 
               // Check whether user select another vesting contract
-              if (oldSelected !== vestingContainer.selectedVestingHash && vestingContainer.selectedVestingHash) {
-                vestingContainer.init(vestingContainer.selectedVestingHash.hashBase16);
+              if (
+                oldSelected !== vestingContainer.selectedVestingHash &&
+                vestingContainer.selectedVestingHash
+              ) {
+                vestingContainer.init(
+                  vestingContainer.selectedVestingHash.hashBase16
+                );
               }
             }}
           />
           <TextField
             id="id-vesting-hash-base16"
             label="Hash of vesting contract (Base16)"
-            fieldState={vestingContainer.selectedVestingHash?.hashBase16 || ""}
+            fieldState={vestingContainer.selectedVestingHash?.hashBase16 || ''}
             readonly={true}
           />
         </Form>
@@ -121,11 +136,18 @@ const VestingHashesManageForm = observer(
             title="Add New"
             onClick={() => vestingContainer.configureImportVestingHash()}
           />
-          <Button title="Remove" type="danger" onClick={() => {
-            if (vestingContainer.selectedVestingHash?.hashBase16) {
-              vestingContainer.deleteVestingHash(vestingContainer.selectedVestingHash!.hashBase16);
-            }
-          }} disabled={vestingContainer.selectedVestingHash === null} />
+          <Button
+            title="Remove"
+            type="danger"
+            onClick={() => {
+              if (vestingContainer.selectedVestingHash?.hashBase16) {
+                vestingContainer.deleteVestingHash(
+                  vestingContainer.selectedVestingHash!.hashBase16
+                );
+              }
+            }}
+            disabled={vestingContainer.selectedVestingHash === null}
+          />
         </ListInline>
       </Card>
     );
@@ -136,9 +158,7 @@ const TableRow = (props: { title: string; children: ReactNode }) => {
   return (
     <tr>
       <th role="row">{props.title}</th>
-      <td>
-        {props.children}
-      </td>
+      <td>{props.children}</td>
     </tr>
   );
 };
@@ -163,24 +183,19 @@ function duration(duration: number) {
  */
 const VestingDetails = observer(
   (props: {
-    vestingDetail: VestingDetail,
-    hash: string
-    refresh: () => void
+    vestingDetail: VestingDetail;
+    hash: string;
+    refresh: () => void;
   }) => {
     const vestingDetail = props.vestingDetail;
     return (
-      <Card
-        title="Vesting Details"
-        refresh={() => props.refresh()}
-      >
+      <Card title="Vesting Details" refresh={() => props.refresh()}>
         <table className="table table-bordered">
           <tbody>
             <TableRow title="Hash of the Vesting Contract">
               {props.hash}
             </TableRow>
-            <TableRow title="Current Time">
-              {moment().format()}
-            </TableRow>
+            <TableRow title="Current Time">{moment().format()}</TableRow>
             <TableRow title="Cliff Timestamp">
               {moment(vestingDetail.cliffTimestamp).fromNow()}
             </TableRow>
@@ -204,19 +219,21 @@ const VestingDetails = observer(
                 {duration(vestingDetail.adminReleaseDuration)}
               </span>
               {vestingDetail.isReleasable && (
-                <Icon name="check-circle" color="green" title="Available to release" />
+                <Icon
+                  name="check-circle"
+                  color="green"
+                  title="Available to release"
+                />
               )}
             </TableRow>
             <TableRow title="Paused State">
               {vestingDetail.isPaused ? 'Paused' : 'Not Paused'}
             </TableRow>
-            {
-              vestingDetail.isPaused && (
-                <TableRow title="Last Time Paused">
-                  {moment(vestingDetail.lastPauseTimestamp).fromNow()}
-                </TableRow>
-              )
-            }
+            {vestingDetail.isPaused && (
+              <TableRow title="Last Time Paused">
+                {moment(vestingDetail.lastPauseTimestamp).fromNow()}
+              </TableRow>
+            )}
             <TableRow title="On Pause Duration">
               {duration(vestingDetail.onPauseDuration)}
             </TableRow>

@@ -149,7 +149,7 @@ export default class App extends React.Component<AppProps, {}> {
     // })
 
     // Toggle the side navigation
-    $('#sidenavToggler').click(function(e) {
+    $('#sidenavToggler').click(function (e) {
       e.preventDefault();
       $('body').toggleClass('sidenav-toggled');
       $('.navbar-sidenav .nav-link-collapse').addClass('collapsed');
@@ -161,14 +161,14 @@ export default class App extends React.Component<AppProps, {}> {
     // Hide sidenav manually after clicking menu item in mobile view
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
-    $('.navbar-sidenav .nav-item').click(function(e) {
+    $('.navbar-sidenav .nav-item').click(function (e) {
       $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
     $(
       'body.fixed-nav .navbar-sidenav, body.fixed-nav .sidenav-toggler, body.fixed-nav .navbar-collapse'
-    ).on('mousewheel DOMMouseScroll', function(e: any) {
+    ).on('mousewheel DOMMouseScroll', function (e: any) {
       var e0 = e.originalEvent,
         delta = e0.wheelDelta || -e0.detail;
       this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -176,7 +176,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top button appear
-    $(document).scroll(function() {
+    $(document).scroll(function () {
       var scrollDistance = $(this).scrollTop()!;
       if (scrollDistance > 100) {
         $('.scroll-to-top').fadeIn();
@@ -186,7 +186,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top
-    $(document).on('click', 'a.scroll-to-top', function(e) {
+    $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
       $('html, body')

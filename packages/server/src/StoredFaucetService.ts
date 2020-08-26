@@ -1,18 +1,19 @@
-import { StateQuery } from "casperlabs-grpc/io/casperlabs/node/api/casper_pb";
+import { StateQuery } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 import {
   CasperService,
   Contracts,
   DeployHash,
   DeployUtil,
   encodeBase16,
-  Keys } from "casperlabs-sdk";
-import { ByteArray, SignKeyPair } from "tweetnacl-ts";
-import { CallFaucet, StoredFaucet } from "./lib/Contracts";
-import DeployService from "./services/DeployService";
+  Keys
+} from 'casperlabs-sdk';
+import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
+import { CallFaucet, StoredFaucet } from './lib/Contracts';
+import DeployService from './services/DeployService';
 
 // based on execution-engine/contracts/explorer/faucet-stored/src/main.rs
-const CONTRACT_NAME = "faucet";
-const ENTRY_POINT_NAME = "call_faucet";
+const CONTRACT_NAME = 'faucet';
+const ENTRY_POINT_NAME = 'call_faucet';
 
 export class StoredFaucetService {
   private deployHash: ByteArray | null = null;

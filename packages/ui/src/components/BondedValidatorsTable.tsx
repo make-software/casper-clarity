@@ -45,9 +45,7 @@ export const BondedValidatorsTable = observer(
                 {Number(bond.getStake()!.getValue()).toLocaleString()}
               </td>
               <td className="text-center">
-                {finalizedBondedValidators.has(
-                  key(bond)
-                ) ? (
+                {finalizedBondedValidators.has(key(bond)) ? (
                   <Icon name="check-circle" color="green" />
                 ) : (
                   <Icon name="clock" />

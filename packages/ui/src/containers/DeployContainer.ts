@@ -46,16 +46,10 @@ export class DeployContainer {
       return;
     }
     for (let proc of this.deploy.getProcessingResultsList()) {
-      const blockHash = proc
-        .getBlockInfo()!
-        .getSummary()!
-        .getBlockHash_asU8();
+      const blockHash = proc.getBlockInfo()!.getSummary()!.getBlockHash_asU8();
       const balance = await this.balanceService.getAccountBalance(
         blockHash,
-        this.deploy
-          .getDeploy()!
-          .getHeader()!
-          .getAccountPublicKeyHash_asU8()
+        this.deploy.getDeploy()!.getHeader()!.getAccountPublicKeyHash_asU8()
       );
       if (balance !== undefined) {
         this.balances.set(encodeBase16(blockHash), balance);

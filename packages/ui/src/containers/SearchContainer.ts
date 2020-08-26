@@ -17,7 +17,7 @@ export enum Target {
 
 class SearchFormData extends CleanableFormData {
   @observable target: Target = Target.Block;
-  hashBase16: FieldState<string> = new FieldState("");
+  hashBase16: FieldState<string> = new FieldState('');
 
   protected check() {
     let hashBase16 = this.hashBase16.$;

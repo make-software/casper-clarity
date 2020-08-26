@@ -5,16 +5,28 @@
     "bootstrap": "lerna bootstrap",
     "dev": "concurrently --kill-others --success first \"npm start --prefix ./packages/server\" \"npm run start --prefix ./packages/ui\"",
     "test": "npm run test:sdk",
+    "posttest": "npm run format",
     "test:sdk": "npm test --prefix ./packages/sdk",
     "build": "lerna run build",
-    "publish": "lerna publish"
+    "publish": "lerna publish",
+    "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\""
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
+    "lerna": "^3.22.1",
     "concurrently": "^3.6.0",
-    "husky": "^4.2.5",
-    "lerna": "^3.22.1"
+    "husky": "^2.7.0",
+    "lint-staged": "^10.2.11",
+    "prettier": "^2.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx,scss,md}": "prettier --write"
   }
 }

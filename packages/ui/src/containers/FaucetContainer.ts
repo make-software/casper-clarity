@@ -4,7 +4,7 @@ import ErrorContainer from './ErrorContainer';
 import StorageCell from '../lib/StorageCell';
 import FaucetService from '../services/FaucetService';
 import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { GrpcError, CasperService} from 'casperlabs-sdk';
+import { GrpcError, CasperService } from 'casperlabs-sdk';
 import { grpc } from '@improbable-eng/grpc-web';
 import { getPublicKeyHashBase64 } from './AuthContainer';
 

@@ -102,7 +102,7 @@ export function makeDeploy(
   paymentAmount: bigint | JSBI,
   accountPublicKeyHash: ByteArray,
   dependencies?: Uint8Array[],
-  entryPoint?: string,
+  entryPoint?: string
 ): Deploy {
   const sessionCode = new Deploy.Code();
   if (type === ContractType.WASM) {
@@ -112,12 +112,12 @@ export function makeDeploy(
   } else if (type === ContractType.Hash) {
     const storedContract = new Deploy.Code.StoredContract();
     storedContract.setContractHash(session);
-    storedContract.setEntryPoint(entryPoint || "");
+    storedContract.setEntryPoint(entryPoint || '');
     sessionCode.setStoredContract(storedContract);
   } else {
     const storedContract = new Deploy.Code.StoredContract();
     storedContract.setName(session as string);
-    storedContract.setEntryPoint(entryPoint || "")
+    storedContract.setEntryPoint(entryPoint || '');
     sessionCode.setStoredContract(storedContract);
   }
   sessionCode.setArgsList(args);
