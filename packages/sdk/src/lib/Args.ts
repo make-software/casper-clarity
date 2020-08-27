@@ -121,6 +121,14 @@ export class Types {
     return Types.simpleType(CLType.Simple.UREF);
   }
 
+  static bytes() {
+    return Types.list(Types.u8());
+  }
+
+  static bytesFixedLength(len: number) {
+    return Types.fixedList(Types.u8(), len);
+  }
+
   static list(inner: CLType) {
     const t = new CLType();
     const innerListType = new CLType.List();
@@ -359,12 +367,12 @@ export class Instances {
   });
 
   static bytes = toCLValueInstance<ByteArray>((value, x) => {
-    value.setClType(Types.list(Types.u8()));
+    value.setClType(Types.bytes());
     value.setValue(Values.bytes(x));
   });
 
   static bytesFixedLength = toCLValueInstance<ByteArray>((value, x) => {
-    value.setClType(Types.fixedList(Types.u8(), x.byteLength));
+    value.setClType(Types.bytesFixedLength(x.byteLength));
     value.setValue(Values.bytes(x));
   });
 
@@ -442,6 +450,20 @@ export class Instances {
     mapValue.setValuesList(mapEntries);
     clValue.setMapValue(mapValue);
     t.setValue(clValue);
+    return t;
+  }
+
+  static listEmpty(innerType: CLType) {
+    const t = new CLValueInstance();
+    t.setClType(Types.list(innerType));
+    t.setValue(Values.list([]));
+    return t;
+  }
+
+  static fixedListEmpty(innerType: CLType) {
+    const t = new CLValueInstance();
+    t.setClType(Types.fixedList(innerType, 0));
+    t.setValue(Values.fixedList([]));
     return t;
   }
 

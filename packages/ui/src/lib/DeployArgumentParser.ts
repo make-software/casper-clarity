@@ -5,11 +5,12 @@ import {
   Key
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import validator from 'validator';
-import { Args, decodeBase16 } from 'casperlabs-sdk';
+import { Args, decodeBase16, encodeBase16 } from 'casperlabs-sdk';
 import {
   DeployArgument,
   FormDeployArgument,
   KeyType,
+  SimpleType,
   SupportedType
 } from '../containers/DeployContractsContainer';
 import { FormState } from 'formstate';
@@ -293,14 +294,86 @@ export class DeployArgumentParser {
     );
   }
 
+  /**
+   * This function just create CLTypes basing passing arguments
+   * Used in empty list and empty map
+   * @private
+   */
+  private static buildSimpleTypes(
+    firstType: SimpleType,
+    secondType: KeyType | null,
+    uRefAccessRight?: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
+  ) {
+    let clType: CLType;
+    switch (firstType) {
+      case 'Bytes':
+        clType = Args.Types.bytes();
+        break;
+      case 'Bytes (Fixed Length)':
+        clType = Args.Types.bytesFixedLength(32);
+        break;
+      case CLType.Simple.BOOL:
+        clType = Args.Types.bool();
+        break;
+      case CLType.Simple.I32:
+        clType = Args.Types.i32();
+        break;
+      case CLType.Simple.I64:
+        clType = Args.Types.i64();
+        break;
+      case CLType.Simple.U8:
+        clType = Args.Types.u8();
+        break;
+      case CLType.Simple.U32:
+        clType = Args.Types.u32();
+        break;
+      case CLType.Simple.U64:
+        clType = Args.Types.u64();
+        break;
+      case CLType.Simple.U128:
+        clType = Args.Types.u128();
+        break;
+      case CLType.Simple.U256:
+        clType = Args.Types.u256();
+        break;
+      case CLType.Simple.U512:
+        clType = Args.Types.u512();
+        break;
+      case CLType.Simple.UNIT:
+        clType = Args.Types.unit();
+        break;
+      case CLType.Simple.STRING:
+        clType = Args.Types.string();
+        break;
+      case CLType.Simple.KEY:
+      case CLType.Simple.UREF:
+        clType = DeployArgumentParser.buildKeyOrUrefInstance(
+          firstType,
+          secondType,
+          encodeBase16(Buffer.from('stub')), // we just want its CLType
+          uRefAccessRight
+        ).getClType()!;
+        break;
+    }
+    return clType;
+  }
+
   private static buildSimpleArgs(
-    firstType: CLType.SimpleMap[keyof CLType.SimpleMap],
+    firstType: SimpleType,
     secondType: KeyType | null,
     argValueInJson: any,
     uRefAccessRight?: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
   ) {
     let clValueInstance;
     switch (firstType) {
+      case 'Bytes':
+        clValueInstance = Args.Instances.bytes(decodeBase16(argValueInJson));
+        break;
+      case 'Bytes (Fixed Length)':
+        clValueInstance = Args.Instances.bytesFixedLength(
+          decodeBase16(argValueInJson)
+        );
+        break;
       case CLType.Simple.BOOL:
         clValueInstance = Args.Instances.bool(argValueInJson);
         break;
@@ -353,14 +426,6 @@ export class DeployArgumentParser {
     let clValueInstance: CLValueInstance;
     const argValueStrInJson = JSON.parse(argValueStr);
     switch (type) {
-      case 'Bytes':
-        clValueInstance = Args.Instances.bytes(decodeBase16(argValueStrInJson));
-        break;
-      case 'Bytes (Fixed Length)':
-        clValueInstance = Args.Instances.bytesFixedLength(
-          decodeBase16(argValueStrInJson)
-        );
-        break;
       case 'Tuple':
         clValueInstance = DeployArgumentParser.buildTupleTypeArg(
           arg.$.tupleInnerDeployArgs.$,
@@ -400,6 +465,9 @@ export class DeployArgumentParser {
       case 10:
       case 11:
       case 12:
+      case 'Bytes':
+      case 'Bytes (Fixed Length)':
+        // Simple Type
         clValueInstance = DeployArgumentParser.buildSimpleArgs(
           type as CLType.SimpleMap[keyof CLType.SimpleMap],
           arg.$.secondType.$,
@@ -428,16 +496,29 @@ export class DeployArgumentParser {
     const uRefAccessRight = listInnerDeployArgs[0].$.URefAccessRight.$;
     const argsList = argValueInJson.map((arg: any) => {
       return DeployArgumentParser.buildSimpleArgs(
-        firstType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        firstType as SimpleType,
         secondType,
         arg,
         uRefAccessRight
       );
     });
-    if (isFixedList) {
-      return Args.Instances.fixedList(argsList);
+    if (argsList.length > 0) {
+      if (isFixedList) {
+        return Args.Instances.fixedList(argsList);
+      } else {
+        return Args.Instances.list(argsList);
+      }
     } else {
-      return Args.Instances.list(argsList);
+      const innerType = DeployArgumentParser.buildSimpleTypes(
+        firstType as SimpleType,
+        secondType,
+        uRefAccessRight
+      );
+      if (isFixedList) {
+        return Args.Instances.fixedListEmpty(innerType);
+      } else {
+        return Args.Instances.listEmpty(innerType);
+      }
     }
   }
 
@@ -462,18 +543,35 @@ export class DeployArgumentParser {
       const key = DeployArgumentParser.buildSimpleArgs(
         keyType as CLType.SimpleMap[keyof CLType.SimpleMap],
         keySecondType,
-        arg.key,
+        arg[0],
         keyURefAccessRight
       );
       const value = DeployArgumentParser.buildSimpleArgs(
         valueType as CLType.SimpleMap[keyof CLType.SimpleMap],
         valueSecondType,
-        arg.value,
+        arg[1],
         valueURefAccessRight
       );
       return [key, value];
     });
-    return Args.Instances.map(mapEntries);
+    if (mapEntries.length > 0) {
+      return Args.Instances.map(mapEntries);
+    } else {
+      // return Args.Instances.mapEmpty()
+      const keyCLType = DeployArgumentParser.buildSimpleTypes(
+        keyType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        keySecondType,
+        keyURefAccessRight
+      );
+
+      const valueCLType = DeployArgumentParser.buildSimpleTypes(
+        valueType as CLType.SimpleMap[keyof CLType.SimpleMap],
+        valueSecondType,
+        valueURefAccessRight
+      );
+
+      return Args.Instances.mapEmpty(keyCLType, valueCLType);
+    }
   }
 
   private static buildTupleTypeArg(

@@ -194,10 +194,10 @@ export class DeployContractsContainer {
     hasInnerDeployArgs: boolean = true,
     name: string = '',
     type: SupportedType = CLType.Simple.BOOL,
+    value: string = '',
     secondType: KeyType | null = null,
     accessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap] = Key
-      .URef.AccessRights.NONE,
-    value: string = ''
+      .URef.AccessRights.NONE
   ) {
     const listInnerArgs = new FormState<FormDeployArgument[]>([]);
     const tupleInnerArgs = new FormState<FormDeployArgument[]>([]);
@@ -425,9 +425,9 @@ export class DeployContractsContainer {
           true,
           arg.name,
           arg.type,
+          arg.value,
           arg.secondType,
-          arg.URefAccessRight,
-          arg.value
+          arg.URefAccessRight
         );
         this.editingDeployArguments.$.push(deployArgument);
       });
@@ -437,9 +437,9 @@ export class DeployContractsContainer {
           true,
           arg.name,
           arg.type,
+          arg.value,
           arg.secondType,
-          arg.URefAccessRight,
-          arg.value
+          arg.URefAccessRight
         );
         this.deployArguments.$.push(deployArgument);
       });
