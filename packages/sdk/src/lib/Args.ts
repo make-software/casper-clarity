@@ -429,12 +429,7 @@ export class Instances {
       }
     }
     const t = new CLValueInstance();
-    const clType = new CLType();
-    const mapType = new CLType.Map();
-    mapType.setKey(eles[0][0].getClType());
-    mapType.setValue(eles[0][1].getClType());
-    clType.setMapType(mapType);
-    t.setClType(clType);
+    t.setClType(Types.map(eles[0][0].getClType()!, eles[0][1].getClType()!));
 
     const clValue = new CLValueInstance.Value();
     const mapEntries = eles.map(e => {
@@ -447,6 +442,13 @@ export class Instances {
     mapValue.setValuesList(mapEntries);
     clValue.setMapValue(mapValue);
     t.setValue(clValue);
+    return t;
+  }
+
+  static mapEmpty(keyType: CLType, valueType: CLType) {
+    const t = new CLValueInstance();
+    t.setClType(Types.map(keyType, valueType));
+    t.setValue(Values.map([]));
     return t;
   }
 }

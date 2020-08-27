@@ -168,4 +168,32 @@ describe('Arg DSL', () => {
     expect(valueList[1]?.getValue()?.getU8()).eq(2);
     expect(valueList[2]?.getValue()?.getU8()).eq(3);
   });
+
+  it('should create empty map instance', function() {
+    const mapEmpty = Arg.Instances.mapEmpty(
+      Arg.Types.string(),
+      Arg.Types.list(Arg.Types.u8())
+    );
+    expect(
+      mapEmpty
+        .getClType()
+        ?.getMapType()
+        ?.getKey()
+        ?.getSimpleType()
+    ).eq(CLType.Simple.STRING);
+    expect(
+      mapEmpty
+        .getClType()
+        ?.getMapType()
+        ?.getValue()
+        ?.getListType()
+        ?.getInner()
+        ?.getSimpleType()
+    ).eq(CLType.Simple.U8);
+    const valueList = mapEmpty
+      ?.getValue()
+      ?.getMapValue()
+      ?.getValuesList()!;
+    expect(valueList.length).eq(0);
+  });
 });
