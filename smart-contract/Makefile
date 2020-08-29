@@ -1,5 +1,8 @@
+RUST_TOOLCHAIN := $(shell cat rust-toolchain)
+
 prepare:
-	rustup target add wasm32-unknown-unknown
+	rustup toolchain install --no-self-update $(RUST_TOOLCHAIN)
+	rustup target add --toolchain $(RUST_TOOLCHAIN) wasm32-unknown-unknown
 
 build-contracts:
 	cargo build --release -p faucet-stored --target wasm32-unknown-unknown

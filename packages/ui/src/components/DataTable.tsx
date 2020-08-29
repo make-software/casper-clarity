@@ -8,6 +8,10 @@ export interface Props<T> {
   title: string;
   refresh?: () => void;
   subscribeToggleStore?: ToggleStore;
+  filterToggleStore?: ToggleStore;
+  filterRow?: (x: T, idx: number) => Boolean;
+  filterTtl?: string;
+  filterLbl?: string;
   headers: string[];
   rows: T[] | null;
   emptyMessage?: any;
@@ -23,18 +27,29 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
       <div className="card mb-3">
         <div className="card-header">
           <span>{this.props.title}</span>
+          {this.props.refresh && (
+            <div className="float-right">
+              <RefreshButton refresh={() => this.props.refresh!()} />
+            </div>
+          )}
           {this.props.subscribeToggleStore && (
             <div className="float-right">
               <ToggleButton
                 title="Subscribe to latest changes"
+                label="Live Feed"
                 toggleStore={this.props.subscribeToggleStore}
                 size="sm"
               />
             </div>
           )}
-          {this.props.refresh && (
+          {this.props.filterToggleStore && (
             <div className="float-right">
-              <RefreshButton refresh={() => this.props.refresh!()} />
+              <ToggleButton
+                title={this.props.filterTtl}
+                label={this.props.filterLbl}
+                toggleStore={this.props.filterToggleStore}
+                size="sm"
+              />
             </div>
           )}
         </div>
@@ -60,7 +75,11 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
                   </tr>
                 </thead>
               )}
-              <tbody>{this.props.rows.map(this.props.renderRow)}</tbody>
+              <tbody>{this.props.filterRow && 
+              this.props.filterToggleStore?.isPressed
+                      ? this.props.rows.filter(this.props.filterRow).map(this.props.renderRow)
+                      : this.props.rows.map(this.props.renderRow)}
+              </tbody>
             </table>
           )}
         </div>
