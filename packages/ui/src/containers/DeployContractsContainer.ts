@@ -406,8 +406,8 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
-    let restoreDeployArgument = function(arg: RawDeployArguments) {
-      let helper = function(
+    let restoreDeployArgument = function (arg: RawDeployArguments) {
+      let helper = function (
         innerDeployArg: DeployArgument,
         mapArg: RawDeployArguments
       ) {
@@ -425,16 +425,16 @@ export class DeployContractsContainer {
         arg.secondType,
         arg.URefAccessRight
       );
-      arg.mapInnerDeployArgs.forEach((mapArg, idx) => {
+      arg?.mapInnerDeployArgs?.forEach((mapArg, idx) => {
         const innerDeployArg = deployArgument.$.mapInnerDeployArgs.$[idx].$;
         helper(innerDeployArg, mapArg);
       });
-      arg.listInnerDeployArgs.forEach((listArg, idx) => {
+      arg?.listInnerDeployArgs?.forEach((listArg, idx) => {
         helper(deployArgument.$.listInnerDeployArgs.$[idx].$, listArg);
       });
 
       // Unlike list or map, the length of tuple is variable.
-      arg.tupleInnerDeployArgs.forEach((tupleArg, idx) => {
+      arg?.tupleInnerDeployArgs?.forEach((tupleArg, idx) => {
         if (idx == 0) {
           helper(deployArgument.$.tupleInnerDeployArgs.$[idx].$, tupleArg);
         } else {
