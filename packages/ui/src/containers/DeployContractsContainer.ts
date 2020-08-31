@@ -83,7 +83,12 @@ interface RawDeployArguments {
   name: string;
   type: SupportedType;
   secondType: KeyType | null;
-  innerDeployArgs: RawDeployArguments[];
+  // List, the length of inner deploy arguments list is 1.
+  listInnerDeployArgs: RawDeployArguments[];
+  // Tuple, the length of it is variant, could be 1, 2 and 3
+  tupleInnerDeployArgs: RawDeployArguments[];
+  // Map, the length of it is fixed, 2 for key and value.
+  mapInnerDeployArgs: RawDeployArguments[];
   URefAccessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap];
   value: string;
 }
@@ -248,7 +253,6 @@ export class DeployContractsContainer {
   @action.bound
   async saveEditingDeployArguments() {
     const res = await this.editingDeployArguments.validate();
-    console.log(this.editingDeployArguments.$.length);
     if (!res.hasError) {
       while (this.editingDeployArguments.$.length) {
         this.deployArguments.$.push(this.editingDeployArguments.$.shift()!);
@@ -402,6 +406,52 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
+    let restoreDeployArgument = function(arg: RawDeployArguments) {
+      let helper = function(
+        innerDeployArg: DeployArgument,
+        mapArg: RawDeployArguments
+      ) {
+        innerDeployArg.name.onChange(mapArg.name);
+        innerDeployArg.type.onChange(mapArg.type);
+        innerDeployArg.value.onChange(mapArg.value);
+        innerDeployArg.secondType.onChange(mapArg.secondType);
+        innerDeployArg.URefAccessRight.onChange(mapArg.URefAccessRight);
+      };
+      const deployArgument = DeployContractsContainer.newDeployArgument(
+        true,
+        arg.name,
+        arg.type,
+        arg.value,
+        arg.secondType,
+        arg.URefAccessRight
+      );
+      arg.mapInnerDeployArgs.forEach((mapArg, idx) => {
+        const innerDeployArg = deployArgument.$.mapInnerDeployArgs.$[idx].$;
+        helper(innerDeployArg, mapArg);
+      });
+      arg.listInnerDeployArgs.forEach((listArg, idx) => {
+        helper(deployArgument.$.listInnerDeployArgs.$[idx].$, listArg);
+      });
+
+      // Unlike list or map, the length of tuple is variable.
+      arg.tupleInnerDeployArgs.forEach((tupleArg, idx) => {
+        if (idx == 0) {
+          helper(deployArgument.$.tupleInnerDeployArgs.$[idx].$, tupleArg);
+        } else {
+          deployArgument.$.tupleInnerDeployArgs.$.push(
+            DeployContractsContainer.newDeployArgument(
+              false,
+              tupleArg.name,
+              tupleArg.type,
+              tupleArg.value,
+              tupleArg.secondType,
+              tupleArg.URefAccessRight
+            )
+          );
+        }
+      });
+      return deployArgument;
+    };
     if (preState !== null) {
       const value = JSON.parse(preState) as UserInputPersistent;
 
@@ -421,26 +471,12 @@ export class DeployContractsContainer {
       this.deployArguments.reset();
 
       value.editingDeployArguments?.forEach(arg => {
-        const deployArgument = DeployContractsContainer.newDeployArgument(
-          true,
-          arg.name,
-          arg.type,
-          arg.value,
-          arg.secondType,
-          arg.URefAccessRight
-        );
+        const deployArgument = restoreDeployArgument(arg);
         this.editingDeployArguments.$.push(deployArgument);
       });
 
       value.deployArguments?.forEach(arg => {
-        const deployArgument = DeployContractsContainer.newDeployArgument(
-          true,
-          arg.name,
-          arg.type,
-          arg.value,
-          arg.secondType,
-          arg.URefAccessRight
-        );
+        const deployArgument = restoreDeployArgument(arg);
         this.deployArguments.$.push(deployArgument);
       });
     }
@@ -448,6 +484,19 @@ export class DeployContractsContainer {
 
   public saveToSessionStore() {
     let deployConfiguration = this.deployConfiguration.$;
+    let helper = (a: FormState<DeployArgument>) => {
+      return {
+        name: a.$.name.value,
+        type: a.$.type.value,
+        secondType: a.$.secondType.value,
+        // Don't support nested complex types
+        listInnerDeployArgs: [] as RawDeployArguments[],
+        tupleInnerDeployArgs: [] as RawDeployArguments[],
+        mapInnerDeployArgs: [] as RawDeployArguments[],
+        URefAccessRight: a.$.URefAccessRight.value,
+        value: a.$.value.value
+      };
+    };
     let state: UserInputPersistent = {
       deployArguments: this.deployArguments.$.map(arg => {
         const value = arg.$;
@@ -455,18 +504,9 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
-          innerDeployArgs: value.tupleInnerDeployArgs.$.map(
-            (a: FormState<DeployArgument>) => {
-              return {
-                name: a.$.name.value,
-                type: a.$.type.value,
-                secondType: a.$.secondType.value,
-                innerDeployArgs: [] as RawDeployArguments[],
-                URefAccessRight: a.$.URefAccessRight.value,
-                value: a.$.value.value
-              };
-            }
-          ),
+          tupleInnerDeployArgs: value.tupleInnerDeployArgs.$.map(helper),
+          listInnerDeployArgs: value.listInnerDeployArgs.$.map(helper),
+          mapInnerDeployArgs: value.mapInnerDeployArgs.$.map(helper),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };
@@ -483,16 +523,9 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
-          innerDeployArgs: value.tupleInnerDeployArgs.$.map(a => {
-            return {
-              name: a.$.name.value,
-              type: a.$.type.value,
-              secondType: a.$.secondType.value,
-              innerDeployArgs: [] as RawDeployArguments[],
-              URefAccessRight: a.$.URefAccessRight.value,
-              value: a.$.value.value
-            };
-          }),
+          tupleInnerDeployArgs: value.tupleInnerDeployArgs.$.map(helper),
+          listInnerDeployArgs: value.listInnerDeployArgs.$.map(helper),
+          mapInnerDeployArgs: value.mapInnerDeployArgs.$.map(helper),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };
