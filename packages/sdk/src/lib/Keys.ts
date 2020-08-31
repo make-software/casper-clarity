@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
-import { ByteArray } from '../index';
+import { ByteArray, encodeBase64 } from '../index';
 import { byteHash } from './Contracts';
 
 // Based on Keys.scala
@@ -129,5 +129,32 @@ export class Ed25519 {
       throw Error(`Unexpected key length: ${len}`);
     }
     return key;
+  }
+
+  static privateKeyEncodeInPem(privateKey: ByteArray) {
+    // prettier-ignore
+    const derPrefix = Buffer.from([48, 46, 2, 1, 0, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32]);
+    const encoded = encodeBase64(
+      Buffer.concat([
+        derPrefix,
+        Buffer.from(Ed25519.parsePrivateKey(privateKey))
+      ])
+    );
+    return (
+      '-----BEGIN PRIVATE KEY-----\n' +
+      encoded +
+      '\n-----END PRIVATE KEY-----\n'
+    );
+  }
+
+  static publicKeyEncodeInPem(publicKey: ByteArray) {
+    // prettier-ignore
+    const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0] );
+    const encoded = encodeBase64(
+      Buffer.concat([derPrefix, Buffer.from(publicKey)])
+    );
+    return (
+      '-----BEGIN PUBLIC KEY-----\n' + encoded + '\n-----END PUBLIC KEY-----\n'
+    );
   }
 }
