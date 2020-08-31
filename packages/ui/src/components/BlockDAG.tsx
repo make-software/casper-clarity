@@ -451,7 +451,10 @@ const toGraph = (blocks: BlockInfo[]) => {
       title: shortHash(id),
       validator: validatorHash(block),
       eraId: keyBlockHash(block),
-      rank: block.getSummary()!.getHeader()!.getJRank(),
+      rank: block
+        .getSummary()!
+        .getHeader()!
+        .getJRank(),
       block: block
     };
   });
@@ -571,10 +574,18 @@ const blockHash = (block: BlockInfo) =>
   encodeBase16(block.getSummary()!.getBlockHash_asU8());
 
 const keyBlockHash = (block: BlockInfo) =>
-  encodeBase16(block.getSummary()!.getHeader()!.getKeyBlockHash_asU8());
+  encodeBase16(
+    block
+      .getSummary()!
+      .getHeader()!
+      .getKeyBlockHash_asU8()
+  );
 
 const isBlock = (block: BlockInfo) =>
-  block.getSummary()!.getHeader()!.getMessageType() === Block.MessageType.BLOCK;
+  block
+    .getSummary()!
+    .getHeader()!
+    .getMessageType() === Block.MessageType.BLOCK;
 
 const isBallot = (block: BlockInfo) => !isBlock(block);
 
@@ -586,7 +597,12 @@ const isOrphaned = (block: BlockInfo) =>
   block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
 
 const validatorHash = (block: BlockInfo) =>
-  encodeBase16(block.getSummary()!.getHeader()!.getValidatorPublicKey_asU8());
+  encodeBase16(
+    block
+      .getSummary()!
+      .getHeader()!
+      .getValidatorPublicKey_asU8()
+  );
 
 /** Shorten lines by a fixed amount so that the line doesn't stick out from under the arrows tip. */
 const shorten = (d: any, by: number) => {
@@ -624,13 +640,3 @@ const consistentColor = (colors: readonly string[]) => {
     return colors[c];
   };
 };
-
-function arraysEqual<T>(a: T[] | null, b: T[] | null) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}

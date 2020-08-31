@@ -15,19 +15,30 @@ import {
   validateInt,
   valueRequired
 } from '../lib/FormsValidator';
-import validator from 'validator';
 import $ from 'jquery';
 import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import {
   CLType,
-  CLValueInstance,
   Key
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
+import { DeployArgumentParser } from '../lib/DeployArgumentParser';
 
-type SupportedType = CLType.SimpleMap[keyof CLType.SimpleMap] | 'Bytes';
+export const BytesTypeStr = 'Bytes';
+export const BytesFixedTypeStr = 'Bytes (Fixed Length)';
+
+export type SimpleType =
+  | 'Bytes'
+  | 'Bytes (Fixed Length)'
+  | CLType.SimpleMap[keyof CLType.SimpleMap];
+
+export type ComplexType = 'Tuple' | 'Map' | 'List' | 'FixedList';
+
+export type SupportedType = SimpleType | ComplexType;
+
+export const ComplexTypesString = ['Tuple', 'Map', 'List', 'FixedList'];
 
 export enum KeyType {
   ADDRESS = 'Address',
@@ -35,48 +46,19 @@ export enum KeyType {
   UREF = 'URef'
 }
 
-export enum BitWidth {
-  B_128 = 128,
-  B_256 = 256,
-  B_512 = 512
-}
-
-const powerOf2 = (n: number): JSBI => {
-  return JSBI.exponentiate(JSBI.BigInt(2), JSBI.BigInt(n));
-};
-
-const numberLimitForUnsigned = (bit: number) => {
-  return {
-    min: JSBI.BigInt(0),
-    max: JSBI.subtract(powerOf2(bit), JSBI.BigInt(1))
-  };
-};
-
-const numberLimitForSigned = (bit: number) => {
-  return {
-    min: JSBI.multiply(JSBI.BigInt(-1), powerOf2(bit - 1)),
-    max: JSBI.subtract(powerOf2(bit - 1), JSBI.BigInt(1))
-  };
-};
-
-const NumberLimit = {
-  [CLType.Simple.U8]: numberLimitForUnsigned(8),
-  [CLType.Simple.U32]: numberLimitForUnsigned(32),
-  [CLType.Simple.U64]: numberLimitForUnsigned(64),
-  [CLType.Simple.U128]: numberLimitForUnsigned(128),
-  [CLType.Simple.U256]: numberLimitForUnsigned(256),
-  [CLType.Simple.U512]: numberLimitForUnsigned(512),
-  [CLType.Simple.I32]: numberLimitForSigned(32),
-  [CLType.Simple.I64]: numberLimitForSigned(64)
-};
-
 export type DeployArgument = {
   name: FieldState<string>;
   type: FieldState<SupportedType>;
   // if type == ArgumentType.Key then the type of secondType is KeyType
   // and if type == ArgumentType.BIG_INT, then the type of secondType is BitWidth
   // otherwise second equals to null
-  secondType: FieldState<KeyType | BitWidth | null>;
+  secondType: FieldState<KeyType | null>;
+  // List, the length of inner deploy arguments list is 1.
+  listInnerDeployArgs: FormDeployArguments;
+  // Tuple, the length of it is variant, could be 1, 2 and 3
+  tupleInnerDeployArgs: FormDeployArguments;
+  // Map, the length of it is fixed, 2 for key and value.
+  mapInnerDeployArgs: FormDeployArguments;
   URefAccessRight: FieldState<
     Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
   >; // null if type != ArgumentType.KEY
@@ -100,7 +82,13 @@ export type FormDeployConfiguration = FormState<DeployConfiguration>;
 interface RawDeployArguments {
   name: string;
   type: SupportedType;
-  secondType: KeyType | BitWidth | null;
+  secondType: KeyType | null;
+  // List, the length of inner deploy arguments list is 1.
+  listInnerDeployArgs: RawDeployArguments[];
+  // Tuple, the length of it is variant, could be 1, 2 and 3
+  tupleInnerDeployArgs: RawDeployArguments[];
+  // Map, the length of it is fixed, 2 for key and value.
+  mapInnerDeployArgs: RawDeployArguments[];
   URefAccessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap];
   value: string;
 }
@@ -202,32 +190,51 @@ export class DeployContractsContainer {
   @action.bound
   addNewEditingDeployArgument() {
     this.editing = true;
-    this.editingDeployArguments.$.push(this.newDeployArgument());
+    this.editingDeployArguments.$.push(
+      DeployContractsContainer.newDeployArgument()
+    );
   }
 
-  private newDeployArgument(
+  public static newDeployArgument(
+    hasInnerDeployArgs: boolean = true,
     name: string = '',
     type: SupportedType = CLType.Simple.BOOL,
-    secondType: KeyType | BitWidth | null = null,
+    value: string = '',
+    secondType: KeyType | null = null,
     accessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap] = Key
-      .URef.AccessRights.NONE,
-    value: string = ''
+      .URef.AccessRights.NONE
   ) {
+    const listInnerArgs = new FormState<FormDeployArgument[]>([]);
+    const tupleInnerArgs = new FormState<FormDeployArgument[]>([]);
+    const mapInnerArgs = new FormState<FormDeployArgument[]>([]);
+    if (hasInnerDeployArgs) {
+      listInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      tupleInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+      mapInnerArgs.$.push(DeployContractsContainer.newDeployArgument(false));
+    }
     return new FormState({
       name: new FieldState<string>(name)
         .disableAutoValidation()
-        .validators(valueRequired),
+        .validators(...(hasInnerDeployArgs ? [valueRequired] : [])),
       type: new FieldState<SupportedType>(type),
-      secondType: new FieldState<KeyType | BitWidth | null>(secondType),
+      secondType: new FieldState<KeyType | null>(secondType),
+      listInnerDeployArgs: listInnerArgs,
+      tupleInnerDeployArgs: tupleInnerArgs,
+      mapInnerDeployArgs: mapInnerArgs,
       URefAccessRight: new FieldState<
         Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
       >(accessRight),
       value: new FieldState<string>(value)
         .disableAutoValidation()
-        .validators(valueRequired)
+        .validators(...(hasInnerDeployArgs ? [valueRequired] : []))
     })
       .compose()
-      .validators(this.validateDeployArgument);
+      .validators(
+        ...(hasInnerDeployArgs
+          ? [DeployArgumentParser.validateDeployArgument]
+          : [])
+      );
   }
 
   @action.bound
@@ -346,11 +353,10 @@ export class DeployContractsContainer {
     } else {
       const config = deployConfigurationForm.value;
       const args = deployArguments.value;
-      let type: DeployUtil.ContractType;
       let session: ByteArray | string;
 
       let argsProto = args.map((arg: FormState<DeployArgument>) => {
-        return this.buildArgument(arg);
+        return DeployArgumentParser.buildArgument(arg);
       });
       const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
 
@@ -395,184 +401,57 @@ export class DeployContractsContainer {
     }
   }
 
-  private buildArgument(arg: FormState<DeployArgument>) {
-    const argValueStr: string = arg.$.value.value;
-    const type = arg.$.type.$;
-    let clValueInstance: CLValueInstance;
-    if (type === 'Bytes') {
-      clValueInstance = this.buildBytesTypeArg(argValueStr);
-    } else {
-      const simpleType = type as CLType.SimpleMap[keyof CLType.SimpleMap];
-      clValueInstance = this.buildSimpleTypeArg(simpleType, argValueStr, arg);
-    }
-
-    const deployArg = new Deploy.Arg();
-    deployArg.setName(arg.$.name.value);
-    deployArg.setValue(clValueInstance);
-    return deployArg;
-  }
-
-  private buildBytesTypeArg(argValueStr: string): CLValueInstance {
-    const innerType = new CLType();
-    innerType.setSimpleType(CLType.Simple.U8);
-    const fixedListType = new CLType.FixedList();
-    fixedListType.setInner(innerType);
-    const bytes = decodeBase16(argValueStr);
-    fixedListType.setLen(bytes.length);
-
-    const clType = new CLType();
-    clType.setFixedListType(fixedListType);
-
-    const value = new CLValueInstance.Value();
-    value.setBytesValue(bytes);
-
-    const clValueInstance = new CLValueInstance();
-    clValueInstance.setClType(clType);
-    clValueInstance.setValue(value);
-    return clValueInstance;
-  }
-
-  private buildSimpleTypeArg(
-    simpleType: CLType.SimpleMap[keyof CLType.SimpleMap],
-    argValueStr: string,
-    arg: FormState<DeployArgument>
-  ): CLValueInstance {
-    const value = new CLValueInstance.Value();
-    const clType = new CLType();
-    switch (simpleType) {
-      case CLType.Simple.U8:
-        value.setU8(parseInt(argValueStr));
-        break;
-      case CLType.Simple.U32:
-        value.setU32(parseInt(argValueStr));
-        break;
-      case CLType.Simple.U64:
-        value.setU64(parseInt(argValueStr));
-        break;
-      case CLType.Simple.I32:
-        value.setI32(parseInt(argValueStr));
-        break;
-      case CLType.Simple.I64:
-        value.setI64(parseInt(argValueStr));
-        break;
-      case CLType.Simple.U128:
-        const u128 = new CLValueInstance.U128();
-        u128.setValue(argValueStr);
-        value.setU128(u128);
-        break;
-      case CLType.Simple.U256:
-        const u256 = new CLValueInstance.U256();
-        u256.setValue(argValueStr);
-        value.setU256(u256);
-        break;
-      case CLType.Simple.U512:
-        const u512 = new CLValueInstance.U512();
-        u512.setValue(argValueStr);
-        value.setU256(u512);
-        break;
-      case CLType.Simple.STRING:
-        value.setStrValue(argValueStr);
-        break;
-      case CLType.Simple.BOOL:
-        value.setBoolValue(validator.toBoolean(argValueStr));
-        break;
-      case CLType.Simple.KEY:
-        const key = new Key();
-        let keyType = arg.$.secondType.value as KeyType;
-        let valueInByteArray = decodeBase16(argValueStr);
-        switch (keyType) {
-          case KeyType.ADDRESS:
-            const address = new Key.Address();
-            address.setAccount(valueInByteArray);
-            key.setAddress(address);
-            break;
-          case KeyType.HASH:
-            const hash = new Key.Hash();
-            hash.setHash(valueInByteArray);
-            key.setHash(hash);
-            break;
-          case KeyType.UREF:
-            const uRef = new Key.URef();
-            uRef.setUref(valueInByteArray);
-            uRef.setAccessRights(arg.$.URefAccessRight.value!);
-            key.setUref(uRef);
-            break;
-        }
-        value.setKey(key);
-        break;
-      case CLType.Simple.UREF:
-        const URef = new Key.URef();
-        URef.setAccessRights(arg.$.URefAccessRight.value!);
-        URef.setUref(decodeBase16(argValueStr));
-        value.setUref(URef);
-        break;
-    }
-    clType.setSimpleType(simpleType);
-
-    const clValueInstance = new CLValueInstance();
-    clValueInstance.setClType(clType);
-    clValueInstance.setValue(value);
-    return clValueInstance;
-  }
-
-  /**
-   * Implement validator for DeployArgument which can be used in formstate library,
-   * If a truthy string is returned it represents a validation error.
-   * @param deployArgument
-   */
-  private validateDeployArgument(
-    deployArgument: DeployArgument
-  ): string | false {
-    const value = deployArgument.value.$;
-    switch (deployArgument.type.$) {
-      case CLType.Simple.U8:
-      case CLType.Simple.U32:
-      case CLType.Simple.U64:
-      case CLType.Simple.I32:
-      case CLType.Simple.I64:
-      case CLType.Simple.U128:
-      case CLType.Simple.U256:
-      case CLType.Simple.U512:
-        let limit: { min: JSBI; max: JSBI } = (NumberLimit as any)[
-          deployArgument.type.value
-        ];
-        if (!validator.isNumeric(value)) {
-          return `Value should be a number`;
-        }
-        const v = JSBI.BigInt(value);
-        if (JSBI.lessThan(v, limit.min) || JSBI.greaterThan(v, limit.max)) {
-          return `Value should be in [${limit.min.toString(
-            10
-          )}, ${limit.max.toString(10)}]`;
-        }
-        return false;
-      case CLType.Simple.STRING:
-        return false;
-      case CLType.Simple.BOOL:
-        if (!validator.isBoolean(value)) {
-          return `Value should be true or false`;
-        }
-        return false;
-      case CLType.Simple.KEY:
-      case CLType.Simple.UREF:
-        if (!validator.isHexadecimal(value)) {
-          return `Value should be base16`;
-        }
-        return false;
-      case 'Bytes':
-        if (!validator.isHexadecimal(value)) {
-          return `Value should be base16`;
-        }
-        return false;
-    }
-    return false;
-  }
-
   @action
   private tryRestore() {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
+    let restoreDeployArgument = function(arg: RawDeployArguments) {
+      let helper = function(
+        innerDeployArg: DeployArgument,
+        mapArg: RawDeployArguments
+      ) {
+        innerDeployArg.name.onChange(mapArg.name);
+        innerDeployArg.type.onChange(mapArg.type);
+        innerDeployArg.value.onChange(mapArg.value);
+        innerDeployArg.secondType.onChange(mapArg.secondType);
+        innerDeployArg.URefAccessRight.onChange(mapArg.URefAccessRight);
+      };
+      const deployArgument = DeployContractsContainer.newDeployArgument(
+        true,
+        arg.name,
+        arg.type,
+        arg.value,
+        arg.secondType,
+        arg.URefAccessRight
+      );
+      arg.mapInnerDeployArgs.forEach((mapArg, idx) => {
+        const innerDeployArg = deployArgument.$.mapInnerDeployArgs.$[idx].$;
+        helper(innerDeployArg, mapArg);
+      });
+      arg.listInnerDeployArgs.forEach((listArg, idx) => {
+        helper(deployArgument.$.listInnerDeployArgs.$[idx].$, listArg);
+      });
+
+      // Unlike list or map, the length of tuple is variable.
+      arg.tupleInnerDeployArgs.forEach((tupleArg, idx) => {
+        if (idx == 0) {
+          helper(deployArgument.$.tupleInnerDeployArgs.$[idx].$, tupleArg);
+        } else {
+          deployArgument.$.tupleInnerDeployArgs.$.push(
+            DeployContractsContainer.newDeployArgument(
+              false,
+              tupleArg.name,
+              tupleArg.type,
+              tupleArg.value,
+              tupleArg.secondType,
+              tupleArg.URefAccessRight
+            )
+          );
+        }
+      });
+      return deployArgument;
+    };
     if (preState !== null) {
       const value = JSON.parse(preState) as UserInputPersistent;
 
@@ -592,24 +471,12 @@ export class DeployContractsContainer {
       this.deployArguments.reset();
 
       value.editingDeployArguments?.forEach(arg => {
-        const deployArgument = this.newDeployArgument(
-          arg.name,
-          arg.type,
-          arg.secondType,
-          arg.URefAccessRight,
-          arg.value
-        );
+        const deployArgument = restoreDeployArgument(arg);
         this.editingDeployArguments.$.push(deployArgument);
       });
 
       value.deployArguments?.forEach(arg => {
-        const deployArgument = this.newDeployArgument(
-          arg.name,
-          arg.type,
-          arg.secondType,
-          arg.URefAccessRight,
-          arg.value
-        );
+        const deployArgument = restoreDeployArgument(arg);
         this.deployArguments.$.push(deployArgument);
       });
     }
@@ -617,6 +484,19 @@ export class DeployContractsContainer {
 
   public saveToSessionStore() {
     let deployConfiguration = this.deployConfiguration.$;
+    let helper = (a: FormState<DeployArgument>) => {
+      return {
+        name: a.$.name.value,
+        type: a.$.type.value,
+        secondType: a.$.secondType.value,
+        // Don't support nested complex types
+        listInnerDeployArgs: [] as RawDeployArguments[],
+        tupleInnerDeployArgs: [] as RawDeployArguments[],
+        mapInnerDeployArgs: [] as RawDeployArguments[],
+        URefAccessRight: a.$.URefAccessRight.value,
+        value: a.$.value.value
+      };
+    };
     let state: UserInputPersistent = {
       deployArguments: this.deployArguments.$.map(arg => {
         const value = arg.$;
@@ -624,6 +504,9 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
+          tupleInnerDeployArgs: value.tupleInnerDeployArgs.$.map(helper),
+          listInnerDeployArgs: value.listInnerDeployArgs.$.map(helper),
+          mapInnerDeployArgs: value.mapInnerDeployArgs.$.map(helper),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };
@@ -640,6 +523,9 @@ export class DeployContractsContainer {
           name: value.name.value,
           type: value.type.value,
           secondType: value.secondType.value,
+          tupleInnerDeployArgs: value.tupleInnerDeployArgs.$.map(helper),
+          listInnerDeployArgs: value.listInnerDeployArgs.$.map(helper),
+          mapInnerDeployArgs: value.mapInnerDeployArgs.$.map(helper),
           URefAccessRight: value.URefAccessRight.value,
           value: value.value.value
         };

@@ -1,6 +1,5 @@
 import {
   action,
-  autorun,
   IObservableArray,
   observable,
   reaction,
@@ -41,7 +40,10 @@ export class DagStep {
   private get currentMaxRank() {
     let blockRank =
       this.container.hasBlocks &&
-      this.container.blocks![0].getSummary()!.getHeader()!.getJRank();
+      this.container
+        .blocks![0].getSummary()!
+        .getHeader()!
+        .getJRank();
     return this.maxRank === 0 && blockRank ? blockRank : this.maxRank;
   }
 
@@ -163,9 +165,15 @@ export class DagContainer {
 
         if (index === -1) {
           // blocks with rank < maxRank+1-depth will be culled
-          let blockRank = block!.getSummary()!.getHeader()!.getJRank();
+          let blockRank = block!
+            .getSummary()!
+            .getHeader()!
+            .getJRank();
           let oldMaxRank = this.blocks
-            ? this.blocks[0].getSummary()!.getHeader()!.getJRank()
+            ? this.blocks[0]
+                .getSummary()!
+                .getHeader()!
+                .getJRank()
             : 0;
           let maxRank = Math.max(oldMaxRank, blockRank);
           let culledThreshold = maxRank + 1 - this.depth;
@@ -173,7 +181,10 @@ export class DagContainer {
             // The new block should be added to DAG.
             let remainingBlocks = this.blocks
               ? this.blocks.filter(b => {
-                  let rank = b.getSummary()?.getHeader()?.getJRank();
+                  let rank = b
+                    .getSummary()
+                    ?.getHeader()
+                    ?.getJRank();
                   if (rank !== undefined) {
                     return rank >= culledThreshold;
                   }
@@ -186,7 +197,10 @@ export class DagContainer {
             for (; i < remainingBlocks.length; i++) {
               if (
                 blockRank >=
-                remainingBlocks[i].getSummary()!.getHeader()!.getJRank()
+                remainingBlocks[i]
+                  .getSummary()!
+                  .getHeader()!
+                  .getJRank()
               ) {
                 break;
               }

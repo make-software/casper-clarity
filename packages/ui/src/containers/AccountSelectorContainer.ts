@@ -1,5 +1,5 @@
 import { action, computed, observable } from 'mobx';
-import { decodeBase16, decodeBase64, encodeBase16, Keys } from 'casperlabs-sdk';
+import { decodeBase16 } from 'casperlabs-sdk';
 import { StateChangeOptions } from 'downshift';
 import matchSorter from 'match-sorter';
 import Pages from '../components/Pages';

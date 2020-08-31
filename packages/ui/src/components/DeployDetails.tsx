@@ -7,7 +7,6 @@ import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_
 import Pages from './Pages';
 import {
   RefreshableComponent,
-  Icon,
   shortHash,
   FailIcon,
   SuccessIcon
@@ -114,7 +113,10 @@ const ResultsTable = observer(
         rows={props.deploy && props.deploy.getProcessingResultsList()}
         renderRow={(proc, i) => {
           const id = encodeBase16(
-            proc.getBlockInfo()!.getSummary()!.getBlockHash_asU8()
+            proc
+              .getBlockInfo()!
+              .getSummary()!
+              .getBlockHash_asU8()
           );
           return (
             <tr key={i}>
@@ -148,10 +150,7 @@ const deployAttrs: (deploy: DeployInfo) => Array<[string, any]> = (
   const header = deploy.getDeploy()!.getHeader()!;
   return [
     ['Deploy Hash', id],
-    [
-      'Account Hash',
-      encodeBase16(header.getAccountPublicKeyHash_asU8())
-    ],
+    ['Account Hash', encodeBase16(header.getAccountPublicKeyHash_asU8())],
     ['Timestamp', new Date(header.getTimestamp()).toISOString()],
     ['Gas Price', header.getGasPrice().toLocaleString()]
   ];

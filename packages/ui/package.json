@@ -30,7 +30,6 @@
     "jquery": "^3.4.1",
     "jsbi": "^3.1.2",
     "kind-of": "^6.0.3",
-    "lint-staged": "^8.2.1",
     "lodash": "^4.17.14",
     "match-sorter": "^4.0.2",
     "minimist": ">=1.2.3",
@@ -40,7 +39,7 @@
     "node-sass": "^4.14.1",
     "popper.js": "^1.15.0",
     "prettier": "^1.18.2",
-    "react": "^16.8.6",
+    "react": "latest",
     "react-chartjs-2": "^2.9.0",
     "react-dom": "^16.8.6",
     "react-ga": "^2.7.0",
@@ -57,7 +56,7 @@
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",
     "clean": "rm -rf build",
-    "test": "react-scripts test",
+    "test": "jest",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -78,7 +77,8 @@
   "devDependencies": {
     "@types/lodash": "^4.14.149",
     "@types/react-helmet": "^5.0.15",
-    "@types/validator": "^12.0.1"
+    "@types/validator": "^12.0.1",
+    "react-test-renderer": "^16.13.1"
   },
   "proxy": "http://localhost:8001/"
 }
