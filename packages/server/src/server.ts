@@ -6,18 +6,94 @@ import fs from 'fs';
 import https from 'https';
 import jwksRsa from 'jwks-rsa';
 import path from 'path';
+import * as promClient from 'prom-client';
+
 import { decodeBase64 } from 'tweetnacl-util';
 // TODO: Everything in config.json could come from env vars.
 import config from './config.json';
 import DeployService from './services/DeployService';
 import { StoredFaucetService } from './StoredFaucetService';
 import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport';
+import { Counter, Gauge } from 'prom-client';
+import { CronJob } from 'cron';
+import { MetricsFromAuth0 } from './metricsFromAuth0';
+import { ManagementClient } from 'auth0';
 
 // https://auth0.com/docs/quickstart/spa/vanillajs/02-calling-an-api
 // https://github.com/auth0/express-jwt
 
 // initialize configuration
 dotenv.config();
+
+export class ClarityMetrics {
+  public faucetRequestCounter: Counter<string>;
+  public deployRequestCounter: Counter<string>;
+  public accountKeyGauge: Gauge<string>;
+  public accountGauge: Gauge<string>;
+  public dailyLoginGauge: Gauge<string>;
+  public dailySignupGauge: Gauge<string>;
+  constructor() {
+    this.faucetRequestCounter = new promClient.Counter({
+      name: 'faucet_request_total',
+      help: 'Count of faucet requests'
+    });
+    this.deployRequestCounter = new promClient.Counter({
+      name: 'deploy_request_total',
+      help: 'Count of deploy requests'
+    });
+    this.accountKeyGauge = new promClient.Gauge({
+      name: 'account_key_total',
+      help: 'Count of account key'
+    });
+    this.accountGauge = new promClient.Gauge({
+      name: 'user_account_total',
+      help: 'Count of user account'
+    });
+    this.dailyLoginGauge = new promClient.Gauge({
+      name: 'daily_login_days',
+      help: 'Number of logins every day'
+    });
+    this.dailySignupGauge = new promClient.Gauge({
+      name: 'daily_signup_days',
+      help: 'Number of sign up every day'
+    });
+  }
+}
+
+const clarityMetrics = new ClarityMetrics();
+const enableAuth0Metrics = process.env.ENABLE_AUTH0_METRICS === 'true';
+
+if (enableAuth0Metrics) {
+  const DOMAIN = process.env.DOMAIN;
+  const CLIENT_ID = process.env.CLIENT_ID;
+  const AUDIENCE = process.env.AUDIENCE;
+  const CLIENT_SECRET = process.env.CLIENT_SECRET;
+
+  const managementClient = new ManagementClient({
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    audience: AUDIENCE,
+    domain: DOMAIN!,
+    scope: 'read:stats read:users create:users'
+  });
+  const metricsFromAuth0 = new MetricsFromAuth0(
+    managementClient,
+    clarityMetrics
+  );
+  // set up a cron job which run every 6 hours
+  // @ts-ignore
+  new CronJob(
+    '0 */6 * * *', // every 6 hours
+    () => {
+      metricsFromAuth0.runJob();
+    },
+    null,
+    false,
+    undefined,
+    undefined,
+    true
+  ).start();
+}
 
 // port is now available to the Node.js runtime
 // as if it were an environment variable
@@ -124,6 +200,22 @@ app.get('/', (_, res) => {
 // Parse JSON sent in the body.
 app.use(express.json());
 
+app.get('/metrics', (_, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.end(promClient.register.metrics());
+});
+
+app.post('/api/collect', checkJwt, (req, res) => {
+  const eventType = req.body.eventType;
+  switch (eventType) {
+    case 'deploy':
+      clarityMetrics.deployRequestCounter.inc();
+      break;
+    default:
+  }
+  res.end();
+});
+
 // Faucet endpoint.
 app.post('/api/faucet', checkJwt, (req, res) => {
   // express-jwt put the token in res.user
@@ -143,6 +235,7 @@ app.post('/api/faucet', checkJwt, (req, res) => {
       const response = {
         deployHashBase16: Buffer.from(deployHash).toString('hex')
       };
+      clarityMetrics.faucetRequestCounter.inc();
       res.send(response);
     })
     .catch(err => {

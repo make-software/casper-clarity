@@ -394,10 +394,10 @@ const Content = (props: AppProps) => {
               <Title title="Vesting Contract" />
               <Vesting {...props} />
             </Route>
-            <Route
-              path={Pages.DeployContracts}
-              render={_ => <DeployContractsForm {...props} />}
-            />
+            <PrivateRoute path={Pages.DeployContracts} auth={props.auth}>
+              <Title title="Deploy Contract" />
+              <DeployContractsForm {...props} />
+            </PrivateRoute>
             <Route path={Pages.Deploys}>
               <Title title={'Deploys'} />
               <AccountSelector {...props} />
