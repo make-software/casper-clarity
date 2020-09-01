@@ -10,7 +10,7 @@ The purpose of the explorer is to help users interact with the blockchain:
 
 ## Install
 
-You could use `yarn run bootstarp` to install all dependencies
+You could use `yarn run bootstrap` to install all dependencies
 
 ## Build
 
