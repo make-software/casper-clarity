@@ -10,7 +10,7 @@ export class NetworkInfoContainer {
     private casperService: CasperService
   ) {}
 
-  async networkInfo() {
+  async refresh() {
     const latestFinalizedBlock = await this.casperService.getLastFinalizedBlockInfo();
     this.validatorSize = latestFinalizedBlock
       .getSummary()!
