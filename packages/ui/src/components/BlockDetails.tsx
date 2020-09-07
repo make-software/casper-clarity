@@ -5,7 +5,13 @@ import { BlockContainer } from '../containers/BlockContainer';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import Pages from './Pages';
-import { RefreshableComponent, Icon, SuccessIcon, FailIcon } from './Utils';
+import {
+  RefreshableComponent,
+  Icon,
+  SuccessIcon,
+  FailIcon,
+  CSPR
+} from './Utils';
 import { BlockDAG } from './BlockDAG';
 import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { shortHash } from './Utils';
@@ -251,7 +257,7 @@ export const Balance = observer(
   (props: { balance: ObservableValue<number> }) => {
     const value = props.balance.value;
     if (value == null) return null;
-    return <span>{value.toLocaleString()}</span>;
+    return <CSPR motes={value} />;
   }
 );
 

@@ -231,3 +231,7 @@ export const Title = (props: { title: string }) => (
     <title>CasperLabs Clarity - {props.title}</title>
   </Helmet>
 );
+
+export const CSPR = (props: { motes: number }) => {
+  return <span>{(props.motes / 100000).toLocaleString()} CSPR</span>;
+};
