@@ -128,3 +128,22 @@ footer.sticky-footer {
 .navbar-nav.ml-auto > .nav-item:last-child {
   margin-right: 33px !important;
 }
+
+.navbar-network-info {
+  width: 633px;
+  height: 65px;
+  background: #232323 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  opacity: 1;
+  padding: 13px 19px;
+  p {
+    text-align: left;
+    font: normal normal normal 15px/19px Sarabun;
+    letter-spacing: 0px;
+    color: #868e96;
+    margin: 0;
+  }
+  .navbar-network-highlight {
+    color: #ffffff;
+  }
+}
