@@ -161,20 +161,18 @@ export class AuthContainer {
       // Save the private and public keys to disk.
       saveToFile(
         Keys.Ed25519.privateKeyEncodeInPem(decodeBase64(form.privateKeyBase64)),
-        `${form.name.$}-account-private.pem`
+        `${form.name.$}_secret_key.pem`
       );
       saveToFile(
         Keys.Ed25519.publicKeyEncodeInPem(
           decodeBase64(form.publicKeyBase64.$!)
         ),
-        `${form.name.$}-account-public.pem`
+        `${form.name.$}_public_key.pem`
       );
-      saveToFile(
-        encodeBase16(
-          Keys.Ed25519.publicKeyHash(decodeBase64(form.publicKeyBase64.$!))
-        ),
-        `${form.name.$}-account-id-hex`
+      const publicKeyBase16 = encodeBase16(
+        decodeBase64(form.publicKeyBase64.$!)
       );
+      saveToFile('01' + publicKeyBase16, `${form.name.$}_public_key_hex`);
       // Add the public key to the accounts and save it to Auth0.
       await this.addAccount({
         name: form.name.$!,
