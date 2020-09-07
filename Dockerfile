@@ -14,6 +14,8 @@ ENV STATIC_ROOT=/app/packages/ui/build
 ENV PAYMENT_AMOUNT=10000000
 ENV TRANSFER_AMOUNT=1000000000
 ENV GAS_PRICE=10
+# The name display in the header of clarity.
+ENV NETWORK_NAME=TestNet
 # The link to graphql playground, used in Home page of UI.
 ENV UI_GRAPHQL_URL=http://devnet-graphql.casperlabs.io:40403/graphql
 ENV FAUCET_CONTRACT_PATH=/app/contracts/faucet_stored.wasm

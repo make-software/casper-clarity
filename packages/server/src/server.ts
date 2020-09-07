@@ -40,6 +40,7 @@ const paymentAmount = BigInt(process.env.PAYMENT_AMOUNT!);
 const transferAmount = BigInt(process.env.TRANSFER_AMOUNT)!;
 
 const urls = process.env.CASPER_SERVICE_URL!;
+const networkName = process.env.NETWORK_NAME!;
 
 const nodeUrls = urls
   .split(';')
@@ -97,6 +98,9 @@ app.get('/config.js', (_, res) => {
       mock: {
         enabled: isMock
       }
+    },
+    network: {
+      name: networkName
     },
     grpc: {
       // In production we can leave this empty and then it should
