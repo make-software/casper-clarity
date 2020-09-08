@@ -75,7 +75,8 @@ const connectedPeersContainer = new ConnectedPeersContainer(
 );
 const deployContractsContainer = new DeployContractsContainer(
   errors,
-  casperService
+  casperService,
+  authService
 );
 const validatorsContainer = new ValidatorsContainer(errors, casperService);
 

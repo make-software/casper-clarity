@@ -25,6 +25,8 @@ import { decodeBase64 } from 'tweetnacl-ts';
 import JSBI from 'jsbi';
 import { publicKeyHashForEd25519 } from './AuthContainer';
 import { DeployArgumentParser } from '../lib/DeployArgumentParser';
+import MetricsService from '../services/MetricsService';
+import AuthService from '../services/AuthService';
 
 export const BytesTypeStr = 'Bytes';
 export const BytesFixedTypeStr = 'Bytes (Fixed Length)';
@@ -175,7 +177,8 @@ export class DeployContractsContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService
+    private casperService: CasperService,
+    private authService: AuthService
   ) {
     this.tryRestore();
   }
@@ -336,6 +339,8 @@ export class DeployContractsContainer {
         decodeBase64(publicKeyBase64)
       );
       await this.casperService.deploy(signedDeploy);
+      const jwtToken = await this.authService.getToken();
+      MetricsService.metricCollect('deploy', jwtToken);
       ($(`#${this.accordionId}`) as any).collapse('hide');
       this.deployedHash = encodeBase16(signedDeploy.getDeployHash_asU8());
       return true;
@@ -406,8 +411,8 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
-    let restoreDeployArgument = function (arg: RawDeployArguments) {
-      let helper = function (
+    let restoreDeployArgument = function(arg: RawDeployArguments) {
+      let helper = function(
         innerDeployArg: DeployArgument,
         mapArg: RawDeployArguments
       ) {
