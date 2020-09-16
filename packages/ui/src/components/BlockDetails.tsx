@@ -156,7 +156,7 @@ const DeploysTable = observer(
               <td>{shortHash(accountId)}</td>
               <td>{deploy.getStage()}</td>
               <td className="text-right">
-                {deploy.getCost().toLocaleString()}
+                <CSPR motes={deploy.getCost()}/>
               </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(accountId)} />
@@ -217,7 +217,7 @@ const blockAttrs: (block: BlockInfo) => Array<[string, any]> = (
     ],
     ['Deploy Count', header.getDeployCount()],
     ['Deploy Error Count', stats.getDeployErrorCount()],
-    ['Deploy Cost Total', stats.getDeployCostTotal().toLocaleString()],
+    ['Deploy Cost Total', <CSPR motes={stats.getDeployCostTotal()}/>],
     ['Deploy Gas Price Average', stats.getDeployGasPriceAvg().toLocaleString()],
     ['Block Size (bytes)', stats.getBlockSizeBytes().toLocaleString()],
     ['Finality', <FinalityIcon block={block} />],
