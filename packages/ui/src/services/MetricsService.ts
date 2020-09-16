@@ -1,8 +1,6 @@
 export type MetricType = 'deploy';
 
 export default class MetricsService {
-  constructor() {}
-
   /** Call the API on the server backend. */
   static async metricCollect(
     type: MetricType,

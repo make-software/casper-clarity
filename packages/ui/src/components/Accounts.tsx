@@ -15,10 +15,12 @@ import {
   RefreshableComponent
 } from './Utils';
 import Modal from './Modal';
-import { FileSelect, Form, SelectField, TextField } from './Forms';
+
+import { FileSelect, Form, SelectField, TextField, TextArea } from './Forms';
 import { encodeBase16, encodeBase64 } from 'casperlabs-sdk';
 import { ObservableValue } from '../lib/ObservableValueMap';
 import DataTable from './DataTable';
+import { Ed25519 } from 'casperlabs-sdk/dist/lib/Keys';
 
 interface Props {
   auth: AuthContainer;
@@ -64,18 +66,12 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
               )}
               readonly={true}
             />
-            <TextField
-              id="id-public-key-base64"
-              label="Public Key (Base64)"
-              fieldState={newAccountForm.publicKeyBase64.value}
-              readonly={true}
-            />
-            <TextField
-              id="id-private-key-base64"
-              label="Private Key (Base64)"
-              fieldState={newAccountForm.privateKeyBase64}
-              readonly={true}
-            />
+            <TextArea disabled={true} label={'Public Key'}>
+              {Ed25519.publicKeyEncodeInPem(newAccountForm.getKeys.publicKey)}
+            </TextArea>
+            <TextArea disabled={true} label={'Private Key'}>
+              {Ed25519.privateKeyEncodeInPem(newAccountForm.getKeys.secretKey)}
+            </TextArea>
           </Form>
         </Modal>
       );

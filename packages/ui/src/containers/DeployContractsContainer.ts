@@ -440,7 +440,7 @@ export class DeployContractsContainer {
 
       // Unlike list or map, the length of tuple is variable.
       arg?.tupleInnerDeployArgs?.forEach((tupleArg, idx) => {
-        if (idx == 0) {
+        if (idx === 0) {
           helper(deployArgument.$.tupleInnerDeployArgs.$[idx].$, tupleArg);
         } else {
           deployArgument.$.tupleInnerDeployArgs.$.push(
