@@ -14,6 +14,7 @@ import {
 } from 'casperlabs-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
+import { SignKeyPair } from 'tweetnacl-ts';
 
 // https://www.npmjs.com/package/tweetnacl-ts#signatures
 // https://tweetnacl.js.org/#/sign
@@ -274,13 +275,20 @@ class AccountFormData extends CleanableFormData {
 
 export class NewAccountFormData extends AccountFormData {
   @observable privateKeyBase64: string = '';
+  private keys: SignKeyPair;
 
   constructor(accounts: UserAccount[]) {
     super(accounts);
     // Generate key pair and assign to public and private keys.
-    const keys = nacl.sign_keyPair();
-    this.publicKeyBase64 = new FieldState<string>(encodeBase64(keys.publicKey));
-    this.privateKeyBase64 = encodeBase64(keys.secretKey);
+    this.keys = nacl.sign_keyPair();
+    this.publicKeyBase64 = new FieldState<string>(
+      encodeBase64(this.keys.publicKey)
+    );
+    this.privateKeyBase64 = encodeBase64(this.keys.secretKey);
+  }
+
+  get getKeys() {
+    return this.keys;
   }
 }
 

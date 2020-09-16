@@ -259,3 +259,20 @@ export const ErrorMessage = (props: { error: string | null }) =>
       {props.error}
     </div>
   ) : null;
+
+export const TextArea = (props: {
+  disabled: boolean;
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className="form-group">
+    <label htmlFor="exampleFormControlTextarea1">{props.label}</label>
+    <textarea
+      className="form-control"
+      id="exampleFormControlTextarea1"
+      disabled={props.disabled}
+    >
+      {props.children}
+    </textarea>
+  </div>
+);
