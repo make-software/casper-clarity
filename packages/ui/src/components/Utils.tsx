@@ -63,9 +63,8 @@ export const Button = (props: {
   <button
     type="button"
     onClick={_ => props.onClick()}
-    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${
-      props.type || 'primary'
-    }`}
+    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${props.type ||
+      'primary'}`}
     disabled={props.disabled || false}
   >
     {props.title}
@@ -233,5 +232,8 @@ export const Title = (props: { title: string }) => (
 );
 
 export const CSPR = (props: { motes: number }) => {
-  return <span>{(props.motes / 100000).toLocaleString()} CSPR</span>;
+  const s = (props.motes / 100000).toLocaleString(undefined, {
+    maximumFractionDigits: 5
+  });
+  return <span>{s} CSPR</span>;
 };

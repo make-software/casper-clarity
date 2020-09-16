@@ -221,7 +221,7 @@ const blockAttrs: (block: BlockInfo) => Array<[string, any]> = (
     ['Deploy Count', header.getDeployCount()],
     ['Deploy Error Count', stats.getDeployErrorCount()],
     ['Deploy Cost Total', <CSPR motes={stats.getDeployCostTotal()} />],
-    ['Deploy Gas Price Average', stats.getDeployGasPriceAvg().toLocaleString()],
+    ['Deploy Gas Price Average', <CSPR motes={stats.getDeployGasPriceAvg()} />],
     ['Block Size (bytes)', stats.getBlockSizeBytes().toLocaleString()],
     ['Finality', <FinalityIcon block={block} />],
     [

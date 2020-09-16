@@ -155,7 +155,7 @@ const deployAttrs: (deploy: DeployInfo) => Array<[string, any]> = (
     ['Deploy Hash', id],
     ['Account Hash', encodeBase16(header.getAccountPublicKeyHash_asU8())],
     ['Timestamp', new Date(header.getTimestamp()).toISOString()],
-    ['Gas Price', header.getGasPrice().toLocaleString()]
+    ['Gas Price', <CSPR motes={header.getGasPrice()} />]
   ];
 };
 
