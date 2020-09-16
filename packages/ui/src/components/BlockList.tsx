@@ -60,8 +60,8 @@ class _BlockList extends React.Component<Props, {}> {
         refresh={() => this.refresh()}
         subscribeToggleStore={dag.toggleableSubscriber.subscribeToggleStore}
         filterToggleStore={dag.hideBallotsToggleStore}
-        filterTtl='Only show blocks'
-        filterLbl='Hide Ballots'
+        filterTtl="Only show blocks"
+        filterLbl="Hide Ballots"
         headers={[
           'Block Hash',
           'j-Rank',
@@ -100,8 +100,11 @@ class _BlockList extends React.Component<Props, {}> {
           );
         }}
         filterRow={(block: BlockInfo) => {
-          let msgType=block.getSummary()?.getHeader()?.getMessageType(); 
-          return msgType==Block.MessageType.BLOCK;
+          let msgType = block
+            .getSummary()
+            ?.getHeader()
+            ?.getMessageType();
+          return msgType === Block.MessageType.BLOCK;
         }}
         footerMessage={
           <DagStepButtons
