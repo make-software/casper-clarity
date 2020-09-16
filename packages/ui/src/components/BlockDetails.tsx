@@ -5,7 +5,13 @@ import { BlockContainer } from '../containers/BlockContainer';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import Pages from './Pages';
-import { RefreshableComponent, Icon, SuccessIcon, FailIcon } from './Utils';
+import {
+  RefreshableComponent,
+  Icon,
+  SuccessIcon,
+  FailIcon,
+  CSPR
+} from './Utils';
 import { BlockDAG } from './BlockDAG';
 import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { shortHash } from './Utils';
@@ -140,7 +146,10 @@ const DeploysTable = observer(
         renderRow={(deploy, i) => {
           const id = encodeBase16(deploy.getDeploy()!.getDeployHash_asU8());
           const accountId = encodeBase16(
-            deploy.getDeploy()!.getHeader()!.getAccountPublicKeyHash_asU8()
+            deploy
+              .getDeploy()!
+              .getHeader()!
+              .getAccountPublicKeyHash_asU8()
           );
           return (
             <tr key={i}>
@@ -150,7 +159,7 @@ const DeploysTable = observer(
               <td>{shortHash(accountId)}</td>
               <td>{deploy.getStage()}</td>
               <td className="text-right">
-                {deploy.getCost().toLocaleString()}
+                <CSPR motes={deploy.getCost()} />
               </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(accountId)} />
@@ -211,8 +220,8 @@ const blockAttrs: (block: BlockInfo) => Array<[string, any]> = (
     ],
     ['Deploy Count', header.getDeployCount()],
     ['Deploy Error Count', stats.getDeployErrorCount()],
-    ['Deploy Cost Total', stats.getDeployCostTotal().toLocaleString()],
-    ['Deploy Gas Price Average', stats.getDeployGasPriceAvg().toLocaleString()],
+    ['Deploy Cost Total', <CSPR motes={stats.getDeployCostTotal()} />],
+    ['Deploy Gas Price Average', <CSPR motes={stats.getDeployGasPriceAvg()} />],
     ['Block Size (bytes)', stats.getBlockSizeBytes().toLocaleString()],
     ['Finality', <FinalityIcon block={block} />],
     [
@@ -251,7 +260,7 @@ export const Balance = observer(
   (props: { balance: ObservableValue<number> }) => {
     const value = props.balance.value;
     if (value == null) return null;
-    return <span>{value.toLocaleString()}</span>;
+    return <CSPR motes={value} />;
   }
 );
 
@@ -281,8 +290,10 @@ export const BlockRole = (props: { header: Block.Header }) => {
 
 export const FinalityIcon = (props: { block: BlockInfo }) => {
   if (
-    props.block.getSummary()?.getHeader()!.getMessageType() ===
-    Block.MessageType.BALLOT
+    props.block
+      .getSummary()
+      ?.getHeader()!
+      .getMessageType() === Block.MessageType.BALLOT
   )
     return null;
 

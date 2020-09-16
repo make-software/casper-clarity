@@ -63,9 +63,8 @@ export const Button = (props: {
   <button
     type="button"
     onClick={_ => props.onClick()}
-    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${
-      props.type || 'primary'
-    }`}
+    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${props.type ||
+      'primary'}`}
     disabled={props.disabled || false}
   >
     {props.title}
@@ -231,3 +230,10 @@ export const Title = (props: { title: string }) => (
     <title>CasperLabs Clarity - {props.title}</title>
   </Helmet>
 );
+
+export const CSPR = (props: { motes: number }) => {
+  const s = (props.motes / 100000).toLocaleString(undefined, {
+    maximumFractionDigits: 5
+  });
+  return <span>{s} CSPR</span>;
+};
