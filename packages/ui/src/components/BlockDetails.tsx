@@ -146,7 +146,10 @@ const DeploysTable = observer(
         renderRow={(deploy, i) => {
           const id = encodeBase16(deploy.getDeploy()!.getDeployHash_asU8());
           const accountId = encodeBase16(
-            deploy.getDeploy()!.getHeader()!.getAccountPublicKeyHash_asU8()
+            deploy
+              .getDeploy()!
+              .getHeader()!
+              .getAccountPublicKeyHash_asU8()
           );
           return (
             <tr key={i}>
@@ -156,7 +159,7 @@ const DeploysTable = observer(
               <td>{shortHash(accountId)}</td>
               <td>{deploy.getStage()}</td>
               <td className="text-right">
-                <CSPR motes={deploy.getCost()}/>
+                <CSPR motes={deploy.getCost()} />
               </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(accountId)} />
@@ -217,7 +220,7 @@ const blockAttrs: (block: BlockInfo) => Array<[string, any]> = (
     ],
     ['Deploy Count', header.getDeployCount()],
     ['Deploy Error Count', stats.getDeployErrorCount()],
-    ['Deploy Cost Total', <CSPR motes={stats.getDeployCostTotal()}/>],
+    ['Deploy Cost Total', <CSPR motes={stats.getDeployCostTotal()} />],
     ['Deploy Gas Price Average', stats.getDeployGasPriceAvg().toLocaleString()],
     ['Block Size (bytes)', stats.getBlockSizeBytes().toLocaleString()],
     ['Finality', <FinalityIcon block={block} />],
@@ -287,8 +290,10 @@ export const BlockRole = (props: { header: Block.Header }) => {
 
 export const FinalityIcon = (props: { block: BlockInfo }) => {
   if (
-    props.block.getSummary()?.getHeader()!.getMessageType() ===
-    Block.MessageType.BALLOT
+    props.block
+      .getSummary()
+      ?.getHeader()!
+      .getMessageType() === Block.MessageType.BALLOT
   )
     return null;
 
