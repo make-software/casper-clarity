@@ -9,7 +9,8 @@ import {
   RefreshableComponent,
   shortHash,
   FailIcon,
-  SuccessIcon
+  SuccessIcon,
+  CSPR
 } from './Utils';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { Balance, FinalityIcon } from './BlockDetails';
@@ -126,7 +127,9 @@ const ResultsTable = observer(
               <td>
                 <FinalityIcon block={proc.getBlockInfo()!} />
               </td>
-              <td className="text-right">{proc.getCost().toLocaleString()}</td>
+              <td className="text-right">
+                <CSPR motes={proc.getCost()} />
+              </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(id)} />
               </td>
@@ -152,7 +155,7 @@ const deployAttrs: (deploy: DeployInfo) => Array<[string, any]> = (
     ['Deploy Hash', id],
     ['Account Hash', encodeBase16(header.getAccountPublicKeyHash_asU8())],
     ['Timestamp', new Date(header.getTimestamp()).toISOString()],
-    ['Gas Price', header.getGasPrice().toLocaleString()]
+    ['Gas Price', <CSPR motes={header.getGasPrice()} />]
   ];
 };
 

@@ -7,8 +7,15 @@ import AuthContainer, {
   NewAccountFormData,
   getPublicKeyHash
 } from '../containers/AuthContainer';
-import { Button, IconButton, ListInline, RefreshableComponent } from './Utils';
+import {
+  Button,
+  CSPR,
+  IconButton,
+  ListInline,
+  RefreshableComponent
+} from './Utils';
 import Modal from './Modal';
+
 import { FileSelect, Form, SelectField, TextField, TextArea } from './Forms';
 import { encodeBase16, encodeBase64 } from 'casperlabs-sdk';
 import { ObservableValue } from '../lib/ObservableValueMap';
@@ -181,7 +188,7 @@ const Balance = observer(
 
     const hash = encodeBase16(value.blockHash);
     const balance =
-      value.balance === undefined ? 'n/a' : value.balance.toLocaleString();
+      value.balance === undefined ? 'n/a' : CSPR({ motes: value.balance });
     return (
       <div className="text-right" title={`As of block ${hash}`}>
         {balance}
