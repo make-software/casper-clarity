@@ -30,6 +30,7 @@ import ConnectedPeersContainer from './containers/ConnectedPeersContainer';
 import { VestingContainer } from './contracts/Vesting/container/VestingContainer';
 import { DeployContractsContainer } from './containers/DeployContractsContainer';
 import ValidatorsContainer from './containers/ValidatorsContainer';
+import { NetworkInfoContainer } from './containers/NetworkInfoContainer';
 
 let w = window as any;
 w.$ = w.jQuery = jQuery;
@@ -79,6 +80,7 @@ const deployContractsContainer = new DeployContractsContainer(
   authService
 );
 const validatorsContainer = new ValidatorsContainer(errors, casperService);
+const networkInfoContainer = new NetworkInfoContainer(errors, casperService);
 
 ReactDOM.render(
   <HashRouter>
@@ -96,6 +98,7 @@ ReactDOM.render(
       connectedPeersContainer={connectedPeersContainer}
       search={search}
       deployContractsContainer={deployContractsContainer}
+      networkInfoContainer={networkInfoContainer}
     />
   </HashRouter>,
   document.getElementById('root')

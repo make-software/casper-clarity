@@ -12,7 +12,7 @@ import Accounts from './Accounts';
 import Faucet from './Faucet';
 import Explorer from './Explorer';
 import BlockList from './BlockList';
-import { PrivateRoute, Title } from './Utils';
+import { PrivateRoute, RefreshableComponent, Title } from './Utils';
 import AuthContainer from '../containers/AuthContainer';
 import FaucetContainer from '../containers/FaucetContainer';
 import ErrorContainer from '../containers/ErrorContainer';
@@ -37,6 +37,7 @@ import { useEffect } from 'react';
 import ReactGA from 'react-ga';
 import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
+import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 
@@ -124,6 +125,7 @@ export interface AppProps {
   connectedPeersContainer: ConnectedPeersContainer;
   search: SearchContainer;
   deployContractsContainer: DeployContractsContainer;
+  networkInfoContainer: NetworkInfoContainer;
 }
 
 // The entry point for rendering.
@@ -189,14 +191,12 @@ export default class App extends React.Component<AppProps, {}> {
     $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body')
-        .stop()
-        .animate(
-          {
-            scrollTop: offset.top
-          },
-          1000
-        );
+      $('html, body').stop().animate(
+        {
+          scrollTop: offset.top
+        },
+        1000
+      );
       e.preventDefault();
     });
   }
@@ -239,10 +239,16 @@ const NavLink = (props: { item: MenuItem }) => {
 // https://github.com/mobxjs/mobx-react/issues/274
 // Moved `withRouter` to a separate line.
 @observer
-class _Navigation extends React.Component<
+class _Navigation extends RefreshableComponent<
   AppProps & RouteComponentProps<any>,
   {}
 > {
+  // refresh every 10 seconds
+  refreshIntervalMillis = 10000;
+  async refresh() {
+    this.props.connectedPeersContainer.refreshPeers();
+    this.props.networkInfoContainer.refresh();
+  }
   render() {
     return (
       <nav
@@ -252,6 +258,30 @@ class _Navigation extends React.Component<
         <a className="navbar-brand" href="https://casperlabs.io/">
           <img src={logo} alt="logo" />
         </a>
+        <div className="navbar-network-info d-none d-md-inline-block">
+          <p>
+            Connected to:&nbsp;
+            <span className={'navbar-network-highlight'}>
+              {window.config?.network?.name}&nbsp;
+            </span>
+            Validators count:&nbsp;
+            <span className={'navbar-network-highlight'}>
+              {this.props.networkInfoContainer.validatorSize}&nbsp;
+            </span>
+            Main rank:&nbsp;
+            <span className={'navbar-network-highlight'}>
+              {this.props.networkInfoContainer.mainRank}&nbsp;
+            </span>
+          </p>
+          {this.props.connectedPeersContainer.peers?.length && (
+            <p>
+              Node version:&nbsp;
+              <span className={'navbar-network-highlight'}>
+                {this.props.connectedPeersContainer.peers[0].getNodeVersion()}
+              </span>
+            </p>
+          )}
+        </div>
         <button
           className="navbar-toggler navbar-toggler-right"
           type="button"

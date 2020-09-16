@@ -10,6 +10,9 @@ interface Config {
   graphql: {
     url?: string;
   };
+  network: {
+    name?: string;
+  };
   auth: {
     mock: {
       enabled: boolean;
