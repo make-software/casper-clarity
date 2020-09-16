@@ -268,9 +268,11 @@ export const TextArea = (props: {
   <div className="form-group">
     <label htmlFor="exampleFormControlTextarea1">{props.label}</label>
     <textarea
+      rows={3}
       className="form-control"
       id="exampleFormControlTextarea1"
       disabled={props.disabled}
+      style={{fontSize: "12px"}}
     >
       {props.children}
     </textarea>
