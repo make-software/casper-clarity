@@ -105,7 +105,17 @@ div.svg-hint {
 }
 
 footer.sticky-footer {
-  background-color: #efeded;
+  background-color: black;
+  small {
+    color: #b8b8b8;
+    padding: 0 1rem;
+    a {
+      color: #3191ff;
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
 }
 
 //.bg-success {

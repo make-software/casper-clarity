@@ -30,6 +30,16 @@ import AccountSelectorContainer from '../containers/AccountSelectorContainer';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import ConnectedPeers from './ConnectedPeers';
 import Vesting from '../contracts/Vesting/component/Vesting';
+import { IoMdKey, IoIosWater, IoMdRocket } from 'react-icons/io';
+import {
+  FaMapMarkedAlt,
+  FaListUl,
+  FaSearch,
+  FaNetworkWired,
+  FaFileContract
+} from 'react-icons/fa';
+import { FiGrid } from 'react-icons/fi';
+import { MdGroup } from 'react-icons/md';
 import { VestingContainer } from '../contracts/Vesting/container/VestingContainer';
 import { DeployContractsForm } from './DeployContracts';
 import { DeployContractsContainer } from '../containers/DeployContractsContainer';
@@ -46,7 +56,7 @@ class MenuItem {
   constructor(
     public path: string,
     public label: string,
-    public icon?: string,
+    public icon?: JSX.Element,
     public exact: boolean = false
   ) {}
 
@@ -59,7 +69,7 @@ class GroupedMenuItem {
   constructor(
     public id: string,
     public label: string,
-    public icon: string,
+    public icon: JSX.Element,
     public secondLevelChildren: MenuItem[]
   ) {}
 
@@ -74,7 +84,7 @@ class GroupedMenuItem {
           data-target={`#${this.id}`}
           aria-controls={this.id}
         >
-          <i className={`nav-link-icon fa fa-fw fa-${this.icon}`} />
+          <div style={{ margin: '0 10px 0 20px' }}>{this.icon}</div>
           <span className="nav-link-text">{this.label}</span>
           <div className="sidenav-collapse-arrow">
             <i className="fas fa-angle-down" />
@@ -95,20 +105,60 @@ class GroupedMenuItem {
   }
 }
 
+const SideMenuIconSize = 18;
+
 const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
-  new MenuItem(Pages.Home, 'Home', 'home', true),
-  new MenuItem(Pages.Accounts, 'Accounts', 'address-book'),
-  new MenuItem(Pages.Faucet, 'Faucet', 'coins'),
-  new MenuItem(Pages.DeployContracts, 'Deploy Contract', 'rocket'),
-  new MenuItem(Pages.Explorer, 'Explorer', 'project-diagram'),
-  new MenuItem(Pages.Blocks, 'Blocks', 'th-large'),
-  new MenuItem(Pages.Deploys, 'Deploys', 'tasks'),
-  new MenuItem(Pages.Search, 'Search', 'search'),
-  new MenuItem(Pages.Validators, 'Validators', 'users'),
-  new MenuItem(Pages.ConnectedPeers, 'Connected Peers', 'network-wired'),
-  new GroupedMenuItem('clarityContracts', 'Contracts', 'file-contract', [
-    new MenuItem(Pages.Vesting, 'Vesting')
-  ])
+  new MenuItem(
+    Pages.Accounts,
+    'Accounts',
+    (<IoMdKey fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Faucet,
+    'Faucet',
+    (<IoIosWater fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.DeployContracts,
+    'Deploy Contract',
+    (<IoMdRocket fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Explorer,
+    'Explorer',
+    (<FaMapMarkedAlt fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Blocks,
+    'Blocks',
+    (<FiGrid fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Deploys,
+    'Deploys',
+    (<FaListUl fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Search,
+    'Search',
+    (<FaSearch fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.Validators,
+    'Validators',
+    (<MdGroup fontSize={SideMenuIconSize} />)
+  ),
+  new MenuItem(
+    Pages.ConnectedPeers,
+    'Connected Peers',
+    (<FaNetworkWired fontSize={SideMenuIconSize} />)
+  ),
+  new GroupedMenuItem(
+    'clarityContracts',
+    'Contracts',
+    (<FaFileContract fontSize={SideMenuIconSize} />),
+    [new MenuItem(Pages.Vesting, 'Vesting')]
+  )
 ];
 
 export interface AppProps {
@@ -151,7 +201,7 @@ export default class App extends React.Component<AppProps, {}> {
     // })
 
     // Toggle the side navigation
-    $('#sidenavToggler').click(function (e) {
+    $('#sidenavToggler').click(function(e) {
       e.preventDefault();
       $('body').toggleClass('sidenav-toggled');
       $('.navbar-sidenav .nav-link-collapse').addClass('collapsed');
@@ -163,14 +213,14 @@ export default class App extends React.Component<AppProps, {}> {
     // Hide sidenav manually after clicking menu item in mobile view
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
-    $('.navbar-sidenav .nav-item').click(function (e) {
+    $('.navbar-sidenav .nav-item').click(function(e) {
       $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
     $(
       'body.fixed-nav .navbar-sidenav, body.fixed-nav .sidenav-toggler, body.fixed-nav .navbar-collapse'
-    ).on('mousewheel DOMMouseScroll', function (e: any) {
+    ).on('mousewheel DOMMouseScroll', function(e: any) {
       var e0 = e.originalEvent,
         delta = e0.wheelDelta || -e0.detail;
       this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -178,7 +228,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top button appear
-    $(document).scroll(function () {
+    $(document).scroll(function() {
       var scrollDistance = $(this).scrollTop()!;
       if (scrollDistance > 100) {
         $('.scroll-to-top').fadeIn();
@@ -188,15 +238,17 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top
-    $(document).on('click', 'a.scroll-to-top', function (e) {
+    $(document).on('click', 'a.scroll-to-top', function(e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body').stop().animate(
-        {
-          scrollTop: offset.top
-        },
-        1000
-      );
+      $('html, body')
+        .stop()
+        .animate(
+          {
+            scrollTop: offset.top
+          },
+          1000
+        );
       e.preventDefault();
     });
   }
@@ -220,9 +272,7 @@ const NavLink = (props: { item: MenuItem }) => {
             data-placement="right"
           >
             <Link to={item.path} className="nav-link">
-              {item.icon && (
-                <i className={'nav-link-icon fa fa-fw fa-' + item.icon} />
-              )}
+              <div style={{ margin: '0 10px 0 20px' }}>{item.icon}</div>
               <span className="nav-link-text">{item.label}</span>
             </Link>
           </li>
@@ -491,6 +541,16 @@ const Footer = () => (
               rel="noopener noreferrer"
             >
               Telegram
+            </a>
+          </small>
+          <small>
+            Main
+            <a
+              href="https://casperlabs.io"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              CasperLabs Website
             </a>
           </small>
         </div>
