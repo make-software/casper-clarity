@@ -7,8 +7,11 @@ $font-family-base: 'Sarabun', sans-serif;
 
 #mainNav.navbar-dark {
   .username {
-    padding: 0.5rem 1rem;
-    color: fade-out($white, 0.5);
+    padding: 0.5rem 1.5rem;
+    .welcome {
+      color: fade-out($white, 0.5);
+      padding-right: 0.5rem;
+    }
   }
 }
 

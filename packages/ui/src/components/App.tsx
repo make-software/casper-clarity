@@ -38,7 +38,7 @@ import {
   FaNetworkWired,
   FaFileContract
 } from 'react-icons/fa';
-import { FiGrid } from 'react-icons/fi';
+import { FiGrid, FiLogIn, FiLogOut } from 'react-icons/fi';
 import { MdGroup } from 'react-icons/md';
 import { VestingContainer } from '../contracts/Vesting/container/VestingContainer';
 import { DeployContractsForm } from './DeployContracts';
@@ -361,18 +361,27 @@ class _Navigation extends RefreshableComponent<
 
           <ul className="navbar-nav ml-auto">
             <li className="nav-item">
-              <div className="username">
-                {this.props.auth.user && this.props.auth.user.name}
-              </div>
+              {this.props.auth.user && (
+                <div className="username text-white">
+                  <span className="welcome">Welcome</span>
+                  {this.props!.auth!.user!.name}
+                </div>
+              )}
             </li>
             <li className="nav-item">
               {this.props.auth.user ? (
-                <a className="nav-link" onClick={_ => this.props.auth.logout()}>
-                  <i className="fa fa-fw fa-sign-out-alt"></i>Sign Out
+                <a
+                  className="nav-link text-white"
+                  onClick={_ => this.props.auth.logout()}
+                >
+                  <FiLogOut /> Sign Out
                 </a>
               ) : (
-                <a className="nav-link" onClick={_ => this.props.auth.login()}>
-                  <i className="fa fa-fw fa-sign-in-alt"></i>Sign In
+                <a
+                  className="nav-link text-white"
+                  onClick={_ => this.props.auth.login()}
+                >
+                  <FiLogIn /> Sign In
                 </a>
               )}
             </li>
