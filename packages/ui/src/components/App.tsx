@@ -307,6 +307,9 @@ class _Navigation extends RefreshableComponent<
       >
         <a className="navbar-brand" href="https://casperlabs.io/">
           <img src={logo} alt="logo" />
+          <span className={'navbar-brand-title'}>
+            Clarity Explorer <FaMapMarkedAlt className={'navbar-brand-icon'} />
+          </span>
         </a>
         <div className="navbar-network-info d-none d-md-inline-block">
           <p>

@@ -19,7 +19,15 @@ $font-family-base: 'Sarabun', sans-serif;
   padding-top: 0.8rem;
   padding-bottom: 0.8rem;
   img {
-    height: 40px;
+    height: 20px;
+    display: block;
+  }
+  .navbar-brand-tile {
+    font: normal normal normal 20px/26px Sarabun;
+  }
+  .navbar-brand-icon {
+    font-size: 26px;
+    vertical-align: top;
   }
 }
 
