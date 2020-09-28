@@ -186,11 +186,13 @@ const Balance = observer(
     const value = props.balance.value;
     if (value == null) return null;
 
-    const hash = encodeBase16(value.blockHash);
     const balance =
       value.balance === undefined ? 'n/a' : CSPR({ motes: value.balance });
     return (
-      <div className="text-right" title={`As of block ${hash}`}>
+      <div
+        className="text-right"
+        title={`As of block ${value.blockHashBase16}`}
+      >
         {balance}
       </div>
     );
