@@ -1,19 +1,23 @@
 import ErrorContainer from './ErrorContainer';
-import { DiagnosticsService } from 'casperlabs-sdk';
 import { observable } from 'mobx';
-import { Node } from 'casperlabs-grpc/io/casperlabs/comm/discovery/node_pb';
+import { CasperServiceByJsonRPC } from '../rpc/CasperServiceByJsonRPC';
 
 export class ConnectedPeersContainer {
-  @observable peers: Array<Node> | null = null;
+  @observable peers: Array<{ nodeId: string; address: string }> | null = null;
 
   constructor(
     private errors: ErrorContainer,
-    private diagnosticsService: DiagnosticsService
+    private casperService: CasperServiceByJsonRPC
   ) {}
 
   async refreshPeers() {
-    let peers = await this.diagnosticsService.listPeers();
-    this.peers = peers.getPeersList();
+    let peers = await this.casperService.getPeers();
+    this.peers = Object.keys(peers.peers).map(nodeId => {
+      return {
+        nodeId: nodeId,
+        address: peers.peers[nodeId]
+      };
+    });
   }
 }
 
