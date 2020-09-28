@@ -3,13 +3,9 @@ import { observer } from 'mobx-react';
 import SearchContainer, { Target } from '../containers/SearchContainer';
 import { Card, Button } from './Utils';
 import { Form, TextField, ErrorMessage, RadioField } from './Forms';
-import {
-  BlockInfo,
-  DeployInfo
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { Redirect } from 'react-router';
 import Pages from './Pages';
-import { encodeBase16 } from 'casperlabs-sdk';
+import { GetBlockResult, GetDeployResult } from '../rpc/CasperServiceByJsonRPC';
 
 interface Props {
   search: SearchContainer;
@@ -65,13 +61,15 @@ const Results = observer((props: { container: SearchContainer }) => {
 
   if (typeof result === 'string') return <ErrorMessage error={result} />;
 
-  if (result instanceof BlockInfo) {
-    const hash = encodeBase16(result.getSummary()!.getBlockHash_asU8());
-    return <Redirect to={Pages.block(hash)} />;
+  if ('block' in result) {
+    const getBlockResult = result as GetBlockResult,
+      hash = getBlockResult.block?.hash;
+    return <Redirect to={Pages.block(hash!)} />;
   }
 
-  if (result instanceof DeployInfo) {
-    const hash = encodeBase16(result.getDeploy()!.getDeployHash_asU8());
+  if ('deploy' in result) {
+    const getDeployResult = result as GetDeployResult,
+      hash = getDeployResult.deploy.hash;
     return <Redirect to={Pages.deploy(hash)} />;
   }
 
