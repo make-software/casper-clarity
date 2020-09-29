@@ -14,8 +14,6 @@ import {
   FailIcon
 } from './Utils';
 import DataTable from './DataTable';
-import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { encodeBase16, decodeBase64 } from 'casperlabs-sdk';
 
 interface Props {
   auth: AuthContainer;
@@ -132,7 +130,7 @@ const StatusTable = observer(
           <tr key={idx}>
             <td>{request.timestamp.toLocaleString()}</td>
             <td>{request.account.name}</td>
-            <td>{encodeBase16(request.deployHash)}</td>
+            <td>{request.deployHashBase16}</td>
             <StatusCell request={request} />
           </tr>
         );
@@ -146,20 +144,16 @@ const StatusCell = observer((props: { request: FaucetRequest }) => {
   const info = props.request.deployInfo;
   const iconAndMessage: () => [any, string | undefined] = () => {
     if (info) {
-      const attempts = info.processingResultsList;
-      const success = attempts.find(x => !x.isError);
-      const failure = attempts.find(x => x.isError);
-      const blockHash = (result: DeployInfo.ProcessingResult.AsObject) => {
-        const h = result.blockInfo!.summary!.blockHash;
-        return encodeBase16(typeof h === 'string' ? decodeBase64(h) : h);
-      };
+      const attempts = info.execution_results;
+      const success = attempts.find(x => x.result.error_message === null);
+      const failure = attempts.find(x => x.result.error_message !== null);
       if (success)
         return [
           <Icon name="check-circle" color="green" />,
-          `Successfully included in block ${blockHash(success)}`
+          `Successfully included in block ${success.block_hash}`
         ];
       if (failure) {
-        const errm = failure.errorMessage;
+        const errm = failure.result.error_message;
         const hint =
           errm === 'Exit code: 1'
             ? '. It looks like you already funded this account!'
@@ -168,7 +162,7 @@ const StatusCell = observer((props: { request: FaucetRequest }) => {
             : '';
         return [
           <FailIcon />,
-          `Failed in block ${blockHash(failure)}: ${errm + hint}`
+          `Failed in block ${failure.block_hash}: ${errm + hint}`
         ];
       }
     }
