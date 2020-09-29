@@ -3,10 +3,11 @@ import { computed } from 'mobx';
 import ErrorContainer from './ErrorContainer';
 import StorageCell from '../lib/StorageCell';
 import FaucetService from '../services/FaucetService';
-import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { GrpcError, CasperService } from 'casperlabs-sdk';
-import { grpc } from '@improbable-eng/grpc-web';
 import { getPublicKeyHashBase64 } from './AuthContainer';
+import {
+  CasperServiceByJsonRPC,
+  GetDeployResult
+} from '../rpc/CasperServiceByJsonRPC';
 
 export class FaucetContainer {
   private _faucetRequests = new StorageCell<FaucetRequest[]>(
@@ -21,7 +22,7 @@ export class FaucetContainer {
   constructor(
     private errors: ErrorContainer,
     private faucetService: FaucetService,
-    private casperService: CasperService,
+    private casperService: CasperServiceByJsonRPC,
     // Callback when the faucet status finished so we can update the balances.
     private onFaucetStatusChange: () => void
   ) {}
@@ -29,10 +30,10 @@ export class FaucetContainer {
   /** Ask the faucet for tokens for a given account. */
   async requestTokens(account: UserAccount) {
     const request = async () => {
-      const deployHash = await this.faucetService.requestTokens(
+      const deployHashBase16 = await this.faucetService.requestTokens(
         getPublicKeyHashBase64(account)
       );
-      this.monitorFaucetRequest(account, deployHash);
+      this.monitorFaucetRequest(account, deployHashBase16);
     };
     await this.errors.capture(request());
   }
@@ -42,8 +43,8 @@ export class FaucetContainer {
     return this._faucetRequests.get;
   }
 
-  private monitorFaucetRequest(account: UserAccount, deployHash: DeployHash) {
-    const request = { timestamp: new Date(), account, deployHash };
+  private monitorFaucetRequest(account: UserAccount, deployHashBase16: string) {
+    const request = { timestamp: new Date(), account, deployHashBase16 };
     const requests = [request].concat(this._faucetRequests.get);
     this._faucetRequests.set(requests);
     this.startPollingFaucetStatus();
@@ -65,15 +66,15 @@ export class FaucetContainer {
     for (let req of requests) {
       const needsUpdate =
         typeof req.deployInfo === 'undefined' ||
-        req.deployInfo!.processingResultsList.length === 0;
+        req.deployInfo!.execution_results.length === 0;
 
       if (needsUpdate) {
         anyNeededUpdate = true;
         const info = await this.errors.withCapture(
-          this.tryGetDeployInfo(req.deployHash)
+          this.tryGetDeployInfo(req.deployHashBase16)
         );
         if (info != null) {
-          req.deployInfo = info.toObject();
+          req.deployInfo = info;
           updated = true;
         }
       }
@@ -89,18 +90,9 @@ export class FaucetContainer {
   }
 
   private async tryGetDeployInfo(
-    deployHash: DeployHash
-  ): Promise<DeployInfo | null> {
-    try {
-      return await this.casperService.getDeployInfo(deployHash);
-    } catch (err) {
-      if (err instanceof GrpcError) {
-        if (err.code === grpc.Code.NotFound)
-          // We connected to a node that doesn't have it yet.
-          return null;
-      }
-      throw err;
-    }
+    deployHashBase16: string
+  ): Promise<GetDeployResult | null> {
+    return await this.casperService.getDeployInfo(deployHashBase16);
   }
 }
 
@@ -108,9 +100,9 @@ export class FaucetContainer {
 export interface FaucetRequest {
   timestamp: Date;
   account: UserAccount;
-  deployHash: DeployHash;
+  deployHashBase16: string;
   // Assigned later when the data becomes available.
-  deployInfo?: DeployInfo.AsObject;
+  deployInfo?: GetDeployResult;
 }
 
 export default FaucetContainer;
