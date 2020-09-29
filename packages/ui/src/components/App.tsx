@@ -106,16 +106,12 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(Pages.Search, 'Search', 'search'),
   new MenuItem(Pages.Validators, 'Validators', 'users'),
   new MenuItem(Pages.ConnectedPeers, 'Connected Peers', 'network-wired'),
-  new GroupedMenuItem('clarityContracts', 'Contracts', 'file-contract', [
-    new MenuItem(Pages.Vesting, 'Vesting')
-  ])
 ];
 
 export interface AppProps {
   errors: ErrorContainer;
   auth: AuthContainer;
   faucet: FaucetContainer;
-  vesting: VestingContainer;
   dag: DagContainer;
   validatorsContainer: ValidatorsContainer;
   block: BlockContainer;
@@ -419,10 +415,6 @@ const Content = (props: AppProps) => {
             <Route path={Pages.Deploy}>
               <Title title="Deploy Detail" />
               <DeployDetails {...props} />
-            </Route>
-            <Route path={Pages.Vesting}>
-              <Title title="Vesting Contract" />
-              <Vesting {...props} />
             </Route>
             <PrivateRoute path={Pages.DeployContracts} auth={props.auth}>
               <Title title="Deploy Contract" />
