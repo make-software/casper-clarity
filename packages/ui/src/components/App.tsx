@@ -29,8 +29,6 @@ import AccountSelector from './AccountSelector';
 import AccountSelectorContainer from '../containers/AccountSelectorContainer';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import ConnectedPeers from './ConnectedPeers';
-import Vesting from '../contracts/Vesting/component/Vesting';
-import { VestingContainer } from '../contracts/Vesting/container/VestingContainer';
 import { DeployContractsForm } from './DeployContracts';
 import { DeployContractsContainer } from '../containers/DeployContractsContainer';
 import { useEffect } from 'react';
