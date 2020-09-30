@@ -11,7 +11,7 @@ import { arrayify, concat } from '@ethersproject/bytes';
 interface ToBytes {
   toBytes: () => ByteArray;
 }
-
+// todo(abner): supports Option<T>, Result<T,E>, unit
 abstract class NumberCoder implements ToBytes {
   readonly bitSize: number;
   readonly signed: boolean;
@@ -123,8 +123,119 @@ class U512 extends NumberCoder {
 class StringValue implements ToBytes {
   constructor(private str: string) {}
   toBytes = () => {
-    return Uint8Array.from(Buffer.from(this.str));
+    const arr = Uint8Array.from(Buffer.from(this.str));
+    return concat([CLValue.u32(arr.length).toBytes(), arr]);
   };
+}
+
+function vecToBytes<T extends ToBytes>(vec: T[]) {
+  const valueByteList = vec.map(e => e.toBytes());
+  valueByteList.splice(0, 0, CLValue.u32(vec.length).toBytes());
+
+  return concat(valueByteList);
+}
+
+class List<T extends ToBytes> implements ToBytes {
+  constructor(private vec: T[]) {}
+
+  toBytes(): ByteArray {
+    return vecToBytes(this.vec);
+  }
+}
+
+type SupportArrayLen =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31
+  | 32
+  | 64
+  | 128
+  | 256
+  | 512;
+
+class FixedList<T extends ToBytes> implements ToBytes {
+  private size: number;
+  private vec: T[];
+  constructor(size: SupportArrayLen, vec: T[]) {
+    if (size !== vec.length) {
+      throw new Error('The size is not equal to the length of vec');
+    }
+    this.size = size;
+    this.vec = vec;
+  }
+  toBytes(): ByteArray {
+    const v = this.vec.map(e => e.toBytes());
+    return concat(v);
+  }
+}
+
+class Tuple1 implements ToBytes {
+  constructor(private v0: ToBytes) {}
+
+  toBytes(): ByteArray {
+    return this.v0.toBytes();
+  }
+}
+
+class Tuple2 implements ToBytes {
+  constructor(private v0: ToBytes, private v1: ToBytes) {}
+
+  toBytes(): ByteArray {
+    return concat([this.v0.toBytes(), this.v1.toBytes()]);
+  }
+}
+
+class Tuple3 implements ToBytes {
+  constructor(private v0: ToBytes, private v1: ToBytes, private v2: ToBytes) {}
+
+  toBytes(): ByteArray {
+    return concat([this.v0.toBytes(), this.v1.toBytes(), this.v2.toBytes()]);
+  }
+}
+
+interface MapEntry {
+  key: ToBytes;
+  value: ToBytes;
+}
+
+class MapValue implements ToBytes {
+  constructor(private v: MapEntry[]) {}
+  toBytes(): ByteArray {
+    const kvBytes: Uint8Array[] = this.v.flatMap(vv => {
+      return [vv.key.toBytes(), vv.value.toBytes()];
+    });
+    kvBytes.splice(0, 0, CLValue.u32(this.v.length).toBytes());
+    return concat(kvBytes);
+  }
 }
 
 export class CLValue {
@@ -168,122 +279,35 @@ export class CLValue {
     return new U512(x);
   };
 
-  // static unit() {
-  //   const value = new CLValueInstance.Value();
-  //   value.setUnit(new Unit());
-  //   return value;
-  // }
-
   static string(x: string) {
     return new StringValue(x);
   }
 
-  // static bytes = Values.toValue<ByteArray>((v, x) => {
-  //   v.setBytesValue(x);
-  // });
+  static list<T extends ToBytes>(vec: T[]) {
+    return new List(vec);
+  }
 
-  // static list = Values.toValue<CLValueInstance.Value[]>((v, x) => {
-  //   const list = new CLValueInstance.List();
-  //   list.setValuesList(x);
-  //   v.setListValue(list);
-  // });
+  static fixedList<T extends ToBytes>(size: SupportArrayLen, vec: T[]) {
+    return new FixedList(size, vec);
+  }
 
-  // static fixedList = Values.toValue<CLValueInstance.Value[]>((v, x) => {
-  //   const fixedList = new CLValueInstance.FixedList();
-  //   fixedList.setLength(x.length);
-  //   fixedList.setValuesList(x);
-  //   v.setFixedListValue(fixedList);
-  // });
+  static map(mapEntries: MapEntry[]) {
+    return new MapValue(mapEntries);
+  }
 
-  // static map = Values.toValue<CLValueInstance.MapEntry[]>((v, x) => {
-  //   const map = new CLValueInstance.Map();
-  //   map.setValuesList(x);
-  //   v.setMapValue(map);
-  // });
+  static tuple1(t0: ToBytes) {
+    return new Tuple1(t0);
+  }
 
-  // static tuple1(t0?: CLValueInstance.Value) {
-  //   const value = new CLValueInstance.Value();
-  //   const tuple1 = new CLValueInstance.Tuple1();
-  //   tuple1.setValue1(t0);
-  //   value.setTuple1Value(tuple1);
-  //   return value;
-  // }
+  static tuple2(t0: ToBytes, t1: ToBytes) {
+    return new Tuple2(t0, t1);
+  }
 
-  // static tuple2(t0?: CLValueInstance.Value, t1?: CLValueInstance.Value) {
-  //   const value = new CLValueInstance.Value();
-  //   const tuple2 = new CLValueInstance.Tuple2();
-  //   tuple2.setValue1(t0);
-  //   tuple2.setValue2(t1);
-  //   value.setTuple2Value(tuple2);
-  //   return value;
-  // }
-
-  // static tuple3(
-  //   t0?: CLValueInstance.Value,
-  //   t1?: CLValueInstance.Value,
-  //   t2?: CLValueInstance.Value
-  // ) {
-  //   const value = new CLValueInstance.Value();
-  //   const tuple3 = new CLValueInstance.Tuple3();
-  //   tuple3.setValue1(t0);
-  //   tuple3.setValue2(t1);
-  //   tuple3.setValue3(t2);
-  //   value.setTuple3Value(tuple3);
-  //   return value;
-  // }
+  static tuple3(t0: ToBytes, t1: ToBytes, t2: ToBytes) {
+    return new Tuple3(t0, t1, t2);
+  }
 }
 
-// function toCLValueInstance<T>(
-//   set: (value: CLValueInstance, x: T) => void
-// ): ToValue<T> {
-//   return (x: T) => {
-//     const value = new CLValueInstance();
-//     set(value, x);
-//     return value;
-//   };
-// }
-//
-// export const BytesValue = toCLValueInstance<ByteArray>((value, x) => {
-//   const innerType = new CLType();
-//   innerType.setSimpleType(CLType.Simple.U8);
-//   const t = new CLType();
-//   const fixedListType = new CLType.FixedList();
-//   fixedListType.setInner(innerType);
-//   fixedListType.setLen(x.length);
-//   t.setFixedListType(fixedListType);
-//
-//   const v = new CLValueInstance.Value();
-//   const fixedListValue = new CLValueInstance.FixedList();
-//   const bytes = Array.from(x, b => {
-//     const byteValue = new CLValueInstance.Value();
-//     byteValue.setU8(b);
-//     return byteValue;
-//   });
-//   fixedListValue.setLength(bytes.length);
-//   fixedListValue.setValuesList(bytes);
-//   v.setFixedListValue(fixedListValue);
-//
-//   value.setClType(t);
-//   value.setValue(v);
-//
-//   return value;
-// });
-//
-// export const BigIntValue = toCLValueInstance<bigint | JSBI>((value, x) => {
-//   const t = new CLType();
-//   t.setSimpleType(CLType.Simple.U512);
-//
-//   const v = new CLValueInstance.Value();
-//   const n = new CLValueInstance.U512();
-//   n.setValue(x.toString());
-//   v.setU512(n);
-//
-//   value.setClType(t);
-//   value.setValue(v);
-//
-//   return value;
-// });
-//
 // export class Types {
 //   private static simpleType(type: CLType.SimpleMap[keyof CLType.SimpleMap]) {
 //     const t = new CLType();

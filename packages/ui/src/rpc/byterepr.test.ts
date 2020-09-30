@@ -48,4 +48,27 @@ describe(`numbers' toBytes`, () => {
       Uint8Array.from([6, 0, 0, 0xc0, 0xd0, 0xe0, 0xf0])
     );
   });
+
+  it('should be able to encode utf8 string', () => {
+    let string = CLValue.string('test_测试');
+    expect(string.toBytes()).to.deep.eq(
+      Uint8Array.from([
+        11,
+        0,
+        0,
+        0,
+        116,
+        101,
+        115,
+        116,
+        95,
+        230,
+        181,
+        139,
+        232,
+        175,
+        149
+      ])
+    );
+  });
 });
