@@ -124,13 +124,13 @@ class StringValue implements ToBytes {
   constructor(private str: string) {}
   toBytes = () => {
     const arr = Uint8Array.from(Buffer.from(this.str));
-    return concat([CLValue.u32(arr.length).toBytes(), arr]);
+    return concat([CLValues.u32(arr.length).toBytes(), arr]);
   };
 }
 
 function vecToBytes<T extends ToBytes>(vec: T[]) {
   const valueByteList = vec.map(e => e.toBytes());
-  valueByteList.splice(0, 0, CLValue.u32(vec.length).toBytes());
+  valueByteList.splice(0, 0, CLValues.u32(vec.length).toBytes());
 
   return concat(valueByteList);
 }
@@ -233,12 +233,12 @@ class MapValue implements ToBytes {
     const kvBytes: Uint8Array[] = this.v.flatMap(vv => {
       return [vv.key.toBytes(), vv.value.toBytes()];
     });
-    kvBytes.splice(0, 0, CLValue.u32(this.v.length).toBytes());
+    kvBytes.splice(0, 0, CLValues.u32(this.v.length).toBytes());
     return concat(kvBytes);
   }
 }
 
-export class CLValue {
+export class CLValues {
   static bool = (x: boolean) => {
     return new Bool(x);
   };
@@ -308,146 +308,123 @@ export class CLValue {
   }
 }
 
-// export class Types {
-//   private static simpleType(type: CLType.SimpleMap[keyof CLType.SimpleMap]) {
-//     const t = new CLType();
-//     t.setSimpleType(type);
-//     return t;
-//   }
-//
-//   static bool() {
-//     return Types.simpleType(CLType.Simple.BOOL);
-//   }
-//
-//   static i32() {
-//     return Types.simpleType(CLType.Simple.I32);
-//   }
-//
-//   static i64() {
-//     return Types.simpleType(CLType.Simple.I64);
-//   }
-//
-//   static u8() {
-//     return Types.simpleType(CLType.Simple.U8);
-//   }
-//
-//   static u32() {
-//     return Types.simpleType(CLType.Simple.U32);
-//   }
-//
-//   static u64() {
-//     return Types.simpleType(CLType.Simple.U64);
-//   }
-//
-//   static u128() {
-//     return Types.simpleType(CLType.Simple.U128);
-//   }
-//
-//   static u256() {
-//     return Types.simpleType(CLType.Simple.U256);
-//   }
-//
-//   static u512() {
-//     return Types.simpleType(CLType.Simple.U512);
-//   }
-//
-//   static unit() {
-//     return Types.simpleType(CLType.Simple.UNIT);
-//   }
-//
-//   static string() {
-//     return Types.simpleType(CLType.Simple.STRING);
-//   }
-//
-//   static key() {
-//     return Types.simpleType(CLType.Simple.KEY);
-//   }
-//
-//   static uref() {
-//     return Types.simpleType(CLType.Simple.UREF);
-//   }
-//
-//   static bytes() {
-//     return Types.list(Types.u8());
-//   }
-//
-//   static bytesFixedLength(len: number) {
-//     return Types.fixedList(Types.u8(), len);
-//   }
-//
-//   static list(inner: CLType) {
-//     const t = new CLType();
-//     const innerListType = new CLType.List();
-//     innerListType.setInner(inner);
-//     t.setListType(innerListType);
-//     return t;
-//   }
-//
-//   static fixedList(inner: CLType, len: number) {
-//     const t = new CLType();
-//     const innerFixedListType = new CLType.FixedList();
-//     innerFixedListType.setInner(inner);
-//     innerFixedListType.setLen(len);
-//     t.setFixedListType(innerFixedListType);
-//     return t;
-//   }
-//
-//   static map(key: CLType, value: CLType) {
-//     const t = new CLType();
-//     const innerType = new CLType.Map();
-//     innerType.setKey(key);
-//     innerType.setValue(value);
-//     t.setMapType(innerType);
-//     return t;
-//   }
-//
-//   static tuple1(t0?: CLType) {
-//     const t = new CLType();
-//     const innerType = new CLType.Tuple1();
-//     innerType.setType0(t0);
-//     t.setTuple1Type(innerType);
-//     return t;
-//   }
-//
-//   static tuple2(t0?: CLType, t1?: CLType) {
-//     const t = new CLType();
-//     const innerType = new CLType.Tuple2();
-//     innerType.setType0(t0);
-//     innerType.setType1(t1);
-//     t.setTuple2Type(innerType);
-//     return t;
-//   }
-//
-//   static tuple3(t0?: CLType, t1?: CLType, t2?: CLType) {
-//     const t = new CLType();
-//     const innerType = new CLType.Tuple3();
-//     innerType.setType0(t0);
-//     innerType.setType1(t1);
-//     innerType.setType2(t2);
-//     t.setTuple3Type(innerType);
-//     return t;
-//   }
-//
-//   static any() {
-//     const t = new CLType();
-//     const anyType = new CLType.Any();
-//     t.setAnyType(anyType);
-//     return t;
-//   }
-// }
-//
-// export class Values {
-//   static toValue<T>(
-//     set: (value: CLValueInstance.Value, x: T) => void
-//   ): (x: T) => CLValueInstance.Value {
-//     return (x: T) => {
-//       const value = new CLValueInstance.Value();
-//       set(value, x);
-//       return value;
-//     };
-//   }
-// }
-//
+enum SimpleType {
+  Bool = 0,
+  I32 = 1,
+  I64 = 2,
+  U8 = 3,
+  U32 = 4,
+  U64 = 5,
+  U128 = 6,
+  U256 = 7,
+  U512 = 8,
+  Unit = 9,
+  String = 10,
+  Key = 11,
+  URef = 12,
+  PublicKey = 22
+}
+
+class ListType {
+  tag = 14;
+  innerType: CLType;
+  constructor(innerType: CLType) {
+    this.innerType = innerType;
+  }
+}
+
+class FixedListType {
+  tag = 15;
+  constructor(public innerType: CLType, public size: number) {}
+}
+
+class MapType {
+  tag = 17;
+  constructor(public keyType: CLType, public valueType: CLType) {}
+}
+
+class Tuple1Type {
+  tag = 18;
+  constructor(public t0: CLType) {}
+}
+
+class Tuple2Type {
+  tag = 19;
+  constructor(public t0: CLType, public t1: CLType) {}
+}
+
+class Tuple3Type {
+  tag = 20;
+  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
+}
+
+type CLType =
+  | SimpleType
+  | ListType
+  | FixedListType
+  | MapType
+  | Tuple1Type
+  | Tuple2Type
+  | Tuple3Type;
+
+export class CLTypes {
+  static toBytes(type: CLType): ByteArray {
+    if (type instanceof ListType) {
+      return concat([
+        Uint8Array.from([type.tag]),
+        CLTypes.toBytes(type.innerType)
+      ]);
+    } else if (type instanceof Tuple1Type) {
+      return concat([Uint8Array.from([type.tag]), CLTypes.toBytes(type.t0)]);
+    } else if (type instanceof Tuple2Type) {
+      return concat([
+        Uint8Array.from([type.tag]),
+        CLTypes.toBytes(type.t0),
+        CLTypes.toBytes(type.t1)
+      ]);
+    } else if (type instanceof Tuple3Type) {
+      return concat([
+        Uint8Array.from([type.tag]),
+        CLTypes.toBytes(type.t0),
+        CLTypes.toBytes(type.t1),
+        CLTypes.toBytes(type.t2)
+      ]);
+    } else if (type instanceof FixedListType) {
+      return concat([
+        Uint8Array.from([type.tag]),
+        CLTypes.toBytes(type.innerType),
+        CLValues.u32(type.size).toBytes()
+      ]);
+    } else if (type instanceof MapType) {
+      return concat([
+        Uint8Array.from([type.tag]),
+        CLTypes.toBytes(type.keyType),
+        CLTypes.toBytes(type.valueType)
+      ]);
+    } else {
+      switch (type) {
+        case SimpleType.Bool:
+        case SimpleType.I32:
+        case SimpleType.I64:
+        case SimpleType.U8:
+        case SimpleType.U32:
+        case SimpleType.U64:
+        case SimpleType.U128:
+        case SimpleType.U256:
+        case SimpleType.U512:
+        case SimpleType.Unit:
+        case SimpleType.String:
+        case SimpleType.Key:
+        case SimpleType.URef:
+        case SimpleType.PublicKey:
+          return Uint8Array.from([type]);
+        default:
+          throw new Error('error type');
+      }
+    }
+  }
+}
+
 // export class Instances {
 //   static bool = toCLValueInstance<boolean>((value, x) => {
 //     value.setClType(Types.bool());
