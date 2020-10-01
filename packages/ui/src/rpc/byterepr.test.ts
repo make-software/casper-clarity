@@ -14,14 +14,6 @@ describe(`numbers' toBytes`, () => {
     expect(u8.toBytes).to.throws('out');
   });
 
-  it('should be able to encode u16', () => {
-    let u16 = CLValues.u16(0xf0e0);
-    expect(u16.toBytes()).to.deep.eq(Uint8Array.from([0xe0, 0xf0]));
-
-    u16 = CLValues.u16(0xf0e0ff);
-    expect(u16.toBytes).to.throws();
-  });
-
   it('should be able to encode u32', () => {
     let u32 = CLValues.u32(0xf0e0_d0c0);
     expect(u32.toBytes()).to.deep.eq(Uint8Array.from([0xc0, 0xd0, 0xe0, 0xf0]));
