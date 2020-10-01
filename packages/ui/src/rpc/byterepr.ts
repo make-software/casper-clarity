@@ -128,6 +128,78 @@ class StringValue implements ToBytes {
   };
 }
 
+abstract class KeyLike {
+  abstract readonly tag: number;
+}
+
+class KeyAccount extends KeyLike implements ToBytes {
+  tag = 0;
+  constructor(private accountHashBytes: ByteArray) {
+    super();
+    if (this.accountHashBytes.byteLength !== 32) {
+      throw new Error('The length of accountHash should be 32');
+    }
+  }
+
+  toBytes(): ByteArray {
+    return concat([Uint8Array.from([this.tag]), this.accountHashBytes]);
+  }
+}
+
+class KeyHash extends KeyLike implements ToBytes {
+  readonly tag: number = 1;
+  constructor(private hash: Uint8Array) {
+    super();
+    if (this.hash.byteLength !== 32) {
+      throw new Error('The length of Hash should be 32');
+    }
+  }
+
+  toBytes(): ByteArray {
+    return concat([Uint8Array.from([this.tag]), this.hash]);
+  }
+}
+
+enum AccessRight {
+  None = 0b0,
+  READ = 0b001,
+  WRITE = 0b010,
+  ADD = 0b100,
+  READ_ADD = AccessRight.READ | AccessRight.ADD,
+  READ_WRITE = AccessRight.READ | AccessRight.WRITE,
+  ADD_WRITE = AccessRight.ADD | AccessRight.WRITE,
+  READ_ADD_WRITE = AccessRight.READ | AccessRight.ADD | AccessRight.WRITE
+}
+
+class URef extends KeyLike implements ToBytes {
+  readonly tag = 2;
+  constructor(private URefAddr: Uint8Array, private accessRight: AccessRight) {
+    super();
+    if (this.URefAddr.byteLength !== 32) {
+      throw new Error('The length of URefAddr should be 32');
+    }
+  }
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      this.URefAddr,
+      Uint8Array.from([this.accessRight])
+    ]);
+  }
+}
+
+export class Key {
+  static account(accountHash: ByteArray) {
+    return new KeyAccount(accountHash);
+  }
+  static hash(hash: ByteArray) {
+    return new KeyHash(hash);
+  }
+  static uRef(URefAddr: ByteArray, accessRight: AccessRight) {
+    return new URef(URefAddr, accessRight);
+  }
+}
+
 function vecToBytes<T extends ToBytes>(vec: T[]) {
   const valueByteList = vec.map(e => e.toBytes());
   valueByteList.splice(0, 0, CLValues.u32(vec.length).toBytes());
