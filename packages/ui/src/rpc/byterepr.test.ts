@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { expect } from 'chai';
-import { CLValues } from './byterepr';
+import { CLValues, NamedArg } from './byterepr';
+import { DeployItem } from './DeployUtil';
 
 describe(`numbers' toBytes`, () => {
   it('should be able to encode u8', () => {
@@ -60,6 +61,35 @@ describe(`numbers' toBytes`, () => {
         232,
         175,
         149
+      ])
+    );
+  });
+
+  it('should serialize NamedArgs correctly', function() {
+    const arg1 = new NamedArg('foo', CLValues.i32(1));
+    const bytes = DeployItem.namedArgsToBytes([arg1]);
+    expect(bytes).to.deep.eq(
+      Uint8Array.from([
+        1,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        102,
+        111,
+        111,
+        4,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
       ])
     );
   });

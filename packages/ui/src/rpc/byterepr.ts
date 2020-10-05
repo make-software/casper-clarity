@@ -9,7 +9,7 @@ import { MaxUint256, NegativeOne, One, Zero } from '@ethersproject/constants';
 import { arrayify, concat } from '@ethersproject/bytes';
 
 interface CLTyped {
-  clType: CLType;
+  clType: () => CLType;
 }
 
 interface ToBytes {
@@ -17,15 +17,22 @@ interface ToBytes {
 }
 
 // CLTyped, ToBytes
-interface CLValue extends CLTyped, ToBytes {}
+abstract class CLValue implements CLTyped, ToBytes {
+  abstract clType(): CLType;
+  abstract toBytes(): ByteArray;
+  serializeWithType(): ByteArray {
+    return concat([CLTypes.toBytes(this.clType()), this.toBytes()]);
+  }
+}
 // todo(abner): supports Option<T>, Result<T,E>, unit
-abstract class NumberCoder implements CLValue {
-  readonly bitSize: number;
-  readonly signed: boolean;
-  readonly value: BigNumberish;
-  readonly name: string;
+abstract class NumberCoder extends CLValue {
+  bitSize: number;
+  signed: boolean;
+  value: BigNumberish;
+  name: string;
 
   protected constructor(bitSize: number, signed: boolean, value: BigNumberish) {
+    super();
     this.name = (signed ? 'i' : 'u') + bitSize;
     this.bitSize = bitSize;
     this.signed = signed;
@@ -64,15 +71,16 @@ abstract class NumberCoder implements CLValue {
       return bytes.reverse();
     }
   };
-  abstract get clType(): CLType;
 }
 
-class Bool implements CLValue {
-  constructor(private b: boolean) {}
+class Bool extends CLValue {
+  constructor(private b: boolean) {
+    super();
+  }
   toBytes(): ByteArray {
     return new Uint8Array([this.b ? 1 : 0]);
   }
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.Bool;
   }
 }
@@ -81,7 +89,7 @@ class U8 extends NumberCoder {
   constructor(u8: number) {
     super(8, false, u8);
   }
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U8;
   }
 }
@@ -90,7 +98,7 @@ class U32 extends NumberCoder {
   constructor(n: number) {
     super(32, false, n);
   }
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U32;
   }
 }
@@ -99,7 +107,7 @@ class I32 extends NumberCoder {
   constructor(n: number) {
     super(32, true, n);
   }
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.I32;
   }
 }
@@ -109,7 +117,7 @@ class U64 extends NumberCoder {
     super(64, false, n);
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U64;
   }
 }
@@ -119,7 +127,7 @@ class I64 extends NumberCoder {
     super(64, true, n);
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.I64;
   }
 }
@@ -129,7 +137,7 @@ class U128 extends NumberCoder {
     super(128, false, n);
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U128;
   }
 }
@@ -139,7 +147,7 @@ class U256 extends NumberCoder {
     super(256, false, n);
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U256;
   }
 }
@@ -149,27 +157,29 @@ class U512 extends NumberCoder {
     super(512, false, n);
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.U512;
   }
 }
 
-class StringValue implements CLValue {
-  constructor(private str: string) {}
+class StringValue extends CLValue {
+  constructor(private str: string) {
+    super();
+  }
   toBytes = () => {
     const arr = Uint8Array.from(Buffer.from(this.str));
     return concat([CLValues.u32(arr.length).toBytes(), arr]);
   };
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.String;
   }
 }
 
-abstract class KeyLike implements CLValue {
+abstract class KeyLike extends CLValue {
   abstract readonly tag: number;
   abstract toBytes(): ByteArray;
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.Key;
   }
 }
@@ -230,14 +240,15 @@ class KeyURef extends KeyLike {
   }
 }
 
-class URef implements CLValue {
+class URef extends CLValue {
   constructor(private URefAddr: Uint8Array, private accessRight: AccessRight) {
+    super();
     if (this.URefAddr.byteLength !== 32) {
       throw new Error('The length of URefAddr should be 32');
     }
   }
 
-  get clType(): CLType {
+  clType(): CLType {
     return SimpleType.URef;
   }
 
@@ -258,16 +269,17 @@ export class Key {
   }
 }
 
-function vecToBytes<T extends CLValue>(vec: T[]) {
+function vecToBytes<T extends ToBytes>(vec: T[]) {
   const valueByteList = vec.map(e => e.toBytes());
   valueByteList.splice(0, 0, CLValues.u32(vec.length).toBytes());
 
   return concat(valueByteList);
 }
 
-class List<T extends CLValue> implements CLValue {
+class List<T extends ToBytes> extends CLValue {
   // todo(abner) implement EmptyList
   constructor(private vec: T[]) {
+    super();
     if (vec.length === 0) {
       throw new Error('');
     }
@@ -277,8 +289,8 @@ class List<T extends CLValue> implements CLValue {
     return vecToBytes(this.vec);
   }
 
-  get clType(): CLType {
-    return new ListType(this.vec[0].clType);
+  clType(): CLType {
+    return new ListType((this.vec[0] as any).clType);
   }
 }
 
@@ -321,11 +333,12 @@ type SupportArrayLen =
   | 256
   | 512;
 
-class FixedList<T extends CLValue> implements CLValue {
+class FixedList<T extends CLValue> extends CLValue {
   private readonly size: number;
   private vec: T[];
   // todo(abner) implements EmptyFixedList
   constructor(size: SupportArrayLen, vec: T[]) {
+    super();
     if (size !== vec.length) {
       throw new Error('The size is not equal to the length of vec');
     }
@@ -337,40 +350,46 @@ class FixedList<T extends CLValue> implements CLValue {
     return concat(v);
   }
 
-  get clType(): CLType {
-    return new FixedListType(this.vec[0].clType, this.size);
+  clType(): CLType {
+    return new FixedListType(this.vec[0].clType(), this.size);
   }
 }
 
-class Tuple1 implements CLValue {
-  constructor(private v0: CLValue) {}
+class Tuple1 extends CLValue {
+  constructor(private v0: CLValue) {
+    super();
+  }
 
   toBytes(): ByteArray {
     return this.v0.toBytes();
   }
 
-  get clType(): CLType {
-    return new Tuple1Type(this.v0.clType);
+  clType(): CLType {
+    return new Tuple1Type(this.v0.clType());
   }
 }
 
-class Tuple2 implements CLValue {
-  constructor(private v0: CLValue, private v1: CLValue) {}
+class Tuple2 extends CLValue {
+  constructor(private v0: CLValue, private v1: CLValue) {
+    super();
+  }
 
   toBytes(): ByteArray {
     return concat([this.v0.toBytes(), this.v1.toBytes()]);
   }
 
-  get clType(): CLType {
-    return new Tuple2Type(this.v0.clType, this.v1.clType);
+  clType(): CLType {
+    return new Tuple2Type(this.v0.clType(), this.v1.clType());
   }
 }
 
-class Tuple3 implements CLValue {
-  constructor(private v0: CLValue, private v1: CLValue, private v2: CLValue) {}
+class Tuple3 extends CLValue {
+  constructor(private v0: CLValue, private v1: CLValue, private v2: CLValue) {
+    super();
+  }
 
-  get clType(): CLType {
-    return new Tuple3Type(this.v0.clType, this.v1.clType, this.v2.clType);
+  clType(): CLType {
+    return new Tuple3Type(this.v0.clType(), this.v1.clType(), this.v2.clType());
   }
 
   toBytes(): ByteArray {
@@ -383,9 +402,11 @@ interface MapEntry {
   value: CLValue;
 }
 
-class MapValue implements CLValue {
+class MapValue extends CLValue {
   // todo(abner) implements EmptyMapValue
-  constructor(private v: MapEntry[]) {}
+  constructor(private v: MapEntry[]) {
+    super();
+  }
   toBytes(): ByteArray {
     const kvBytes: Uint8Array[] = this.v.flatMap(vv => {
       return [vv.key.toBytes(), vv.value.toBytes()];
@@ -393,8 +414,8 @@ class MapValue implements CLValue {
     kvBytes.splice(0, 0, CLValues.u32(this.v.length).toBytes());
     return concat(kvBytes);
   }
-  get clType(): CLType {
-    return new MapType(this.v[0].key.clType, this.v[0].value.clType);
+  clType(): CLType {
+    return new MapType(this.v[0].key.clType(), this.v[0].value.clType());
   }
 }
 
@@ -439,7 +460,7 @@ export class CLValues {
     return new StringValue(x);
   }
 
-  static list<T extends CLValue>(vec: T[]) {
+  static list<T extends ToBytes>(vec: T[]) {
     return new List(vec);
   }
 
@@ -592,6 +613,6 @@ export class NamedArg implements ToBytes {
   }
 
   toBytes(): ByteArray {
-    return concat([this.nameBytes.toBytes(), this.value.toBytes()]);
+    return concat([this.nameBytes.toBytes(), this.value.serializeWithType()]);
   }
 }

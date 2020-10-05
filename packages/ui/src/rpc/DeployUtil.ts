@@ -7,6 +7,7 @@ import { encode } from '@msgpack/msgpack';
 import blake from 'blakejs';
 import * as nacl from 'tweetnacl-ts';
 import { encodeBase16 } from 'casperlabs-sdk';
+import { CLValues, NamedArg } from './byterepr';
 
 export interface DeployHeader {
   account: ByteArray;
@@ -39,39 +40,46 @@ export type ExecutableDeployItem =
   | StoredVersionedContractByName
   | Transfer;
 
-export class ModuleBytes {
+export interface ModuleBytes {
   moduleBytes: Uint8Array;
   args: Uint8Array;
 }
 
-export class StoredContractByHash {
+export interface StoredContractByHash {
   hash: Uint8Array;
   entryPoint: string;
   args: Uint8Array;
 }
 
-export class StoredContractByName {
+export interface StoredContractByName {
   name: string;
   entryPoint: string;
   args: Uint8Array;
 }
 
-export class StoredVersionedContractByName {
+export interface StoredVersionedContractByName {
   name: string;
   version: number | null;
   entryPoint: string;
   args: Uint8Array;
 }
 
-export class StoredVersionedContractByHash {
+export interface StoredVersionedContractByHash {
   hash: Uint8Array;
   version: number | null;
   entryPoint: string;
   args: ByteArray;
 }
 
-export class Transfer {
+export interface Transfer {
   args: ByteArray;
+}
+
+export class DeployItem {
+  static namedArgsToBytes(namedArgs: NamedArg[]) {
+    return CLValues.list(namedArgs).toBytes();
+  }
+  static newModuleBytes(moduleBytes: ByteArray, namedArgs: NamedArg[]) {}
 }
 
 /**
