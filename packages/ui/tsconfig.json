@@ -30,7 +30,6 @@
     "jsx": "preserve",
     "typeRoots": [
       "src/@types",
-      "./@types",
       "../../node_modules/@types"
     ]
   },

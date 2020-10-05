@@ -1,4 +1,5 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
+import { Deploy } from './DeployUtil';
 
 interface RpcResult {
   api_version: string;
@@ -200,6 +201,13 @@ export class CasperServiceByJsonRPC {
         key,
         path
       }
+    });
+  }
+
+  async deploy(signedDeploy: Deploy) {
+    return await this.client.request({
+      method: 'put_deploy',
+      params: signedDeploy
     });
   }
 }

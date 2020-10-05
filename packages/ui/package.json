@@ -8,6 +8,7 @@
     "@ethersproject/constants": "^5.0.4",
     "@fortawesome/fontawesome-free": "^5.9.0",
     "@improbable-eng/grpc-web": "^0.9.6",
+    "@msgpack/msgpack": "^2.2.0",
     "@types/bootstrap": "^4.3.2",
     "@types/d3": "^5.7.2",
     "@types/file-saver": "^2.0.1",
