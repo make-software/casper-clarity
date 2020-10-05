@@ -8,11 +8,16 @@ import { MaxUint256, NegativeOne, One, Zero } from '@ethersproject/constants';
 
 import { arrayify, concat } from '@ethersproject/bytes';
 
-// CLTyped, ToBytes
-interface CLValue {
-  toBytes: () => ByteArray;
+interface CLTyped {
   clType: CLType;
 }
+
+interface ToBytes {
+  toBytes: () => ByteArray;
+}
+
+// CLTyped, ToBytes
+interface CLValue extends CLTyped, ToBytes {}
 // todo(abner): supports Option<T>, Result<T,E>, unit
 abstract class NumberCoder implements CLValue {
   readonly bitSize: number;
@@ -446,6 +451,10 @@ export class CLValues {
     return new MapValue(mapEntries);
   }
 
+  static URef(uRefAddr: Uint8Array, accessRight: AccessRight) {
+    return new URef(uRefAddr, accessRight);
+  }
+
   static tuple1(t0: CLValue) {
     return new Tuple1(t0);
   }
@@ -573,5 +582,16 @@ export class CLTypes {
           throw new Error('error type');
       }
     }
+  }
+}
+
+export class NamedArg implements ToBytes {
+  private nameBytes: StringValue;
+  constructor(public name: string, public value: CLValue) {
+    this.nameBytes = CLValues.string(name);
+  }
+
+  toBytes(): ByteArray {
+    return concat([this.nameBytes.toBytes(), this.value.toBytes()]);
   }
 }
