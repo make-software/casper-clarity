@@ -9,9 +9,7 @@
  * Check whether CasperLabs Signer extension is connected
  */
 export const isConnected: () => Promise<boolean | undefined> = async () => {
-  console.log('Checking connection status...');
   const response = await window.casperlabsHelper!.isConnected();
-  console.log('Response: ' + response);
   return response;
 };
 
@@ -21,7 +19,6 @@ export const isConnected: () => Promise<boolean | undefined> = async () => {
  * @throws Error if already connected.
  */
 export const sendConnectionRequest: () => void = () => {
-  console.log('Attempting connection...');
   return window.casperlabsHelper!.requestConnection();
 };
 

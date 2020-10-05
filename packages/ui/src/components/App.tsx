@@ -340,12 +340,7 @@ class _Navigation extends RefreshableComponent<
             {/* George: Styling and spacing needs improving here */}
             <li className="nav-item">
               <Button
-                // Clean up promise handling and console.logging
-                // Make the attemptConnect method open the popup to the confirm page.
-
-                onClick={async () => {
-                  const result = await this.signerConnected();
-                  console.log('Response: ' + result);
+                onClick={() => {
                   Signer.sendConnectionRequest();
                 }}
                 title={'Connect to Signer'}
