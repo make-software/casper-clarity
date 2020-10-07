@@ -21,7 +21,12 @@ abstract class CLValue implements CLTyped, ToBytes {
   abstract clType(): CLType;
   abstract toBytes(): ByteArray;
   serializeWithType(): ByteArray {
-    return concat([CLTypes.toBytes(this.clType()), this.toBytes()]);
+    const bytes = this.toBytes();
+    const bytesCLValue = Array.from(bytes).map(b => CLValues.u8(b));
+    return concat([
+      CLValues.list(bytesCLValue).toBytes(),
+      CLTypes.toBytes(this.clType())
+    ]);
   }
 }
 // todo(abner): supports Option<T>, Result<T,E>, unit
@@ -290,7 +295,7 @@ class List<T extends ToBytes> extends CLValue {
   }
 
   clType(): CLType {
-    return new ListType((this.vec[0] as any).clType);
+    return new ListType((this.vec[0] as any).clType());
   }
 }
 
