@@ -48,6 +48,7 @@ import ReactGA from 'react-ga';
 import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
+import FaucetAsterix from '../img/faucet-asterix.svg';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 
@@ -57,7 +58,8 @@ class MenuItem {
     public path: string,
     public label: string,
     public icon?: JSX.Element,
-    public exact: boolean = false
+    public exact: boolean = false,
+    public additionalIcon?: string
   ) {}
 
   toRoute() {
@@ -111,52 +113,50 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(
     Pages.Accounts,
     'Accounts',
-    (<IoMdKey fontSize={SideMenuIconSize} />)
+    <IoMdKey fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Faucet,
     'Faucet',
-    (<IoIosWater fontSize={SideMenuIconSize} />)
+    <IoIosWater fontSize={SideMenuIconSize} />,
+    false,
+    FaucetAsterix
   ),
   new MenuItem(
     Pages.DeployContracts,
     'Deploy Contract',
-    (<IoMdRocket fontSize={SideMenuIconSize} />)
+    <IoMdRocket fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Explorer,
     'Explorer',
-    (<FaMapMarkedAlt fontSize={SideMenuIconSize} />)
+    <FaMapMarkedAlt fontSize={SideMenuIconSize} />
   ),
-  new MenuItem(
-    Pages.Blocks,
-    'Blocks',
-    (<FiGrid fontSize={SideMenuIconSize} />)
-  ),
+  new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
   new MenuItem(
     Pages.Deploys,
     'Deploys',
-    (<FaListUl fontSize={SideMenuIconSize} />)
+    <FaListUl fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Search,
     'Search',
-    (<FaSearch fontSize={SideMenuIconSize} />)
+    <FaSearch fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.Validators,
     'Validators',
-    (<MdGroup fontSize={SideMenuIconSize} />)
+    <MdGroup fontSize={SideMenuIconSize} />
   ),
   new MenuItem(
     Pages.ConnectedPeers,
     'Connected Peers',
-    (<FaNetworkWired fontSize={SideMenuIconSize} />)
+    <FaNetworkWired fontSize={SideMenuIconSize} />
   ),
   new GroupedMenuItem(
     'clarityContracts',
     'Contracts',
-    (<FaFileContract fontSize={SideMenuIconSize} />),
+    <FaFileContract fontSize={SideMenuIconSize} />,
     [new MenuItem(Pages.Vesting, 'Vesting')]
   )
 ];
@@ -201,7 +201,7 @@ export default class App extends React.Component<AppProps, {}> {
     // })
 
     // Toggle the side navigation
-    $('#sidenavToggler').click(function(e) {
+    $('#sidenavToggler').click(function (e) {
       e.preventDefault();
       $('body').toggleClass('sidenav-toggled');
       $('.navbar-sidenav .nav-link-collapse').addClass('collapsed');
@@ -213,14 +213,14 @@ export default class App extends React.Component<AppProps, {}> {
     // Hide sidenav manually after clicking menu item in mobile view
     // $("#navbarResponsive") is a responsive component which can only collapsed
     // in mobile view.
-    $('.navbar-sidenav .nav-item').click(function(e) {
+    $('.navbar-sidenav .nav-item').click(function (e) {
       $('#navbarResponsive').collapse('hide');
     });
 
     // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
     $(
       'body.fixed-nav .navbar-sidenav, body.fixed-nav .sidenav-toggler, body.fixed-nav .navbar-collapse'
-    ).on('mousewheel DOMMouseScroll', function(e: any) {
+    ).on('mousewheel DOMMouseScroll', function (e: any) {
       var e0 = e.originalEvent,
         delta = e0.wheelDelta || -e0.detail;
       this.scrollTop += (delta < 0 ? 1 : -1) * 30;
@@ -228,7 +228,7 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top button appear
-    $(document).scroll(function() {
+    $(document).scroll(function () {
       var scrollDistance = $(this).scrollTop()!;
       if (scrollDistance > 100) {
         $('.scroll-to-top').fadeIn();
@@ -238,17 +238,15 @@ export default class App extends React.Component<AppProps, {}> {
     });
 
     // Scroll to top
-    $(document).on('click', 'a.scroll-to-top', function(e) {
+    $(document).on('click', 'a.scroll-to-top', function (e) {
       var anchor = $(this);
       var offset = $(anchor.attr('href')!).offset()!;
-      $('html, body')
-        .stop()
-        .animate(
-          {
-            scrollTop: offset.top
-          },
-          1000
-        );
+      $('html, body').stop().animate(
+        {
+          scrollTop: offset.top
+        },
+        1000
+      );
       e.preventDefault();
     });
   }
@@ -274,6 +272,7 @@ const NavLink = (props: { item: MenuItem }) => {
             <Link to={item.path} className="nav-link">
               <div style={{ margin: '0 10px 0 20px' }}>{item.icon}</div>
               <span className="nav-link-text">{item.label}</span>
+              <img className="svg-additional" src={item.additionalIcon} />
             </Link>
           </li>
         );
@@ -305,7 +304,7 @@ class _Navigation extends RefreshableComponent<
         className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
         id="mainNav"
       >
-        <a className="navbar-brand" href="https://casperlabs.io/">
+        <a className="navbar-brand" href="/">
           <img src={logo} alt="logo" />
           <span className={'navbar-brand-title'}>
             Clarity Explorer <FaMapMarkedAlt className={'navbar-brand-icon'} />

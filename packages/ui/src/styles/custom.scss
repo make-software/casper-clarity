@@ -1,9 +1,11 @@
-$font-family-base: 'Sarabun', sans-serif;
 // https://startbootstrap.com/template-overviews/sb-admin/
 @import 'sb-admin/sb-admin.scss';
 @import '~bootstrap/scss/bootstrap';
 @import 'account-selector';
 @import 'toggle-button';
+@import 'font';
+
+$font-family-base: 'Segoe UI', sans-serif;
 
 #mainNav.navbar-dark {
   .username {
@@ -87,8 +89,13 @@ div.svg-hint {
   padding: 5px;
 }
 
+.svg-additional {
+  position: absolute;
+  right: 16px;
+}
+
 #mainNav.navbar-dark .navbar-collapse .navbar-sidenav {
-  background: #000000;
+  background: #202020;
 }
 
 .bg-dark {
