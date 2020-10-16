@@ -53,7 +53,6 @@ export const sign: (
 
 const throwIfNotConnected = () => {
   if (!isConnected()) {
-    alert('NOT CONNECTED');
     throw new Error(
       'No CasperLabs Signer browser plugin detected or it is not ready'
     );
