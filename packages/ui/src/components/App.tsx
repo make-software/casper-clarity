@@ -251,7 +251,7 @@ class _Navigation extends RefreshableComponent<
     this.props.networkInfoContainer.refresh();
   }
 
-  async signerConnected() {
+  async signerConnectionStateText() {
     const result = await Signer.isConnected();
     const buttonText = result ? 'Connected' : 'Connect to Signer';
     return buttonText;
