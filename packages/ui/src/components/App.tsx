@@ -12,7 +12,7 @@ import Accounts from './Accounts';
 import Faucet from './Faucet';
 import Explorer from './Explorer';
 import BlockList from './BlockList';
-import { PrivateRoute, RefreshableComponent, Title } from './Utils';
+import { PrivateRoute, RefreshableComponent, Title, Button } from './Utils';
 import AuthContainer from '../containers/AuthContainer';
 import FaucetContainer from '../containers/FaucetContainer';
 import ErrorContainer from '../containers/ErrorContainer';
@@ -49,6 +49,7 @@ import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
 import FaucetAsterix from '../img/faucet-asterix.svg';
+import { Signer } from 'casperlabs-sdk';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 
@@ -298,6 +299,13 @@ class _Navigation extends RefreshableComponent<
     this.props.connectedPeersContainer.refreshPeers();
     this.props.networkInfoContainer.refresh();
   }
+
+  async signerConnectionStateText() {
+    const result = await Signer.isConnected();
+    const buttonText = result ? 'Connected' : 'Connect to Signer';
+    return buttonText;
+  }
+
   render() {
     return (
       <nav
@@ -380,12 +388,25 @@ class _Navigation extends RefreshableComponent<
                 </a>
               ) : (
                 <a
-                  className="nav-link text-white"
+                  className="nav-link text-center"
                   onClick={_ => this.props.auth.login()}
                 >
-                  <FiLogIn /> Sign In
+                  <i className="fa fa-fw fa-sign-in-alt"></i>Sign In
                 </a>
               )}
+            </li>
+            {/* George: Styling and spacing needs improving here */}
+            <li className="nav-item">
+              <Button
+                onClick={() => {
+                  Signer.sendConnectionRequest();
+                }}
+                title={'Connect to Signer'}
+                // Make button state/appearance conditional on connected or not
+                disabled={false}
+                type={'primary'}
+                size={'sm'}
+              />
             </li>
           </ul>
         </div>

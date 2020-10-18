@@ -1,6 +1,12 @@
 interface CasperLabsHelper {
-  // whether CasperLabs Sign Helper Plugin is ready
-  isConnected: () => boolean;
+  /**
+   * Returns connection status from Signer
+   */
+  isConnected: () => Promise<boolean | undefined>;
+  /**
+   * Attempt connection to Signer
+   */
+  requestConnection: () => void;
   /**
    * send base16 encoded message to plugin to sign
    *

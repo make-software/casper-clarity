@@ -305,12 +305,20 @@ export class DeployContractsContainer {
     });
   }
 
+  async checkConnectionToSigner() {
+    let connected = await Signer.isConnected();
+    return connected;
+  }
+
   @action.bound
   async _onSubmit() {
     this.deployedHash = null;
-    if (!Signer.isConnected()) {
+
+    let connected = await this.checkConnectionToSigner();
+
+    if (!connected) {
       throw new Error(
-        'Please install the CasperLabs Sign Helper Plugin first!'
+        'Please install/connect the CasperLabs Signer extension first!'
       );
     }
 
@@ -411,8 +419,8 @@ export class DeployContractsContainer {
     const preState = localStorage.getItem(
       DeployContractsContainer.PersistentKey
     );
-    let restoreDeployArgument = function(arg: RawDeployArguments) {
-      let helper = function(
+    let restoreDeployArgument = (arg: RawDeployArguments) => {
+      let helper = function (
         innerDeployArg: DeployArgument,
         mapArg: RawDeployArguments
       ) {
