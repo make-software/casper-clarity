@@ -22,7 +22,7 @@ interface ExecutionResult {
   error_message: string | null;
 }
 
-interface JsonExecutionResult {
+export interface JsonExecutionResult {
   block_hash: JsonBlockHash;
   result: ExecutionResult;
 }

@@ -5,298 +5,148 @@
 
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { MaxUint256, NegativeOne, One, Zero } from '@ethersproject/constants';
-
 import { arrayify, concat } from '@ethersproject/bytes';
+import { CLValue, ToBytes } from './CLValue';
 
-interface CLTyped {
-  clType: () => CLType;
-}
+type ByteArray = Uint8Array;
 
-interface ToBytes {
-  toBytes: () => ByteArray;
-}
+/**
+ * Convert number to bytes
+ */
+export const toBytesNumber = (
+  bitSize: number,
+  signed: boolean,
+  value: BigNumberish
+) => {
+  let v = BigNumber.from(value);
 
-// CLTyped, ToBytes
-abstract class CLValue implements CLTyped, ToBytes {
-  abstract clType(): CLType;
-  abstract toBytes(): ByteArray;
-  serializeWithType(): ByteArray {
-    const bytes = this.toBytes();
-    const bytesCLValue = Array.from(bytes).map(b => CLValues.u8(b));
-    return concat([
-      CLValues.list(bytesCLValue).toBytes(),
-      CLTypes.toBytes(this.clType())
-    ]);
-  }
-}
-// todo(abner): supports Option<T>, Result<T,E>, unit
-abstract class NumberCoder extends CLValue {
-  bitSize: number;
-  signed: boolean;
-  value: BigNumberish;
-  name: string;
-
-  protected constructor(bitSize: number, signed: boolean, value: BigNumberish) {
-    super();
-    this.name = (signed ? 'i' : 'u') + bitSize;
-    this.bitSize = bitSize;
-    this.signed = signed;
-    this.value = value;
-  }
-
-  toBytes = (): ByteArray => {
-    let v = BigNumber.from(this.value);
-
-    // Check bounds are safe for encoding
-    let maxUintValue = MaxUint256.mask(this.bitSize);
-    if (this.signed) {
-      let bounds = maxUintValue.mask(this.bitSize - 1);
-      if (v.gt(bounds) || v.lt(bounds.add(One).mul(NegativeOne))) {
-        throw new Error('value out-of-bounds, value: ' + this.value);
-      }
-    } else if (v.lt(Zero) || v.gt(maxUintValue.mask(this.bitSize))) {
-      throw new Error('value out-of-bounds, value: ' + this.value);
+  // Check bounds are safe for encoding
+  let maxUintValue = MaxUint256.mask(bitSize);
+  if (signed) {
+    let bounds = maxUintValue.mask(bitSize - 1); // 1 bit for signed
+    if (v.gt(bounds) || v.lt(bounds.add(One).mul(NegativeOne))) {
+      throw new Error('value out-of-bounds, value: ' + value);
     }
-    v = v.toTwos(this.bitSize).mask(this.bitSize);
-    let bytes = arrayify(v);
-    if (v.gt(0)) {
-      // for unsigned number, we had to deal with paddings
-      if (this.bitSize > 64) {
-        // for u128, u256, u512, we have to and append extra byte for length
-        return concat([bytes, Uint8Array.from([bytes.length])]).reverse();
-      } else {
-        // for other types, we have to add padding 0s
-        const byteLength = this.bitSize / 8;
-        return concat([
-          bytes.reverse(),
-          new Uint8Array(byteLength - bytes.length)
-        ]);
-      }
+  } else if (v.lt(Zero) || v.gt(maxUintValue.mask(bitSize))) {
+    throw new Error('value out-of-bounds, value: ' + value);
+  }
+  v = v.toTwos(bitSize).mask(bitSize);
+  let bytes = arrayify(v);
+  if (v.gt(0)) {
+    // for unsigned number, we had to deal with paddings
+    if (bitSize > 64) {
+      // for u128, u256, u512, we have to and append extra byte for length
+      return concat([bytes, Uint8Array.from([bytes.length])]).reverse();
     } else {
-      return bytes.reverse();
+      // for other types, we have to add padding 0s
+      const byteLength = bitSize / 8;
+      return concat([
+        bytes.reverse(),
+        new Uint8Array(byteLength - bytes.length)
+      ]);
     }
-  };
+  } else {
+    return bytes.reverse();
+  }
+};
+
+/**
+ * Converts `u8` to little endian.
+ */
+export function toBytesU8(u8: BigNumberish): ByteArray {
+  return toBytesNumber(8, false, u8);
 }
 
-class Bool extends CLValue {
-  constructor(private b: boolean) {
-    super();
-  }
-  toBytes(): ByteArray {
-    return new Uint8Array([this.b ? 1 : 0]);
-  }
-  clType(): CLType {
-    return SimpleType.Bool;
-  }
+/**
+ * Converts `i32` to little endian.
+ */
+export function toBytesI32(i32: BigNumberish): ByteArray {
+  return toBytesNumber(32, true, i32);
 }
 
-class U8 extends NumberCoder {
-  constructor(u8: number) {
-    super(8, false, u8);
-  }
-  clType(): CLType {
-    return SimpleType.U8;
-  }
+/**
+ * Converts `u32` to little endian.
+ */
+export function toBytesU32(u32: BigNumberish): ByteArray {
+  return toBytesNumber(32, false, u32);
 }
 
-class U32 extends NumberCoder {
-  constructor(n: number) {
-    super(32, false, n);
-  }
-  clType(): CLType {
-    return SimpleType.U32;
-  }
+/**
+ * Converts `u64` to little endian.
+ */
+export function toBytesU64(u64: BigNumberish): ByteArray {
+  return toBytesNumber(64, false, u64);
 }
 
-class I32 extends NumberCoder {
-  constructor(n: number) {
-    super(32, true, n);
-  }
-  clType(): CLType {
-    return SimpleType.I32;
-  }
+/**
+ * Converts `i64` to little endian.
+ */
+export function toBytesI64(i64: BigNumberish): ByteArray {
+  return toBytesNumber(64, true, i64);
 }
 
-class U64 extends NumberCoder {
-  constructor(n: BigNumberish) {
-    super(64, false, n);
-  }
-
-  clType(): CLType {
-    return SimpleType.U64;
-  }
+/**
+ * Converts `u128` to little endian.
+ */
+export function toBytesU128(u128: BigNumberish): ByteArray {
+  return toBytesNumber(128, false, u128);
 }
 
-class I64 extends NumberCoder {
-  constructor(n: BigNumberish) {
-    super(64, true, n);
-  }
-
-  clType(): CLType {
-    return SimpleType.I64;
-  }
+/**
+ * Converts `u256` to little endian.
+ */
+export function toBytesU256(u256: BigNumberish): ByteArray {
+  return toBytesNumber(256, false, u256);
 }
 
-class U128 extends NumberCoder {
-  constructor(n: BigNumberish) {
-    super(128, false, n);
-  }
-
-  clType(): CLType {
-    return SimpleType.U128;
-  }
+export function toBytesDeployHash(deployHash: ByteArray) {
+  return toBytesBytesArray(deployHash);
 }
 
-class U256 extends NumberCoder {
-  constructor(n: BigNumberish) {
-    super(256, false, n);
-  }
-
-  clType(): CLType {
-    return SimpleType.U256;
-  }
+/**
+ * Converts `u512` to little endian.
+ */
+export function toBytesU512(u512: BigNumberish): ByteArray {
+  return toBytesNumber(512, false, u512);
 }
 
-class U512 extends NumberCoder {
-  constructor(n: BigNumberish) {
-    super(512, false, n);
-  }
-
-  clType(): CLType {
-    return SimpleType.U512;
-  }
+/**
+ * Serializes a string into an array of bytes.
+ */
+export function toBytesString(str: string): ByteArray {
+  const arr = Uint8Array.from(Buffer.from(str));
+  return concat([toBytesU32(str.length), arr]);
 }
 
-class StringValue extends CLValue {
-  constructor(private str: string) {
-    super();
-  }
-  toBytes = () => {
-    const arr = Uint8Array.from(Buffer.from(this.str));
-    return concat([CLValues.u32(arr.length).toBytes(), arr]);
-  };
-
-  clType(): CLType {
-    return SimpleType.String;
-  }
+/**
+ * Serializes an array of u8.
+ */
+export function toBytesArrayU8(arr: ByteArray): ByteArray {
+  return concat([toBytesU32(arr.length), arr]);
 }
 
-abstract class KeyLike extends CLValue {
-  abstract readonly tag: number;
-  abstract toBytes(): ByteArray;
-  clType(): CLType {
-    return SimpleType.Key;
-  }
+/**
+ * Serializes an byteArray
+ */
+export function toBytesBytesArray(arr: ByteArray): ByteArray {
+  return arr;
 }
 
-class KeyAccount extends KeyLike {
-  tag = 0;
-  constructor(private accountHashBytes: ByteArray) {
-    super();
-    if (this.accountHashBytes.byteLength !== 32) {
-      throw new Error('The length of accountHash should be 32');
-    }
-  }
-
-  toBytes(): ByteArray {
-    return concat([Uint8Array.from([this.tag]), this.accountHashBytes]);
-  }
-}
-
-class KeyHash extends KeyLike {
-  readonly tag: number = 1;
-  constructor(private hash: Uint8Array) {
-    super();
-    if (this.hash.byteLength !== 32) {
-      throw new Error('The length of Hash should be 32');
-    }
-  }
-
-  toBytes(): ByteArray {
-    return concat([Uint8Array.from([this.tag]), this.hash]);
-  }
-}
-
-enum AccessRight {
-  None = 0b0,
-  READ = 0b001,
-  WRITE = 0b010,
-  ADD = 0b100,
-  READ_ADD = AccessRight.READ | AccessRight.ADD,
-  READ_WRITE = AccessRight.READ | AccessRight.WRITE,
-  ADD_WRITE = AccessRight.ADD | AccessRight.WRITE,
-  READ_ADD_WRITE = AccessRight.READ | AccessRight.ADD | AccessRight.WRITE
-}
-
-class KeyURef extends KeyLike {
-  readonly tag = 2;
-  constructor(private URefAddr: Uint8Array, private accessRight: AccessRight) {
-    super();
-    if (this.URefAddr.byteLength !== 32) {
-      throw new Error('The length of URefAddr should be 32');
-    }
-  }
-  toBytes(): ByteArray {
-    return concat([
-      Uint8Array.from([this.tag]),
-      this.URefAddr,
-      Uint8Array.from([this.accessRight])
-    ]);
-  }
-}
-
-class URef extends CLValue {
-  constructor(private URefAddr: Uint8Array, private accessRight: AccessRight) {
-    super();
-    if (this.URefAddr.byteLength !== 32) {
-      throw new Error('The length of URefAddr should be 32');
-    }
-  }
-
-  clType(): CLType {
-    return SimpleType.URef;
-  }
-
-  toBytes(): ByteArray {
-    return concat([this.URefAddr, Uint8Array.from([this.accessRight])]);
-  }
-}
-
-export class Key {
-  static account(accountHash: ByteArray) {
-    return new KeyAccount(accountHash);
-  }
-  static hash(hash: ByteArray) {
-    return new KeyHash(hash);
-  }
-  static uRef(URefAddr: ByteArray, accessRight: AccessRight) {
-    return new KeyURef(URefAddr, accessRight);
-  }
-}
-
-function vecToBytes<T extends ToBytes>(vec: T[]) {
+/**
+ * Serializes a vector of values of type `T` into an array of bytes.
+ */
+export function toBytesVecT<T extends ToBytes>(vec: T[]) {
   const valueByteList = vec.map(e => e.toBytes());
-  valueByteList.splice(0, 0, CLValues.u32(vec.length).toBytes());
+  valueByteList.splice(0, 0, toBytesU32(vec.length));
 
   return concat(valueByteList);
 }
 
-class List<T extends ToBytes> extends CLValue {
-  // todo(abner) implement EmptyList
-  constructor(private vec: T[]) {
-    super();
-    if (vec.length === 0) {
-      throw new Error('');
-    }
-  }
-
-  toBytes(): ByteArray {
-    return vecToBytes(this.vec);
-  }
-
-  clType(): CLType {
-    return new ListType((this.vec[0] as any).clType());
-  }
+/**
+ * Serializes a list of strings into an array of bytes.
+ */
+export function toBytesStringList(arr: string[]) {
+  return toBytesVecT(arr.map(e => CLValue.fromString(e)));
 }
 
 type SupportArrayLen =
@@ -337,287 +187,3 @@ type SupportArrayLen =
   | 128
   | 256
   | 512;
-
-class FixedList<T extends CLValue> extends CLValue {
-  private readonly size: number;
-  private vec: T[];
-  // todo(abner) implements EmptyFixedList
-  constructor(size: SupportArrayLen, vec: T[]) {
-    super();
-    if (size !== vec.length) {
-      throw new Error('The size is not equal to the length of vec');
-    }
-    this.size = size;
-    this.vec = vec;
-  }
-  toBytes(): ByteArray {
-    const v = this.vec.map(e => e.toBytes());
-    return concat(v);
-  }
-
-  clType(): CLType {
-    return new FixedListType(this.vec[0].clType(), this.size);
-  }
-}
-
-class Tuple1 extends CLValue {
-  constructor(private v0: CLValue) {
-    super();
-  }
-
-  toBytes(): ByteArray {
-    return this.v0.toBytes();
-  }
-
-  clType(): CLType {
-    return new Tuple1Type(this.v0.clType());
-  }
-}
-
-class Tuple2 extends CLValue {
-  constructor(private v0: CLValue, private v1: CLValue) {
-    super();
-  }
-
-  toBytes(): ByteArray {
-    return concat([this.v0.toBytes(), this.v1.toBytes()]);
-  }
-
-  clType(): CLType {
-    return new Tuple2Type(this.v0.clType(), this.v1.clType());
-  }
-}
-
-class Tuple3 extends CLValue {
-  constructor(private v0: CLValue, private v1: CLValue, private v2: CLValue) {
-    super();
-  }
-
-  clType(): CLType {
-    return new Tuple3Type(this.v0.clType(), this.v1.clType(), this.v2.clType());
-  }
-
-  toBytes(): ByteArray {
-    return concat([this.v0.toBytes(), this.v1.toBytes(), this.v2.toBytes()]);
-  }
-}
-
-interface MapEntry {
-  key: CLValue;
-  value: CLValue;
-}
-
-class MapValue extends CLValue {
-  // todo(abner) implements EmptyMapValue
-  constructor(private v: MapEntry[]) {
-    super();
-  }
-  toBytes(): ByteArray {
-    const kvBytes: Uint8Array[] = this.v.flatMap(vv => {
-      return [vv.key.toBytes(), vv.value.toBytes()];
-    });
-    kvBytes.splice(0, 0, CLValues.u32(this.v.length).toBytes());
-    return concat(kvBytes);
-  }
-  clType(): CLType {
-    return new MapType(this.v[0].key.clType(), this.v[0].value.clType());
-  }
-}
-
-export class CLValues {
-  static bool = (x: boolean) => {
-    return new Bool(x);
-  };
-
-  static u8 = (x: number) => {
-    return new U8(x);
-  };
-
-  static u32 = (x: number) => {
-    return new U32(x);
-  };
-
-  static i32 = (x: number) => {
-    return new I32(x);
-  };
-
-  static i64 = (x: BigNumberish) => {
-    return new I64(x);
-  };
-
-  static u64 = (x: BigNumberish) => {
-    return new U64(x);
-  };
-
-  static u128 = (x: BigNumberish) => {
-    return new U128(x);
-  };
-
-  static u256 = (x: BigNumberish) => {
-    return new U256(x);
-  };
-
-  static u512 = (x: BigNumberish) => {
-    return new U512(x);
-  };
-
-  static string(x: string) {
-    return new StringValue(x);
-  }
-
-  static list<T extends ToBytes>(vec: T[]) {
-    return new List(vec);
-  }
-
-  static fixedList<T extends CLValue>(size: SupportArrayLen, vec: T[]) {
-    return new FixedList(size, vec);
-  }
-
-  static map(mapEntries: MapEntry[]) {
-    return new MapValue(mapEntries);
-  }
-
-  static URef(uRefAddr: Uint8Array, accessRight: AccessRight) {
-    return new URef(uRefAddr, accessRight);
-  }
-
-  static tuple1(t0: CLValue) {
-    return new Tuple1(t0);
-  }
-
-  static tuple2(t0: CLValue, t1: CLValue) {
-    return new Tuple2(t0, t1);
-  }
-
-  static tuple3(t0: CLValue, t1: CLValue, t2: CLValue) {
-    return new Tuple3(t0, t1, t2);
-  }
-}
-
-enum SimpleType {
-  Bool = 0,
-  I32 = 1,
-  I64 = 2,
-  U8 = 3,
-  U32 = 4,
-  U64 = 5,
-  U128 = 6,
-  U256 = 7,
-  U512 = 8,
-  Unit = 9,
-  String = 10,
-  Key = 11,
-  URef = 12,
-  PublicKey = 22
-}
-
-class ListType {
-  tag = 14;
-  innerType: CLType;
-  constructor(innerType: CLType) {
-    this.innerType = innerType;
-  }
-}
-
-class FixedListType {
-  tag = 15;
-  constructor(public innerType: CLType, public size: number) {}
-}
-
-class MapType {
-  tag = 17;
-  constructor(public keyType: CLType, public valueType: CLType) {}
-}
-
-class Tuple1Type {
-  tag = 18;
-  constructor(public t0: CLType) {}
-}
-
-class Tuple2Type {
-  tag = 19;
-  constructor(public t0: CLType, public t1: CLType) {}
-}
-
-class Tuple3Type {
-  tag = 20;
-  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
-}
-
-type CLType =
-  | SimpleType
-  | ListType
-  | FixedListType
-  | MapType
-  | Tuple1Type
-  | Tuple2Type
-  | Tuple3Type;
-
-export class CLTypes {
-  static toBytes(type: CLType): ByteArray {
-    if (type instanceof ListType) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypes.toBytes(type.innerType)
-      ]);
-    } else if (type instanceof Tuple1Type) {
-      return concat([Uint8Array.from([type.tag]), CLTypes.toBytes(type.t0)]);
-    } else if (type instanceof Tuple2Type) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypes.toBytes(type.t0),
-        CLTypes.toBytes(type.t1)
-      ]);
-    } else if (type instanceof Tuple3Type) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypes.toBytes(type.t0),
-        CLTypes.toBytes(type.t1),
-        CLTypes.toBytes(type.t2)
-      ]);
-    } else if (type instanceof FixedListType) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypes.toBytes(type.innerType),
-        CLValues.u32(type.size).toBytes()
-      ]);
-    } else if (type instanceof MapType) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypes.toBytes(type.keyType),
-        CLTypes.toBytes(type.valueType)
-      ]);
-    } else {
-      switch (type) {
-        case SimpleType.Bool:
-        case SimpleType.I32:
-        case SimpleType.I64:
-        case SimpleType.U8:
-        case SimpleType.U32:
-        case SimpleType.U64:
-        case SimpleType.U128:
-        case SimpleType.U256:
-        case SimpleType.U512:
-        case SimpleType.Unit:
-        case SimpleType.String:
-        case SimpleType.Key:
-        case SimpleType.URef:
-        case SimpleType.PublicKey:
-          return Uint8Array.from([type]);
-        default:
-          throw new Error('error type');
-      }
-    }
-  }
-}
-
-export class NamedArg implements ToBytes {
-  private nameBytes: StringValue;
-  constructor(public name: string, public value: CLValue) {
-    this.nameBytes = CLValues.string(name);
-  }
-
-  toBytes(): ByteArray {
-    return concat([this.nameBytes.toBytes(), this.value.serializeWithType()]);
-  }
-}

@@ -3,11 +3,22 @@
  *
  * @packageDocumentation
  */
-import { encode } from '@msgpack/msgpack';
+import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
+import { Option } from './option';
 import * as nacl from 'tweetnacl-ts';
 import { encodeBase16 } from 'casperlabs-sdk';
-import { CLValues, NamedArg } from './byterepr';
+import { CLTypeHelper, PublicKey, ToBytes, U32 } from './CLValue';
+import {
+  toBytesArrayU8,
+  toBytesBytesArray,
+  toBytesDeployHash,
+  toBytesString,
+  toBytesU64,
+  toBytesVecT
+} from './byterepr';
+
+type ByteArray = Uint8Array;
 
 export interface DeployHeader {
   account: ByteArray;
@@ -19,12 +30,32 @@ export interface DeployHeader {
   chainName: string;
 }
 
+class DeployHash implements ToBytes {
+  constructor(private hash: ByteArray) {}
+
+  toBytes(): ByteArray {
+    return toBytesDeployHash(this.hash);
+  }
+}
+
+const toBytesDeployHeader = (deployHeader: DeployHeader) => {
+  return concat([
+    PublicKey.fromEd25519(deployHeader.account).toBytes(),
+    toBytesU64(deployHeader.timestamp),
+    toBytesU64(deployHeader.ttl),
+    toBytesU64(deployHeader.gasPrice),
+    toBytesDeployHash(deployHeader.bodyHash),
+    toBytesVecT(deployHeader.dependencies.map(d => new DeployHash(d))),
+    toBytesString(deployHeader.chainName)
+  ]);
+};
+
 export interface Deploy {
   hash: ByteArray;
   header: DeployHeader;
   payment: ExecutableDeployItem;
   session: ExecutableDeployItem;
-  approval: Approval[];
+  approvals: Approval[];
 }
 
 export class Approval {
@@ -32,55 +63,126 @@ export class Approval {
   signature: ByteArray;
 }
 
-export type ExecutableDeployItem =
-  | ModuleBytes
-  | StoredContractByHash
-  | StoredContractByName
-  | StoredVersionedContractByHash
-  | StoredVersionedContractByName
-  | Transfer;
+export abstract class ExecutableDeployItem implements ToBytes {
+  abstract tag: number;
 
-export interface ModuleBytes {
-  moduleBytes: Uint8Array;
-  args: Uint8Array;
+  abstract toBytes(): ByteArray;
 }
 
-export interface StoredContractByHash {
-  hash: Uint8Array;
-  entryPoint: string;
-  args: Uint8Array;
-}
-
-export interface StoredContractByName {
-  name: string;
-  entryPoint: string;
-  args: Uint8Array;
-}
-
-export interface StoredVersionedContractByName {
-  name: string;
-  version: number | null;
-  entryPoint: string;
-  args: Uint8Array;
-}
-
-export interface StoredVersionedContractByHash {
-  hash: Uint8Array;
-  version: number | null;
-  entryPoint: string;
-  args: ByteArray;
-}
-
-export interface Transfer {
-  args: ByteArray;
-}
-
-export class DeployItem {
-  static namedArgsToBytes(namedArgs: NamedArg[]) {
-    return CLValues.list(namedArgs).toBytes();
+export class ModuleBytes extends ExecutableDeployItem {
+  tag = 0;
+  constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
+    super();
   }
-  static newModuleBytes(moduleBytes: ByteArray, namedArgs: NamedArg[]) {}
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesArrayU8(this.moduleBytes),
+      toBytesArrayU8(this.args)
+    ]);
+  }
 }
+
+export class StoredContractByHash extends ExecutableDeployItem {
+  tag = 1;
+  hash: Uint8Array;
+  entryPoint: string;
+  args: Uint8Array;
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesBytesArray(this.hash),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+}
+
+export class StoredContractByName extends ExecutableDeployItem {
+  name: string;
+  entryPoint: string;
+  args: Uint8Array;
+  tag = 2;
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesString(this.name),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+}
+
+export class StoredVersionedContractByName extends ExecutableDeployItem {
+  name: string;
+  version: number | null;
+  entryPoint: string;
+  args: Uint8Array;
+  tag = 4;
+
+  toBytes(): ByteArray {
+    let serializedVersion;
+    if (this.version === null) {
+      serializedVersion = new Option(null, CLTypeHelper.u32());
+    } else {
+      serializedVersion = new Option(new U32(this.version as number));
+    }
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesString(this.name),
+      serializedVersion.toBytes(),
+      toBytesString(this.entryPoint),
+      this.args
+    ]);
+  }
+}
+
+export class StoredVersionedContractByHash extends ExecutableDeployItem {
+  hash: Uint8Array;
+  version: number | null;
+  entryPoint: string;
+  args: ByteArray;
+  tag = 3;
+
+  toBytes(): ByteArray {
+    let serializedVersion;
+    if (this.version === null) {
+      serializedVersion = new Option(null, CLTypeHelper.u32());
+    } else {
+      serializedVersion = new Option(new U32(this.version as number));
+    }
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesBytesArray(this.hash),
+      serializedVersion.toBytes(),
+      toBytesString(this.entryPoint),
+      this.args
+    ]);
+  }
+}
+
+export class Transfer extends ExecutableDeployItem {
+  args: ByteArray;
+  tag = 5;
+
+  toBytes(): ByteArray {
+    return concat([Uint8Array.from([this.tag]), this.args]);
+  }
+}
+
+const serializeHeader = (deployHeader: DeployHeader) => {
+  return toBytesDeployHeader(deployHeader);
+};
+
+const serializeBody = (
+  payment: ExecutableDeployItem,
+  session: ExecutableDeployItem
+) => {
+  return concat([payment.toBytes(), session.toBytes()]);
+};
 
 /**
  * Supported contract type
@@ -104,7 +206,7 @@ export function makeDeploy(
   dependencies: Uint8Array[] = [],
   timestamp?: number
 ): Deploy {
-  const serializedBody = encode([session, payment]);
+  const serializedBody = serializeBody(session, payment);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
   const uniqueDependencies = dependencies.filter(
     d =>
@@ -122,14 +224,14 @@ export function makeDeploy(
     timestamp: timestamp,
     ttl
   };
-  const serializedHeader = encode(header);
+  const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
   return {
     hash: deployHash,
     header,
     payment,
     session,
-    approval: []
+    approvals: []
   };
 }
 
@@ -147,7 +249,7 @@ export const signDeploy = (
   const signature = nacl.sign_detached(deploy.hash, signingKeyPair.secretKey);
   approval.signer = signingKeyPair.publicKey;
   approval.signature = signature;
-  deploy.approval.push(approval);
+  deploy.approvals.push(approval);
 
   return deploy;
 };
@@ -167,6 +269,6 @@ export const setSignature = (
   const approval = new Approval();
   approval.signature = sig;
   approval.signer = publicKey;
-  deploy.approval.push(approval);
+  deploy.approvals.push(approval);
   return deploy;
 };

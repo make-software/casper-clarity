@@ -1,7 +1,8 @@
-// @ts-nocheck
 import { expect } from 'chai';
-import { CLValues, NamedArg } from './byterepr';
+import { CLValues, NamedArg, toBytesDeployHash } from './byterepr';
 import { DeployItem } from './DeployUtil';
+import { decodeBase16, encodeBase16 } from 'casperlabs-sdk';
+import { CLValue, PublicKey } from './CLValue';
 
 describe(`numbers' toBytes`, () => {
   it('should be able to encode u8', () => {
@@ -90,6 +91,95 @@ describe(`numbers' toBytes`, () => {
         0,
         0,
         1
+      ])
+    );
+  });
+
+  it('should serialize DeployHash correctly', function() {
+    const deployHash = decodeBase16(
+      '7e83be8eb783d4631c3239eee08e95f33396210e23893155b6fb734e9b7f0df7'
+    );
+    const bytes = toBytesDeployHash(deployHash);
+    expect(bytes).to.deep.eq(
+      Uint8Array.from([
+        126,
+        131,
+        190,
+        142,
+        183,
+        131,
+        212,
+        99,
+        28,
+        50,
+        57,
+        238,
+        224,
+        142,
+        149,
+        243,
+        51,
+        150,
+        33,
+        14,
+        35,
+        137,
+        49,
+        85,
+        182,
+        251,
+        115,
+        78,
+        155,
+        127,
+        13,
+        247
+      ])
+    );
+  });
+
+  it('should serialize PublicKey correctly', function() {
+    const publicKey = Uint8Array.from(Array(32).fill(42));
+    const bytes = PublicKey.fromEd25519(publicKey).toBytes();
+    expect(bytes).to.deep.eq(
+      Uint8Array.from([
+        1,
+        32,
+        0,
+        0,
+        0,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42
       ])
     );
   });
