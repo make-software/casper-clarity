@@ -86,9 +86,13 @@ export class ModuleBytes extends ExecutableDeployItem {
 
 export class StoredContractByHash extends ExecutableDeployItem {
   tag = 1;
-  hash: Uint8Array;
-  entryPoint: string;
-  args: Uint8Array;
+  constructor(
+    private hash: Uint8Array,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
 
   toBytes(): ByteArray {
     return concat([
@@ -101,10 +105,15 @@ export class StoredContractByHash extends ExecutableDeployItem {
 }
 
 export class StoredContractByName extends ExecutableDeployItem {
-  name: string;
-  entryPoint: string;
-  args: Uint8Array;
   tag = 2;
+
+  constructor(
+    private name: string,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
 
   toBytes(): ByteArray {
     return concat([
@@ -117,11 +126,16 @@ export class StoredContractByName extends ExecutableDeployItem {
 }
 
 export class StoredVersionedContractByName extends ExecutableDeployItem {
-  name: string;
-  version: number | null;
-  entryPoint: string;
-  args: Uint8Array;
   tag = 4;
+
+  constructor(
+    private name: string,
+    private version: number | null,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
 
   toBytes(): ByteArray {
     let serializedVersion;
@@ -135,7 +149,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
       toBytesString(this.name),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      this.args
+      toBytesArrayU8(this.args)
     ]);
   }
 }
@@ -159,7 +173,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
       toBytesBytesArray(this.hash),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      this.args
+      toBytesArrayU8(this.args)
     ]);
   }
 }
@@ -169,15 +183,15 @@ export class Transfer extends ExecutableDeployItem {
   tag = 5;
 
   toBytes(): ByteArray {
-    return concat([Uint8Array.from([this.tag]), this.args]);
+    return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
   }
 }
 
-const serializeHeader = (deployHeader: DeployHeader) => {
+export const serializeHeader = (deployHeader: DeployHeader) => {
   return toBytesDeployHeader(deployHeader);
 };
 
-const serializeBody = (
+export const serializeBody = (
   payment: ExecutableDeployItem,
   session: ExecutableDeployItem
 ) => {

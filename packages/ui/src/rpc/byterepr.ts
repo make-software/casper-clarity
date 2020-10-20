@@ -119,14 +119,14 @@ export function toBytesString(str: string): ByteArray {
 }
 
 /**
- * Serializes an array of u8.
+ * Serializes an array of u8, equal to Vec<u8> in rust.
  */
 export function toBytesArrayU8(arr: ByteArray): ByteArray {
   return concat([toBytesU32(arr.length), arr]);
 }
 
 /**
- * Serializes an byteArray
+ * Serializes an byteArray, equal to [u8;n] in rust.
  */
 export function toBytesBytesArray(arr: ByteArray): ByteArray {
   return arr;
