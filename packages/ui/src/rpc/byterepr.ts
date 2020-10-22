@@ -115,7 +115,7 @@ export function toBytesU512(u512: BigNumberish): ByteArray {
  */
 export function toBytesString(str: string): ByteArray {
   const arr = Uint8Array.from(Buffer.from(str));
-  return concat([toBytesU32(str.length), arr]);
+  return concat([toBytesU32(arr.byteLength), arr]);
 }
 
 /**

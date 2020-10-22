@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { CLValue } from './CLValue';
 import { RuntimeArgs } from './RuntimeArgs';
+import { decodeBase16 } from 'casperlabs-sdk';
 
 describe(`RuntimeArgs`, () => {
   it('should serialize RuntimeArgs correctly', () => {
@@ -32,5 +33,12 @@ describe(`RuntimeArgs`, () => {
         1
       ])
     );
+  });
+
+  it('should serialize empty NamedArgs correctly', () => {
+    const truth = decodeBase16('00000000');
+    const runtimeArgs = RuntimeArgs.fromMap({});
+    const bytes = runtimeArgs.toBytes();
+    expect(bytes).to.deep.eq(truth);
   });
 });
