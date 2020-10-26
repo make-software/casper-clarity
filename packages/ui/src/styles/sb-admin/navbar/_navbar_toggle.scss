@@ -30,6 +30,7 @@ body.sidenav-toggled {
     width: $sidenav-collapsed-width;
     .nav-link-text {
       display: none;
+      margin-left: 10px;
     }
     .nav-item,
     .nav-link {

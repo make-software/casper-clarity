@@ -30,6 +30,16 @@ import AccountSelectorContainer from '../containers/AccountSelectorContainer';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import ConnectedPeers from './ConnectedPeers';
 import Vesting from '../contracts/Vesting/component/Vesting';
+import { IoMdKey, IoIosWater, IoMdRocket } from 'react-icons/io';
+import {
+  FaMapMarkedAlt,
+  FaListUl,
+  FaSearch,
+  FaNetworkWired,
+  FaFileContract
+} from 'react-icons/fa';
+import { FiGrid, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { MdGroup } from 'react-icons/md';
 import { VestingContainer } from '../contracts/Vesting/container/VestingContainer';
 import { DeployContractsForm } from './DeployContracts';
 import { DeployContractsContainer } from '../containers/DeployContractsContainer';
@@ -38,6 +48,7 @@ import ReactGA from 'react-ga';
 import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
+import FaucetAsterix from '../img/faucet-asterix.svg';
 import { Signer } from 'casperlabs-sdk';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
@@ -47,8 +58,9 @@ class MenuItem {
   constructor(
     public path: string,
     public label: string,
-    public icon?: string,
-    public exact: boolean = false
+    public icon?: JSX.Element,
+    public exact: boolean = false,
+    public additionalIcon?: string
   ) {}
 
   toRoute() {
@@ -60,7 +72,7 @@ class GroupedMenuItem {
   constructor(
     public id: string,
     public label: string,
-    public icon: string,
+    public icon: JSX.Element,
     public secondLevelChildren: MenuItem[]
   ) {}
 
@@ -75,7 +87,7 @@ class GroupedMenuItem {
           data-target={`#${this.id}`}
           aria-controls={this.id}
         >
-          <i className={`nav-link-icon fa fa-fw fa-${this.icon}`} />
+          <div style={{ margin: '0 10px 0 20px' }}>{this.icon}</div>
           <span className="nav-link-text">{this.label}</span>
           <div className="sidenav-collapse-arrow">
             <i className="fas fa-angle-down" />
@@ -96,20 +108,58 @@ class GroupedMenuItem {
   }
 }
 
+const SideMenuIconSize = 18;
+
 const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
-  new MenuItem(Pages.Home, 'Home', 'home', true),
-  new MenuItem(Pages.Accounts, 'Accounts', 'address-book'),
-  new MenuItem(Pages.Faucet, 'Faucet', 'coins'),
-  new MenuItem(Pages.DeployContracts, 'Deploy Contract', 'rocket'),
-  new MenuItem(Pages.Explorer, 'Explorer', 'project-diagram'),
-  new MenuItem(Pages.Blocks, 'Blocks', 'th-large'),
-  new MenuItem(Pages.Deploys, 'Deploys', 'tasks'),
-  new MenuItem(Pages.Search, 'Search', 'search'),
-  new MenuItem(Pages.Validators, 'Validators', 'users'),
-  new MenuItem(Pages.ConnectedPeers, 'Connected Peers', 'network-wired'),
-  new GroupedMenuItem('clarityContracts', 'Contracts', 'file-contract', [
-    new MenuItem(Pages.Vesting, 'Vesting')
-  ])
+  new MenuItem(
+    Pages.Accounts,
+    'Accounts',
+    <IoMdKey fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(
+    Pages.Faucet,
+    'Faucet',
+    <IoIosWater fontSize={SideMenuIconSize} />,
+    false,
+    FaucetAsterix
+  ),
+  new MenuItem(
+    Pages.DeployContracts,
+    'Deploy Contract',
+    <IoMdRocket fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(
+    Pages.Explorer,
+    'Explorer',
+    <FaMapMarkedAlt fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
+  new MenuItem(
+    Pages.Deploys,
+    'Deploys',
+    <FaListUl fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(
+    Pages.Search,
+    'Search',
+    <FaSearch fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(
+    Pages.Validators,
+    'Validators',
+    <MdGroup fontSize={SideMenuIconSize} />
+  ),
+  new MenuItem(
+    Pages.ConnectedPeers,
+    'Connected Peers',
+    <FaNetworkWired fontSize={SideMenuIconSize} />
+  ),
+  new GroupedMenuItem(
+    'clarityContracts',
+    'Contracts',
+    <FaFileContract fontSize={SideMenuIconSize} />,
+    [new MenuItem(Pages.Vesting, 'Vesting')]
+  )
 ];
 
 export interface AppProps {
@@ -221,10 +271,9 @@ const NavLink = (props: { item: MenuItem }) => {
             data-placement="right"
           >
             <Link to={item.path} className="nav-link">
-              {item.icon && (
-                <i className={'nav-link-icon fa fa-fw fa-' + item.icon} />
-              )}
+              <div style={{ margin: '0 10px 0 20px' }}>{item.icon}</div>
               <span className="nav-link-text">{item.label}</span>
+              <img className="svg-additional" src={item.additionalIcon} />
             </Link>
           </li>
         );
@@ -263,8 +312,11 @@ class _Navigation extends RefreshableComponent<
         className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
         id="mainNav"
       >
-        <a className="navbar-brand" href="https://casperlabs.io/">
+        <a className="navbar-brand" href="/">
           <img src={logo} alt="logo" />
+          <span className={'navbar-brand-title'}>
+            Clarity Explorer <FaMapMarkedAlt className={'navbar-brand-icon'} />
+          </span>
         </a>
         <div className="navbar-network-info d-none d-md-inline-block">
           <p>
@@ -319,14 +371,20 @@ class _Navigation extends RefreshableComponent<
 
           <ul className="navbar-nav ml-auto">
             <li className="nav-item">
-              <div className="username">
-                {this.props.auth.user && this.props.auth.user.name}
-              </div>
+              {this.props.auth.user && (
+                <div className="username text-white">
+                  <span className="welcome">Welcome</span>
+                  {this.props!.auth!.user!.name}
+                </div>
+              )}
             </li>
             <li className="nav-item">
               {this.props.auth.user ? (
-                <a className="nav-link" onClick={_ => this.props.auth.logout()}>
-                  <i className="fa fa-fw fa-sign-out-alt"></i>Sign Out
+                <a
+                  className="nav-link text-white"
+                  onClick={_ => this.props.auth.logout()}
+                >
+                  <FiLogOut /> Sign Out
                 </a>
               ) : (
                 <a
@@ -515,6 +573,16 @@ const Footer = () => (
               rel="noopener noreferrer"
             >
               Telegram
+            </a>
+          </small>
+          <small>
+            Main
+            <a
+              href="https://casperlabs.io"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              CasperLabs Website
             </a>
           </small>
         </div>
