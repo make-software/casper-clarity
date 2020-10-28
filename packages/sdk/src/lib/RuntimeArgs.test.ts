@@ -1,14 +1,15 @@
 import { expect } from 'chai';
 import { CLValue } from './CLValue';
 import { RuntimeArgs } from './RuntimeArgs';
-import { decodeBase16 } from 'casperlabs-sdk';
+import { decodeBase16 } from './Conversions';
+import { toBytesU32 } from './byterepr';
 
 describe(`RuntimeArgs`, () => {
   it('should serialize RuntimeArgs correctly', () => {
-    let args = RuntimeArgs.fromMap({
+    const args = RuntimeArgs.fromMap({
       foo: CLValue.fromI32(1)
     });
-    let bytes = args.toBytes();
+    const bytes = args.toBytes();
     expect(bytes).to.deep.eq(
       Uint8Array.from([
         1,
@@ -38,6 +39,7 @@ describe(`RuntimeArgs`, () => {
   it('should serialize empty NamedArgs correctly', () => {
     const truth = decodeBase16('00000000');
     const runtimeArgs = RuntimeArgs.fromMap({});
+    console.log(toBytesU32(0));
     const bytes = runtimeArgs.toBytes();
     expect(bytes).to.deep.eq(truth);
   });

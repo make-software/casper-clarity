@@ -8,7 +8,6 @@ import {
   toBytesVecT
 } from './byterepr';
 import { BigNumberish } from '@ethersproject/bignumber';
-import { Key } from './keys';
 import { URef } from './uref';
 
 type ByteArray = Uint8Array;
@@ -155,6 +154,16 @@ class U512 extends NumberCoder {
 
   clType(): CLType {
     return SimpleType.U512;
+  }
+}
+
+class Unit extends CLTypedAndToBytes {
+  clType(): CLType {
+    return SimpleType.Unit;
+  }
+
+  toBytes(): ByteArray {
+    return Uint8Array.from([]);
   }
 }
 
@@ -566,11 +575,15 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new U512(u512));
   };
 
+  static fromUnit = () => {
+    return CLValue.fromT(new Unit());
+  };
+
   static fromString = (x: string) => {
     return CLValue.fromT(new StringValue(x));
   };
 
-  static fromKey = (key: Key) => {
+  static fromKey = (key: KeyValue) => {
     return CLValue.fromT(key);
   };
 
@@ -606,11 +619,87 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new Tuple3(t0, t1, t2));
   }
 
-  static fromMap<T extends CLTypedAndToBytes>(mapEntries: MapEntry[]) {
+  static fromMap(mapEntries: MapEntry[]) {
     return CLValue.fromT(new MapValue(mapEntries));
   }
 
   static fromPublicKey(publicKey: ByteArray) {
     return CLValue.fromT(PublicKey.fromEd25519(publicKey));
+  }
+}
+
+export enum KeyVariant {
+  /** The Account variant */
+  ACCOUNT_ID = 0,
+  /** The Hash variant */
+  HASH_ID = 1,
+  /** The URef variant */
+  UREF_ID = 2
+}
+
+/** A cryptographic public key. */
+export class AccountHash {
+  /**
+   * Constructs a new `AccountHash`.
+   *
+   * @param bytes The bytes constituting the public key.
+   */
+  constructor(public bytes: Uint8Array) {}
+
+  /** Serializes a `AccountHash` into an array of bytes. */
+  toBytes(): Uint8Array {
+    return this.bytes;
+  }
+}
+
+/**
+ * The type under which data (e.g. [[CLValue]]s, smart contracts, user accounts)
+ * are indexed on the network.
+ */
+export class KeyValue extends CLTypedAndToBytes {
+  variant: KeyVariant;
+  hash: Uint8Array | null;
+  uRef: URef | null;
+  account: AccountHash | null;
+
+  /** Creates a `Key` from a given [[URef]]. */
+  static fromURef(uref: URef): KeyValue {
+    const key = new KeyValue();
+    key.variant = KeyVariant.UREF_ID;
+    key.uRef = uref;
+    return key;
+  }
+
+  /** Creates a `Key` from a given hash. */
+  static fromHash(hash: Uint8Array): KeyValue {
+    const key = new KeyValue();
+    key.variant = KeyVariant.HASH_ID;
+    key.hash = hash;
+    return key;
+  }
+
+  /** Creates a `Key` from a [[<AccountHash>]] representing an account. */
+  static fromAccount(account: AccountHash): KeyValue {
+    const key = new KeyValue();
+    key.variant = KeyVariant.ACCOUNT_ID;
+    key.account = account;
+    return key;
+  }
+
+  clType() {
+    return SimpleType.Key;
+  }
+
+  /** Serializes a `Key` into an array of bytes. */
+  toBytes() {
+    if (this.variant === KeyVariant.ACCOUNT_ID) {
+      return concat([Uint8Array.from([this.variant]), this.account!.toBytes()]);
+    } else if (this.variant === KeyVariant.HASH_ID) {
+      return concat([Uint8Array.from([this.variant]), this.hash!]);
+    } else if (this.variant === KeyVariant.UREF_ID) {
+      return concat([Uint8Array.from([this.variant]), this.uRef!.toBytes()]);
+    } else {
+      throw new Error('Unknown variant');
+    }
   }
 }

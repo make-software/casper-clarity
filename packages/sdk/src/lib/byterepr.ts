@@ -21,9 +21,9 @@ export const toBytesNumber = (
   let v = BigNumber.from(value);
 
   // Check bounds are safe for encoding
-  let maxUintValue = MaxUint256.mask(bitSize);
+  const maxUintValue = MaxUint256.mask(bitSize);
   if (signed) {
-    let bounds = maxUintValue.mask(bitSize - 1); // 1 bit for signed
+    const bounds = maxUintValue.mask(bitSize - 1); // 1 bit for signed
     if (v.gt(bounds) || v.lt(bounds.add(One).mul(NegativeOne))) {
       throw new Error('value out-of-bounds, value: ' + value);
     }
@@ -31,9 +31,9 @@ export const toBytesNumber = (
     throw new Error('value out-of-bounds, value: ' + value);
   }
   v = v.toTwos(bitSize).mask(bitSize);
-  let bytes = arrayify(v);
-  if (v.gt(0)) {
-    // for unsigned number, we had to deal with paddings
+  const bytes = arrayify(v);
+  if (v.gte(0)) {
+    // for positive number, we had to deal with paddings
     if (bitSize > 64) {
       // for u128, u256, u512, we have to and append extra byte for length
       return concat([bytes, Uint8Array.from([bytes.length])]).reverse();
@@ -148,42 +148,3 @@ export function toBytesVecT<T extends ToBytes>(vec: T[]) {
 export function toBytesStringList(arr: string[]) {
   return toBytesVecT(arr.map(e => CLValue.fromString(e)));
 }
-
-type SupportArrayLen =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18
-  | 19
-  | 20
-  | 21
-  | 22
-  | 23
-  | 24
-  | 25
-  | 26
-  | 27
-  | 28
-  | 29
-  | 30
-  | 31
-  | 32
-  | 64
-  | 128
-  | 256
-  | 512;

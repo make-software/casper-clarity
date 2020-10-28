@@ -1,12 +1,12 @@
 import blake from 'blakejs';
-import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import * as fs from 'fs';
 import { Message } from 'google-protobuf';
 import * as nacl from 'tweetnacl-ts';
 import { ByteArray } from '../index';
-import { Args, BigIntValue, BytesValue } from './Args';
-import { ContractType, makeDeploy, signDeploy } from './DeployUtil';
-import { Ed25519 } from './Keys';
+import * as DeployUtil from './DeployUtil';
+import { RuntimeArgs } from './RuntimeArgs';
+import { CLValue, AccountHash, KeyValue } from './CLValue';
+import { Deploy } from './DeployUtil';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -59,20 +59,31 @@ export class Contract {
    * @param signingKeyPair key pair to sign the deploy
    */
   public deploy(
-    args: Deploy.Arg[],
+    args: RuntimeArgs,
     paymentAmount: bigint,
     accountPublicKeyHash: ByteArray,
     signingKeyPair: nacl.SignKeyPair
   ): Deploy {
-    const deploy = makeDeploy(
-      args,
-      ContractType.WASM,
+    const session = new DeployUtil.ModuleBytes(
       this.sessionWasm,
-      this.paymentWasm,
-      paymentAmount,
-      accountPublicKeyHash
+      args.toBytes()
     );
-    return signDeploy(deploy, signingKeyPair);
+    const paymentArgs = RuntimeArgs.fromMap({
+      amount: CLValue.fromU512(paymentAmount.toString())
+    });
+
+    const payment = new DeployUtil.ModuleBytes(
+      this.paymentWasm,
+      paymentArgs.toBytes()
+    );
+
+    const deploy = DeployUtil.makeDeploy(
+      session,
+      payment,
+      accountPublicKeyHash,
+      'casper-net-1'
+    );
+    return DeployUtil.signDeploy(deploy, signingKeyPair);
   }
 }
 
@@ -85,11 +96,11 @@ export class BoundContract {
     private contractKeyPair: nacl.SignKeyPair
   ) {}
 
-  public deploy(args: Deploy.Arg[], paymentAmount: bigint): Deploy {
+  public deploy(args: RuntimeArgs, paymentAmount: bigint): Deploy {
     return this.contract.deploy(
       args,
       paymentAmount,
-      Ed25519.publicKeyHash(this.contractKeyPair.publicKey),
+      this.contractKeyPair.publicKey,
       this.contractKeyPair
     );
   }
@@ -101,8 +112,13 @@ export class Faucet {
    *
    * @param accountPublicKeyHash the public key hash that want to be funded
    */
-  public static args(accountPublicKeyHash: ByteArray): Deploy.Arg[] {
-    return Args(['account', BytesValue(accountPublicKeyHash)]);
+  public static args(accountPublicKeyHash: ByteArray): RuntimeArgs {
+    const accountKey = KeyValue.fromAccount(
+      new AccountHash(accountPublicKeyHash)
+    );
+    return RuntimeArgs.fromMap({
+      account: CLValue.fromKey(accountKey)
+    });
   }
 }
 
@@ -116,10 +132,13 @@ export class Transfer {
   public static args(
     accountPublicKeyHash: ByteArray,
     amount: bigint
-  ): Deploy.Arg[] {
-    return Args(
-      ['account', BytesValue(accountPublicKeyHash)],
-      ['amount', BigIntValue(amount)]
+  ): RuntimeArgs {
+    const account = CLValue.fromKey(
+      KeyValue.fromAccount(new AccountHash(accountPublicKeyHash))
     );
+    return RuntimeArgs.fromMap({
+      account,
+      amount: CLValue.fromU512(amount.toString())
+    });
   }
 }

@@ -2,8 +2,10 @@
  * Implements a collection of runtime arguments.
  */
 import { toBytesString, toBytesVecT } from './byterepr';
-import { CLTypedAndToBytes, CLValue, ToBytes } from './CLValue';
+import { CLValue, ToBytes } from './CLValue';
 import { concat } from '@ethersproject/bytes';
+
+type ByteArray = Uint8Array;
 
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}

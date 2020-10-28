@@ -11,16 +11,18 @@ const OPTION_TAG_SOME = 1;
  * no value at all. Similar to Rust's `Option` or Haskell's `Maybe`.
  */
 export class Option extends CLTypedAndToBytes {
+  private innerType: CLType;
   /**
    * Constructs a new option containing the value of `CLTypedAndToBytes`. `t` can be `null`, which
    * indicates no value.
    */
-  constructor(private t: CLTypedAndToBytes | null, private innerType?: CLType) {
+  constructor(private t: CLTypedAndToBytes | null, innerType?: CLType) {
     super();
     if (t === null) {
       if (!innerType) {
         throw new Error('You had to assign innerType for None');
       }
+      this.innerType = innerType;
     } else {
       this.innerType = t.clType();
     }

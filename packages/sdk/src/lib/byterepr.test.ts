@@ -1,22 +1,19 @@
 import { expect } from 'chai';
-import { decodeBase16 } from 'casperlabs-sdk';
-import { CLValue, PublicKey } from './CLValue';
+import { decodeBase16 } from './Conversions';
+import { CLValue, PublicKey, KeyValue } from './CLValue';
 import {
   toBytesDeployHash,
   toBytesI32,
   toBytesString,
   toBytesU128,
   toBytesU32,
+  toBytesU64,
   toBytesU8,
   toBytesVecT
 } from './byterepr';
-import { RuntimeArgs } from './RuntimeArgs';
 import { AccessRights, URef } from './uref';
-import { Key } from './keys';
 
 describe(`numbers' toBytes`, () => {
-  it('should ');
-
   it('should be able to encode u8', () => {
     let bytesU8 = toBytesU8(10);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0x0a]));
@@ -32,6 +29,8 @@ describe(`numbers' toBytes`, () => {
     expect(bytesU32).to.deep.eq(Uint8Array.from([0xc0, 0xd0, 0xe0, 0xf0]));
     bytesU32 = toBytesU32(100000);
     expect(bytesU32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
+    bytesU32 = toBytesU32(0);
+    expect(bytesU32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
   });
 
   it('should be able to encode i32', () => {
@@ -39,6 +38,21 @@ describe(`numbers' toBytes`, () => {
     expect(bytesI32).to.deep.eq(Uint8Array.from([96, 121, 254, 255]));
     bytesI32 = toBytesI32(100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
+    bytesI32 = toBytesI32(0);
+    expect(bytesI32).to.deep.eq(Uint8Array.from([]));
+    bytesI32 = toBytesI32(-1);
+    expect(bytesI32).to.deep.eq(Uint8Array.from([]));
+  });
+
+  it('should be able to encode u64', () => {
+    let bytesU128 = toBytesU64('14198572906121139257');
+    expect(bytesU128).to.deep.eq(
+      Uint8Array.from([57, 20, 214, 178, 212, 118, 11, 197])
+    );
+    bytesU128 = toBytesU64('9834009477689550808');
+    expect(bytesU128).to.deep.eq(
+      Uint8Array.from([216, 167, 130, 99, 132, 107, 121, 136])
+    );
   });
 
   it('should be able to encode u128', () => {
@@ -55,7 +69,7 @@ describe(`numbers' toBytes`, () => {
   });
 
   it('should be able to encode utf8 string', () => {
-    let bytesString = toBytesString('test_测试');
+    const bytesString = toBytesString('test_测试');
     expect(bytesString).to.deep.eq(
       Uint8Array.from([
         11,
@@ -95,7 +109,7 @@ describe(`numbers' toBytes`, () => {
       ),
       AccessRights.READ_ADD_WRITE
     );
-    const bytes = Key.fromURef(uref).toBytes();
+    const bytes = KeyValue.fromURef(uref).toBytes();
     expect(bytes).to.deep.eq(truth);
   });
 

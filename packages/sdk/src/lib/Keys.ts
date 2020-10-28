@@ -8,7 +8,7 @@ import { byteHash } from './Contracts';
 const publicKeyHashUtil = (signatureAlgorithm: string) => {
   const separator = Buffer.from([0]);
   const prefix = Buffer.concat([
-    Buffer.from(signatureAlgorithm.toUpperCase()),
+    Buffer.from(signatureAlgorithm.toLowerCase()),
     separator
   ]);
 
