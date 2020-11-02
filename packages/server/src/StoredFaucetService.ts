@@ -9,8 +9,6 @@ import {
 import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
 import { CallFaucet, StoredFaucet } from './lib/Contracts';
 import { CasperServiceByJsonRPC, DeployUtil } from 'casperlabs-sdk';
-import { deployToJson } from 'casperlabs-sdk/dist/lib/DeployUtil';
-import { writeFileSync } from 'fs';
 
 // based on execution-engine/contracts/explorer/faucet-stored/src/main.rs
 const CONTRACT_NAME = 'faucet';
