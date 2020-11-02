@@ -1,6 +1,7 @@
 import { concat } from '@ethersproject/bytes';
 import {
   toBytesArrayU8,
+  toBytesBytesArray,
   toBytesNumber,
   toBytesString,
   toBytesStringList,
@@ -625,6 +626,13 @@ export class CLValue implements ToBytes {
 
   static fromPublicKey(publicKey: ByteArray) {
     return CLValue.fromT(PublicKey.fromEd25519(publicKey));
+  }
+
+  static fromBytes(bytes: ByteArray) {
+    return new CLValue(
+      toBytesBytesArray(bytes),
+      CLTypeHelper.fixedList(CLTypeHelper.u8(), bytes.byteLength)
+    );
   }
 }
 
