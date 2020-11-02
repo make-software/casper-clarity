@@ -3,7 +3,7 @@
  */
 import { CasperServiceByJsonRPC } from './CasperServiceByJsonRPC';
 
-export default class BalanceServiceByJsonRPC {
+export class BalanceServiceByJsonRPC {
   private balanceUrefs = new Map<string, string>();
 
   constructor(private casperService: CasperServiceByJsonRPC) {}
@@ -20,12 +20,15 @@ export default class BalanceServiceByJsonRPC {
     blockHashBase16: string,
     accountPublicKeyHashBase16: string
   ): Promise<number | undefined> {
+    const stateRootHash = await this.casperService.getStateRootHash(
+      blockHashBase16
+    );
     let balanceUref = this.balanceUrefs.get(accountPublicKeyHashBase16);
 
     // Find the balance Uref and cache it if we don't have it.
     if (!balanceUref) {
       balanceUref = await this.casperService.getAccountBalanceUref(
-        blockHashBase16,
+        stateRootHash,
         accountPublicKeyHashBase16
       );
       if (balanceUref) {
@@ -38,7 +41,7 @@ export default class BalanceServiceByJsonRPC {
     }
 
     return await this.casperService.getAccountBalance(
-      blockHashBase16,
+      stateRootHash,
       balanceUref
     );
   }
