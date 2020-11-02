@@ -232,7 +232,7 @@ export const Title = (props: { title: string }) => (
 );
 
 export const CSPR = (props: { motes: number }) => {
-  const s = (props.motes / 100000).toLocaleString(undefined, {
+  const s = (props.motes / 1000_000_000).toLocaleString(undefined, {
     maximumFractionDigits: 5
   });
   return <span>{s} CSPR</span>;
