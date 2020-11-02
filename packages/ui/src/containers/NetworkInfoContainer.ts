@@ -1,5 +1,5 @@
 import ErrorContainer from './ErrorContainer';
-import { CasperService } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC } from 'casperlabs-sdk';
 import { observable } from 'mobx';
 
 export class NetworkInfoContainer {
@@ -7,17 +7,18 @@ export class NetworkInfoContainer {
   @observable mainRank: number = 0;
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService
+    private casperService: CasperServiceByJsonRPC
   ) {}
 
   async refresh() {
-    const latestFinalizedBlock = await this.casperService.getLastFinalizedBlockInfo();
-    this.validatorSize = latestFinalizedBlock
-      .getSummary()!
-      .getHeader()!
-      .getState()!
-      .getBondsList()!.length;
     const lastBlock = await this.casperService.getLatestBlockInfo();
-    this.mainRank = lastBlock.getSummary()!.getHeader()!.getMainRank();
+
+    // fixme
+    // this.validatorSize = latestFinalizedBlock
+    //   .getSummary()!
+    //   .getHeader()!
+    //   .getState()!
+    //   .getBondsList()!.length;
+    this.mainRank = lastBlock.block?.header.height || 0;
   }
 }

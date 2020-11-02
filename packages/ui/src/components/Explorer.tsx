@@ -3,14 +3,13 @@ import { observer } from 'mobx-react';
 import { LinkButton, ListInline, shortHash } from './Utils';
 import { BlockDAG } from './BlockDAG';
 import DataTable from './DataTable';
-import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { DagStepButtons, Props } from './BlockList';
 import { Link, withRouter } from 'react-router-dom';
 import Pages from './Pages';
-import { encodeBase16 } from 'casperlabs-sdk';
 import { BondedValidatorsTable } from './BondedValidatorsTable';
 import { ToggleButton } from './ToggleButton';
-import { BlockType, BlockRole, FinalityIcon } from './BlockDetails';
+import { FinalityIcon } from './BlockDetails';
+import { JsonBlock } from 'casperlabs-sdk';
 
 /** Show the tips of the DAG. */
 @observer
@@ -85,17 +84,13 @@ class _Explorer extends React.Component<Props, {}> {
               }
               onSelected={block => {
                 let current = dag.selectedBlock;
-                if (
-                  current &&
-                  current.getSummary()!.getBlockHash_asB64() ===
-                    block.getSummary()!.getBlockHash_asB64()
-                ) {
-                  dag.selectedBlock = undefined;
+                if (current && current.hash === block.hash) {
+                  dag.selectedBlock = null;
                 } else {
                   dag.selectedBlock = block;
                 }
               }}
-              selected={dag.selectedBlock}
+              selected={dag.selectedBlock ? dag.selectedBlock : undefined}
               depth={dag.depth}
               onDepthChange={d => {
                 dag.depth = d;
@@ -137,8 +132,8 @@ export default Explorer;
 
 class BlockDetails extends React.Component<
   {
-    block: BlockInfo;
-    blocks: BlockInfo[];
+    block: JsonBlock;
+    blocks: JsonBlock[];
     onSelect: (blockHash: string) => void;
   },
   {}
@@ -147,76 +142,69 @@ class BlockDetails extends React.Component<
 
   render() {
     let { block } = this.props;
-    let summary = block.getSummary()!;
-    let header = summary.getHeader()!;
-    let id = encodeBase16(summary.getBlockHash_asU8());
-    let idB64 = summary.getBlockHash_asB64();
-    let validatorId = encodeBase16(header.getValidatorPublicKeyHash_asU8());
+    let header = block.header;
+    let id = block.hash;
+    let validatorId = header.proposer;
     let attrs: Array<[string, any]> = [
       ['Block Hash', <Link to={Pages.block(id)}>{shortHash(id)}</Link>],
-      [
-        'Key Block Hash',
-        <Link to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}>
-          {shortHash(header.getKeyBlockHash_asU8())}
-        </Link>
-      ],
-      ['j-Rank', header.getJRank()],
-      ['m-Rank', header.getMainRank()],
-      ['Round ID', header.getRoundId()],
-      ['Type', <BlockType header={header} />],
-      ['Role', <BlockRole header={header} />],
-      ['Timestamp', new Date(header.getTimestamp()).toISOString()],
-      ['Deploy Count', header.getDeployCount()],
+      // fixme
+      // [
+      //   'Key Block Hash',
+      //   <Link to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}>
+      //     {shortHash(header.)}
+      //   </Link>
+      // ],
+      ['height', header.height],
+      ['Era ID', header.era_id],
+      // fixme
+      // ['Type', <BlockType header={header} />],
+      // ['Role', <BlockRole header={header} />],
+      ['Timestamp', new Date(header.timestamp).toISOString()],
+      ['Deploy Count', header.deploy_hashes.length],
       ['Validator', shortHash(validatorId)],
-      ['Validator Block Number', header.getValidatorBlockSeqNum()],
-      [
-        'Validator Stake',
-        (() => {
-          let validatorBond = header
-            .getState()!
-            .getBondsList()
-            .find(
-              x =>
-                encodeBase16(x.getValidatorPublicKeyHash_asU8()) === validatorId
-            );
-          // Genesis doesn't have a validator.
-          return (
-            (validatorBond &&
-              validatorBond.getStake() &&
-              Number(validatorBond.getStake()!.getValue()).toLocaleString()) ||
-            null
-          );
-        })()
-      ],
+      // fixme
+      // ['Validator Block Number', header.getValidatorBlockSeqNum()],
+      // [
+      //   'Validator Stake',
+      //   (() => {
+      //     let validatorBond = header
+      //       .getState()!
+      //       .getBondsList()
+      //       .find(
+      //         x =>
+      //           encodeBase16(x.getValidatorPublicKeyHash_asU8()) === validatorId
+      //       );
+      //     Genesis doesn't have a validator.
+      // return (
+      //   (validatorBond &&
+      //     validatorBond.getStake() &&
+      //     Number(validatorBond.getStake()!.getValue()).toLocaleString()) ||
+      //   null
+      // );
+      // })()
+      // ],
       ['Finality', <FinalityIcon block={block} />],
       [
         'Parents',
         <ul>
-          {header.getParentHashesList_asU8().map((x, idx) => (
-            <li key={idx}>
-              <BlockLink blockHash={x} onClick={this.props.onSelect} />
+          {
+            <li key={0}>
+              <BlockLink
+                id={block.header.parent_hash}
+                onClick={this.props.onSelect}
+              />
             </li>
-          ))}
+          }
         </ul>
       ],
       [
         'Children',
         <ul>
           {this.props.blocks
-            .filter(
-              b =>
-                b
-                  .getSummary()!
-                  .getHeader()!
-                  .getParentHashesList_asB64()
-                  .findIndex(p => p === idB64) > -1
-            )
+            .filter(b => b.header.parent_hash === id)
             .map((b, idx) => (
               <li key={idx}>
-                <BlockLink
-                  blockHash={b.getSummary()!.getBlockHash_asU8()}
-                  onClick={this.props.onSelect}
-                />
+                <BlockLink id={b.hash} onClick={this.props.onSelect} />
               </li>
             ))}
         </ul>
@@ -246,9 +234,13 @@ class BlockDetails extends React.Component<
 }
 
 const BlockLink = (props: {
-  blockHash: ByteArray;
+  id: string;
   onClick: (blockHashBase16: string) => void;
 }) => {
-  let id = encodeBase16(props.blockHash);
-  return <LinkButton title={shortHash(id)} onClick={() => props.onClick(id)} />;
+  return (
+    <LinkButton
+      title={shortHash(props.id)}
+      onClick={() => props.onClick(props.id)}
+    />
+  );
 };

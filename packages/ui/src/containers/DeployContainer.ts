@@ -1,13 +1,18 @@
-import { observable, action, computed } from 'mobx';
+import { observable, action } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { CasperService, BalanceService, encodeBase16 } from 'casperlabs-sdk';
-import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import ObservableValueMap from '../lib/ObservableValueMap';
+import {
+  CasperServiceByJsonRPC,
+  JsonDeploy,
+  JsonExecutionResult,
+  BalanceServiceByJsonRPC
+} from 'casperlabs-sdk';
 
 export class DeployContainer {
-  @observable deployHash: ByteArray | null = null;
-  @observable deploy: DeployInfo | null = null;
+  @observable deployHashBase16: string | null = null;
+  @observable deploy: JsonDeploy | null = null;
+  @observable jsonExecutionResults: JsonExecutionResult[] | null = null;
   @observable balances: ObservableValueMap<
     string,
     number
@@ -15,27 +20,24 @@ export class DeployContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService,
-    private balanceService: BalanceService
+    private casperService: CasperServiceByJsonRPC,
+    private balanceService: BalanceServiceByJsonRPC
   ) {}
 
   /** Call whenever the page switches to a new deploy. */
   @action
-  init(deployHash: ByteArray) {
-    this.deployHash = deployHash;
+  init(deployHashBase16: string) {
+    this.deployHashBase16 = deployHashBase16;
     this.deploy = null;
     this.balances.clear();
   }
 
-  @computed get deployHashBase16() {
-    return this.deployHash && encodeBase16(this.deployHash);
-  }
-
   async loadDeploy() {
-    if (this.deployHash == null) return;
+    if (this.deployHashBase16 == null) return;
     await this.errors.capture(
-      this.casperService.getDeployInfo(this.deployHash).then(deploy => {
-        this.deploy = deploy;
+      this.casperService.getDeployInfo(this.deployHashBase16).then(deploy => {
+        this.deploy = deploy.deploy;
+        this.jsonExecutionResults = deploy.execution_results;
       })
     );
   }
@@ -45,14 +47,14 @@ export class DeployContainer {
     if (this.deploy == null) {
       return;
     }
-    for (let proc of this.deploy.getProcessingResultsList()) {
-      const blockHash = proc.getBlockInfo()!.getSummary()!.getBlockHash_asU8();
+    for (let proc of this.jsonExecutionResults!) {
+      const blockHash = proc.block_hash;
       const balance = await this.balanceService.getAccountBalance(
         blockHash,
-        this.deploy.getDeploy()!.getHeader()!.getAccountPublicKeyHash_asU8()
+        this.deploy.header.account
       );
       if (balance !== undefined) {
-        this.balances.set(encodeBase16(blockHash), balance);
+        this.balances.set(blockHash, balance);
       }
     }
   }

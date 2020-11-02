@@ -98,12 +98,12 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(Pages.Accounts, 'Accounts', 'address-book'),
   new MenuItem(Pages.Faucet, 'Faucet', 'coins'),
   new MenuItem(Pages.DeployContracts, 'Deploy Contract', 'rocket'),
-  new MenuItem(Pages.Explorer, 'Explorer', 'project-diagram'),
-  new MenuItem(Pages.Blocks, 'Blocks', 'th-large'),
-  new MenuItem(Pages.Deploys, 'Deploys', 'tasks'),
+  // new MenuItem(Pages.Explorer, 'Explorer', 'project-diagram'),
+  // new MenuItem(Pages.Blocks, 'Blocks', 'th-large'),
+  // new MenuItem(Pages.Deploys, 'Deploys', 'tasks'),
   new MenuItem(Pages.Search, 'Search', 'search'),
-  new MenuItem(Pages.Validators, 'Validators', 'users'),
-  new MenuItem(Pages.ConnectedPeers, 'Connected Peers', 'network-wired'),
+  // new MenuItem(Pages.Validators, 'Validators', 'users'),
+  new MenuItem(Pages.ConnectedPeers, 'Connected Peers', 'network-wired')
 ];
 
 export interface AppProps {
@@ -267,14 +267,6 @@ class _Navigation extends RefreshableComponent<
               {this.props.networkInfoContainer.mainRank}&nbsp;
             </span>
           </p>
-          {this.props.connectedPeersContainer.peers?.length && (
-            <p>
-              Node version:&nbsp;
-              <span className={'navbar-network-highlight'}>
-                {this.props.connectedPeersContainer.peers[0].getNodeVersion()}
-              </span>
-            </p>
-          )}
         </div>
         <button
           className="navbar-toggler navbar-toggler-right"

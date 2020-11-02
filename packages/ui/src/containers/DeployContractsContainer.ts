@@ -1,13 +1,7 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import {
-  CasperService,
-  decodeBase16,
-  DeployUtil,
-  encodeBase16,
-  Signer
-} from 'casperlabs-sdk';
+import { DeployUtil, CasperServiceByJsonRPC } from 'casperlabs-sdk';
 import { FieldState, FormState } from 'formstate';
 import {
   numberGreaterThan,
@@ -15,17 +9,12 @@ import {
   validateInt,
   valueRequired
 } from '../lib/FormsValidator';
-import $ from 'jquery';
 import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import {
   CLType,
   Key
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
-import { decodeBase64 } from 'tweetnacl-ts';
-import JSBI from 'jsbi';
-import { publicKeyHashForEd25519 } from './AuthContainer';
 import { DeployArgumentParser } from '../lib/DeployArgumentParser';
-import MetricsService from '../services/MetricsService';
 import AuthService from '../services/AuthService';
 
 export const BytesTypeStr = 'Bytes';
@@ -177,7 +166,7 @@ export class DeployContractsContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService,
+    private casperService: CasperServiceByJsonRPC,
     private authService: AuthService
   ) {
     this.tryRestore();
@@ -307,103 +296,105 @@ export class DeployContractsContainer {
 
   @action.bound
   async _onSubmit() {
-    this.deployedHash = null;
-    if (!Signer.isConnected()) {
-      throw new Error(
-        'Please install the CasperLabs Sign Helper Plugin first!'
-      );
-    }
-
-    const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
-    if (!publicKeyBase64) {
-      throw new Error('Please create an account in the Plugin first!');
-    }
+    return true;
+    // this.deployedHash = null;
+    // if (!Signer.isConnected()) {
+    //   throw new Error(
+    //     'Please install the CasperLabs Sign Helper Plugin first!'
+    //   );
+    // }
+    //
+    // const publicKeyBase64 = await Signer.getSelectedPublicKeyBase64();
+    // if (!publicKeyBase64) {
+    //   throw new Error('Please create an account in the Plugin first!');
+    // }
     // Todo: (ECO-441) make Signer return publicKeyHash directly
-    const publicKeyHash = publicKeyHashForEd25519(publicKeyBase64);
-    let deploy = await this.makeDeploy(publicKeyHash);
-    if (!deploy) {
-      return false;
-    }
-
-    this.signing = true;
-    let sigBase64;
-    try {
-      sigBase64 = await Signer.sign(
-        encodeBase16(deploy!.getDeployHash_asU8()),
-        publicKeyBase64
-      );
-      this.signing = false;
-      let signedDeploy = DeployUtil.setSignature(
-        deploy,
-        decodeBase64(sigBase64),
-        decodeBase64(publicKeyBase64)
-      );
-      await this.casperService.deploy(signedDeploy);
-      const jwtToken = await this.authService.getToken();
-      MetricsService.metricCollect('deploy', jwtToken);
-      ($(`#${this.accordionId}`) as any).collapse('hide');
-      this.deployedHash = encodeBase16(signedDeploy.getDeployHash_asU8());
-      return true;
-    } catch (e) {
-      this.signing = false;
-      throw e;
-    }
+    // const publicKeyHash = publicKeyHashForEd25519(publicKeyBase64);
+    // let deploy = await this.makeDeploy(publicKeyHash);
+    // if (!deploy) {
+    //   return false;
+    // }
+    //
+    // this.signing = true;
+    // let sigBase64;
+    // try {
+    //   sigBase64 = await Signer.sign(
+    //     encodeBase16(deploy!.getDeployHash_asU8()),
+    //     publicKeyBase64
+    //   );
+    //   this.signing = false;
+    //   let signedDeploy = DeployUtil.setSignature(
+    //     deploy,
+    //     decodeBase64(sigBase64),
+    //     decodeBase64(publicKeyBase64)
+    //   );
+    //   await this.casperService.deploy(signedDeploy);
+    //   const jwtToken = await this.authService.getToken();
+    //   MetricsService.metricCollect('deploy', jwtToken);
+    //   ($(`#${this.accordionId}`) as any).collapse('hide');
+    //   this.deployedHash = encodeBase16(signedDeploy.hash);
+    //   return true;
+    // } catch (e) {
+    //   this.signing = false;
+    //   throw e;
+    // }
   }
 
   private async makeDeploy(publicKeyHash: Uint8Array): Promise<Deploy | null> {
-    let deployConfigurationForm = await this.deployConfiguration.validate();
-    let deployArguments = await this.deployArguments.validate();
-    if (deployConfigurationForm.hasError || deployArguments.hasError) {
-      return null;
-    } else {
-      const config = deployConfigurationForm.value;
-      const args = deployArguments.value;
-      let session: ByteArray | string;
-
-      let argsProto = args.map((arg: FormState<DeployArgument>) => {
-        return DeployArgumentParser.buildArgument(arg);
-      });
-      const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
-
-      if (config.contractType.value === DeployUtil.ContractType.WASM) {
-        session = this.selectedFileContent!;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.WASM,
-          session,
-          null,
-          paymentAmount,
-          publicKeyHash
-        );
-      } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
-        session = decodeBase16(config.contractHash.value);
-        const entryPoint = config.entryPoint.value;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.Hash,
-          session,
-          null,
-          paymentAmount,
-          publicKeyHash,
-          [],
-          entryPoint
-        );
-      } else if (config.contractType.value === DeployUtil.ContractType.Name) {
-        session = config.contractName.value;
-        const entryPoint = config.entryPoint.value;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.Name,
-          session,
-          null,
-          paymentAmount,
-          publicKeyHash,
-          [],
-          entryPoint
-        );
-      }
-      return Promise.resolve(null);
-    }
+    // let deployConfigurationForm = await this.deployConfiguration.validate();
+    // let deployArguments = await this.deployArguments.validate();
+    // if (deployConfigurationForm.hasError || deployArguments.hasError) {
+    //   return null;
+    // } else {
+    //   const config = deployConfigurationForm.value;
+    //   const args = deployArguments.value;
+    //   let session: ByteArray | string;
+    //
+    //   let argsProto = args.map((arg: FormState<DeployArgument>) => {
+    //     return DeployArgumentParser.buildArgument(arg);
+    //   });
+    //   const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
+    //
+    //   if (config.contractType.value === DeployUtil.ContractType.WASM) {
+    //     session = this.selectedFileContent!;
+    //     new ModuleBytes(session, argsProto);
+    //     return DeployUtil.makeDeploy(
+    //       argsProto,
+    //       DeployUtil.ContractType.WASM,
+    //       session,
+    //       null,
+    //       paymentAmount,
+    //       publicKeyHash
+    //     );
+    //   } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
+    //     session = decodeBase16(config.contractHash.value);
+    //     const entryPoint = config.entryPoint.value;
+    //     return DeployUtil.makeDeploy(
+    //       argsProto,
+    //       DeployUtil.ContractType.Hash,
+    //       session,
+    //       null,
+    //       paymentAmount,
+    //       publicKeyHash,
+    //       [],
+    //       entryPoint
+    //     );
+    //   } else if (config.contractType.value === DeployUtil.ContractType.Name) {
+    //     session = config.contractName.value;
+    //     const entryPoint = config.entryPoint.value;
+    //     return DeployUtil.makeDeploy(
+    //       argsProto,
+    //       DeployUtil.ContractType.Name,
+    //       session,
+    //       null,
+    //       paymentAmount,
+    //       publicKeyHash,
+    //       [],
+    //       entryPoint
+    //     );
+    //   }
+    return Promise.resolve(null);
+    // }
   }
 
   @action
