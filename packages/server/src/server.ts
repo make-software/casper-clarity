@@ -1,4 +1,4 @@
-import { CasperService, Contracts, Keys } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC, Contracts, Keys } from 'casperlabs-sdk';
 import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'express-jwt';
@@ -11,9 +11,7 @@ import * as promClient from 'prom-client';
 import { decodeBase64 } from 'tweetnacl-util';
 // TODO: Everything in config.json could come from env vars.
 import config from './config.json';
-import DeployService from './services/DeployService';
 import { StoredFaucetService } from './StoredFaucetService';
-import { NodeHttpTransport } from '@improbable-eng/grpc-web-node-http-transport';
 import { Counter, Gauge } from 'prom-client';
 import { CronJob } from 'cron';
 import { MetricsFromAuth0 } from './metricsFromAuth0';
@@ -115,23 +113,15 @@ const paymentAmount = BigInt(process.env.PAYMENT_AMOUNT!);
 // How much to send to a user in a faucet request.
 const transferAmount = BigInt(process.env.TRANSFER_AMOUNT)!;
 
-const urls = process.env.CASPER_SERVICE_URL!;
 const networkName = process.env.NETWORK_NAME!;
 
-const nodeUrls = urls
-  .split(';')
-  .map(u => u.trim())
-  .filter(u => u);
-
 // gRPC client to the node.
-const deployService = new DeployService(nodeUrls);
-const casperService = new CasperService(nodeUrls[0], NodeHttpTransport());
+const casperService = new CasperServiceByJsonRPC(process.env.JSON_RPC_URL!);
 const storedFaucetService = new StoredFaucetService(
   storedFaucet,
   contractKeys,
   paymentAmount,
   transferAmount,
-  deployService,
   casperService
 );
 
