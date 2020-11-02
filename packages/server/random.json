@@ -1,0 +1,40 @@
+{
+	"jsonrpc": "2.0",
+	"id": 12,
+	"method": "account_put_deploy",
+	"params": {
+		"deploy": {
+			"hash": "103cb354fb2003eb3bf808f9bc57942e1225892fd9fdf1a15e38042ee9151052",
+			"header": {
+				"account": "0180e437265af14bd8f8418e19c0aedc40844653d53a50f7414ab889756e332994",
+				"timestamp": "2020-10-27T16:54:36.971Z",
+				"ttl": "1h",
+				"gas_price": 16,
+				"body_hash": "a85ac5a01665d579ec6fc492bedc5628a237b6d2cfd2c789b7e1193367b7ad07",
+				"dependencies": [
+					"8a3e131b4897b58271512a40ff42d74a633806be0a28b7ba5122d3f7e40bc285"
+				],
+				"chain_name": "casper-example"
+			},
+			"payment": {
+				"Transfer": {
+					"args": "bd60dc6bbaa766110dedfa1e57"
+				}
+			},
+			"session": {
+				"StoredVersionedContractByName": {
+					"name": "RrZ1t0dhtR6zOd2Hblpo",
+					"version": 1814984266,
+					"entry_point": "PkQ3MozOXyUFRG9u5YcZ",
+					"args": "84247b838b5940af173257b750ad2d3222c4fa14e59a21a9682ae7"
+				}
+			},
+			"approvals": [
+				{
+					"signer": "0180e437265af14bd8f8418e19c0aedc40844653d53a50f7414ab889756e332994",
+					"signature": "014e3c4139ce830152407a7dd44e0a8908e0131b2501706033ba45b30667ce8a85a2a480b23c355bb1fa1b50de44c975f9a1a9a0af8a2514d3cc78aac96b5e810e"
+				}
+			]
+		}
+	}
+}

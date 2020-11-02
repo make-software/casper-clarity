@@ -15,9 +15,9 @@ import AuthContainer from './containers/AuthContainer';
 import ErrorContainer from './containers/ErrorContainer';
 import FaucetService from './services/FaucetService';
 import {
-  BalanceService,
-  CasperService,
-  DiagnosticsService
+  CasperServiceByJsonRPC,
+  DiagnosticsService,
+  BalanceServiceByJsonRPC
 } from 'casperlabs-sdk';
 import { Auth0Service, MockAuthService } from './services/AuthService';
 import DagContainer from './containers/DagContainer';
@@ -39,14 +39,11 @@ const authService = window.config.auth.mock.enabled
   ? new MockAuthService()
   : new Auth0Service(window.config.auth0);
 const faucetService = new FaucetService(authService);
-const casperService = new CasperService(
+const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
-const balanceService = new BalanceService(casperService);
-const diagnosticsService = new DiagnosticsService(
-  window.config.grpc.url || window.origin
-);
-
+const balanceService = new BalanceServiceByJsonRPC(casperService);
+new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.
 const errors = new ErrorContainer();
 const auth = new AuthContainer(
@@ -70,7 +67,7 @@ const search = new SearchContainer(errors, casperService);
 const accountSelectorContainer = new AccountSelectorContainer();
 const connectedPeersContainer = new ConnectedPeersContainer(
   errors,
-  diagnosticsService
+  casperService
 );
 const deployContractsContainer = new DeployContractsContainer(
   errors,

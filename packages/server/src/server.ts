@@ -16,6 +16,7 @@ import { Counter, Gauge } from 'prom-client';
 import { CronJob } from 'cron';
 import { MetricsFromAuth0 } from './metricsFromAuth0';
 import { ManagementClient } from 'auth0';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // https://auth0.com/docs/quickstart/spa/vanillajs/02-calling-an-api
 // https://github.com/auth0/express-jwt
@@ -152,6 +153,14 @@ const checkJwt: express.RequestHandler = isMock
         rateLimit: true
       })
     });
+
+app.use(
+  '/rpc',
+  createProxyMiddleware('/rpc', {
+    target: 'http://192.168.2.166:50101',
+    changeOrigin: true
+  })
+);
 
 // Render the `config.js` file dynamically.
 app.get('/config.js', (_, res) => {
