@@ -1,5 +1,6 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
-import { Deploy } from './DeployUtil';
+import { DeployUtil } from '..';
+import { deployToJson } from '../lib/DeployUtil';
 
 interface RpcResult {
   api_version: string;
@@ -13,8 +14,8 @@ export interface GetStatusResult extends GetPeersResult {
   last_finalized_block: JsonBlock | null;
 }
 
-export interface GetGlobalStateHashResult extends RpcResult {
-  global_state_hash: string;
+export interface GetStateRootHashResult extends RpcResult {
+  state_root_hash: string;
 }
 
 interface ExecutionResult {
@@ -72,7 +73,7 @@ export interface JsonDeploy {
 
 export interface JsonHeader {
   parent_hash: string;
-  global_state_hash: string;
+  state_root_hash: string;
   body_hash: string;
   deploy_hashes: string[];
   random_bit: boolean;
@@ -144,12 +145,11 @@ export class CasperServiceByJsonRPC {
    * Get the reference to the balance so we can cache it.
    */
   async getAccountBalanceUref(
-    blockHashBase16: string,
+    stateRootHash: string,
     accountPublicKeyHashBase16: string
   ) {
-    const globalStateHash = await this.getGlobalStateHash(blockHashBase16);
     const account = await this.getBlockState(
-      globalStateHash,
+      stateRootHash,
       'account-hash-' + accountPublicKeyHashBase16,
       []
     ).then(res => res.stored_value.Account);
@@ -157,57 +157,52 @@ export class CasperServiceByJsonRPC {
   }
 
   async getAccountBalance(
-    blockHashBase16: JsonBlockHash,
+    stateRootHash: string,
     balanceUref: string
   ): Promise<number> {
-    const globalStateHash = await this.getGlobalStateHash(blockHashBase16);
     return await this.client
       .request({
         method: 'state_get_balance',
         params: {
-          global_state_hash: globalStateHash,
+          state_root_hash: stateRootHash,
           purse_uref: balanceUref
         }
       })
-      .then(res => Object.values(res.balance_value)[0] as number);
+      .then(res => parseInt(res.balance_value, 10));
   }
 
-  async getGlobalStateHash(blockHashBase16: JsonBlockHash): Promise<string> {
+  async getStateRootHash(blockHashBase16: JsonBlockHash): Promise<string> {
     return await this.client
       .request({
-        method: 'chain_get_global_state_hash',
+        method: 'chain_get_state_root_hash',
         params: {
           block_hash: blockHashBase16
         }
       })
-      .then((res: GetGlobalStateHashResult) => res.global_state_hash);
+      .then((res: GetStateRootHashResult) => res.state_root_hash);
   }
 
   /**
-   * get global state
-   * @param globalStateHashBase16
+   * get global state item
+   * @param stateRootHash
    * @param key
    * @param path
    */
-  async getBlockState(
-    globalStateHashBase16: string,
-    key: string,
-    path: string[]
-  ) {
+  async getBlockState(stateRootHash: string, key: string, path: string[]) {
     return await this.client.request({
       method: 'state_get_item',
       params: {
-        global_state_hash: globalStateHashBase16,
+        state_root_hash: stateRootHash,
         key,
         path
       }
     });
   }
 
-  async deploy(signedDeploy: Deploy) {
+  async deploy(signedDeploy: DeployUtil.Deploy) {
     return await this.client.request({
-      method: 'put_deploy',
-      params: signedDeploy
+      method: 'account_put_deploy',
+      params: deployToJson(signedDeploy)
     });
   }
 }
