@@ -26,7 +26,8 @@ export class StoredFaucetService {
     private contractKeys: SignKeyPair,
     private paymentAmount: bigint,
     private transferAmount: bigint,
-    private casperService: CasperServiceByJsonRPC
+    private casperService: CasperServiceByJsonRPC,
+    private chainName: string
   ) {
     this.periodCheckState().then();
   }
@@ -68,7 +69,7 @@ export class StoredFaucetService {
       session,
       payment,
       PublicKey.fromEd25519(this.contractKeys.publicKey),
-      'casper-net-1'
+      this.chainName
     );
     const signedDeploy = DeployUtil.signDeploy(deployByName, this.contractKeys);
     await this.casperService.deploy(signedDeploy);

@@ -57,12 +57,14 @@ export class Contract {
    * @param paymentAmount
    * @param accountPublicKey
    * @param signingKeyPair key pair to sign the deploy
+   * @param chainName
    */
   public deploy(
     args: RuntimeArgs,
     paymentAmount: bigint,
     accountPublicKey: PublicKey,
-    signingKeyPair: nacl.SignKeyPair
+    signingKeyPair: nacl.SignKeyPair,
+    chainName: string
   ): Deploy {
     const session = new DeployUtil.ModuleBytes(
       this.sessionWasm,
@@ -81,7 +83,7 @@ export class Contract {
       session,
       payment,
       accountPublicKey,
-      'casper-net-1'
+      chainName
     );
     return DeployUtil.signDeploy(deploy, signingKeyPair);
   }
@@ -96,12 +98,17 @@ export class BoundContract {
     private contractKeyPair: nacl.SignKeyPair
   ) {}
 
-  public deploy(args: RuntimeArgs, paymentAmount: bigint): Deploy {
+  public deploy(
+    args: RuntimeArgs,
+    paymentAmount: bigint,
+    chainName: string
+  ): Deploy {
     return this.contract.deploy(
       args,
       paymentAmount,
       PublicKey.fromEd25519(this.contractKeyPair.publicKey),
-      this.contractKeyPair
+      this.contractKeyPair,
+      chainName
     );
   }
 }

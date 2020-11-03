@@ -7,7 +7,6 @@ import {
   Signer,
   encodeBase16,
   RuntimeArgs,
-  CLValue,
   PublicKey,
   decodeBase16
 } from 'casperlabs-sdk';
@@ -387,7 +386,7 @@ export class DeployContractsContainer {
           sessionExecutionItem,
           DeployUtil.standardPayment(paymentAmount),
           PublicKey.fromEd25519(publicKey),
-          'casper-net-1'
+          window.config.network?.chainName || ''
         );
       }
       return Promise.resolve(null);

@@ -115,6 +115,7 @@ const paymentAmount = BigInt(process.env.PAYMENT_AMOUNT!);
 const transferAmount = BigInt(process.env.TRANSFER_AMOUNT)!;
 
 const networkName = process.env.NETWORK_NAME!;
+const chainName = process.env.CHAIN_NAME!;
 
 // gRPC client to the node.
 const casperService = new CasperServiceByJsonRPC(process.env.JSON_RPC_URL!);
@@ -123,7 +124,8 @@ const storedFaucetService = new StoredFaucetService(
   contractKeys,
   paymentAmount,
   transferAmount,
-  casperService
+  casperService,
+  chainName
 );
 
 const app = express();
@@ -175,7 +177,8 @@ app.get('/config.js', (_, res) => {
       }
     },
     network: {
-      name: networkName
+      name: networkName,
+      chainName
     },
     grpc: {
       // In production we can leave this empty and then it should
