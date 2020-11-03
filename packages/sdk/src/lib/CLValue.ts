@@ -289,6 +289,18 @@ export class PublicKey extends CLTypedAndToBytes {
     ]);
   }
 
+  toAccountHash(): string {
+    let accountHash: string;
+    switch (this.tag) {
+      case 1:
+        accountHash = '01' + encodeBase16(this.publicKey);
+        break;
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+    return accountHash;
+  }
+
   static fromEd25519(publicKey: ByteArray) {
     return new PublicKey(publicKey, 1);
   }

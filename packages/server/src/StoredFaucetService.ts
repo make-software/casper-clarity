@@ -4,6 +4,7 @@ import {
   DeployHash,
   encodeBase16,
   Keys,
+  PublicKey,
   RuntimeArgs
 } from 'casperlabs-sdk';
 import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
@@ -67,7 +68,7 @@ export class StoredFaucetService {
     const deployByName = DeployUtil.makeDeploy(
       session,
       payment,
-      this.contractKeys.publicKey,
+      PublicKey.fromEd25519(this.contractKeys.publicKey),
       'casper-net-1'
     );
     const signedDeploy = DeployUtil.signDeploy(deployByName, this.contractKeys);

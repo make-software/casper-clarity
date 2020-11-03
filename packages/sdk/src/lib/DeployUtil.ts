@@ -17,12 +17,11 @@ import {
   toBytesU64,
   toBytesVecT
 } from './byterepr';
-import * as fs from 'fs';
 
 type ByteArray = Uint8Array;
 
 export interface DeployHeader {
-  account: ByteArray;
+  account: PublicKey;
   timestamp: number;
   ttl: number;
   gasPrice: number;
@@ -41,7 +40,7 @@ class DeployHash implements ToBytes {
 
 const toBytesDeployHeader = (deployHeader: DeployHeader) => {
   return concat([
-    PublicKey.fromEd25519(deployHeader.account).toBytes(),
+    deployHeader.account.toBytes(),
     toBytesU64(deployHeader.timestamp),
     toBytesU64(deployHeader.ttl),
     toBytesU64(deployHeader.gasPrice),
@@ -60,8 +59,8 @@ export interface Deploy {
 }
 
 export class Approval {
-  signer: ByteArray;
-  signature: ByteArray;
+  signer: string;
+  signature: string;
 }
 
 interface ToJson {
@@ -276,7 +275,7 @@ export enum ContractType {
 export function makeDeploy(
   session: ExecutableDeployItem,
   payment: ExecutableDeployItem,
-  accountPublicKeyHash: ByteArray,
+  accountPublicKey: PublicKey,
   chainName: string,
   gasPrice: number = 10,
   ttl: number = 3600000,
@@ -284,7 +283,6 @@ export function makeDeploy(
   timestamp?: number
 ): Deploy {
   const serializedBody = serializeBody(payment, session);
-  fs.writeFileSync('serialized_body.txt', encodeBase16(serializedBody));
   const bodyHash = blake.blake2b(serializedBody, null, 32);
   const uniqueDependencies = dependencies.filter(
     d =>
@@ -294,7 +292,7 @@ export function makeDeploy(
     timestamp = Date.now();
   }
   const header: DeployHeader = {
-    account: accountPublicKeyHash,
+    account: accountPublicKey,
     bodyHash,
     chainName,
     dependencies: uniqueDependencies,
@@ -325,8 +323,8 @@ export const signDeploy = (
 ): Deploy => {
   const approval = new Approval();
   const signature = nacl.sign_detached(deploy.hash, signingKeyPair.secretKey);
-  approval.signer = signingKeyPair.publicKey;
-  approval.signature = signature;
+  approval.signer = '01' + encodeBase16(signingKeyPair.publicKey);
+  approval.signature = '01' + encodeBase16(signature);
   deploy.approvals.push(approval);
 
   return deploy;
@@ -345,8 +343,8 @@ export const setSignature = (
   publicKey: ByteArray
 ): Deploy => {
   const approval = new Approval();
-  approval.signature = sig;
-  approval.signer = publicKey;
+  approval.signature = '01' + encodeBase16(sig);
+  approval.signer = '01' + encodeBase16(publicKey);
   deploy.approvals.push(approval);
   return deploy;
 };
@@ -354,7 +352,7 @@ export const setSignature = (
 export const deployToJson = (deploy: Deploy) => {
   const header = deploy.header;
   const headerJson = {
-    account: '01' + encodeBase16(header.account),
+    account: header.account.toAccountHash(),
     timestamp: new Date(header.timestamp).toISOString(),
     ttl: '1h',
     gas_price: header.gasPrice,
@@ -369,8 +367,8 @@ export const deployToJson = (deploy: Deploy) => {
     session: deploy.session.toJson(),
     approvals: deploy.approvals.map(it => {
       return {
-        signer: '01' + encodeBase16(it.signer),
-        signature: '01' + encodeBase16(it.signature)
+        signer: it.signer,
+        signature: it.signature
       };
     })
   };

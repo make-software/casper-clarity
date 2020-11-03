@@ -2,7 +2,8 @@ import {
   ByteArray,
   CasperServiceByJsonRPC,
   Contracts,
-  Keys
+  Keys,
+  PublicKey
 } from 'casperlabs-sdk';
 import commandLineArgs from 'command-line-args';
 
@@ -46,7 +47,7 @@ const args = Contracts.Transfer.args(accountPublicKey, options.amount);
 const deploy = transfer.deploy(
   args,
   options['payment-amount'],
-  Keys.Ed25519.publicKeyHash(contractKeys.publicKey),
+  PublicKey.fromEd25519(contractKeys.publicKey),
   contractKeys
 );
 

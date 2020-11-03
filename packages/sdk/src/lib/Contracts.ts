@@ -2,7 +2,7 @@ import blake from 'blakejs';
 import * as fs from 'fs';
 import { Message } from 'google-protobuf';
 import * as nacl from 'tweetnacl-ts';
-import { ByteArray } from '../index';
+import { ByteArray, PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';
@@ -55,13 +55,13 @@ export class Contract {
    *
    * @param args Arguments
    * @param paymentAmount
-   * @param accountPublicKeyHash
+   * @param accountPublicKey
    * @param signingKeyPair key pair to sign the deploy
    */
   public deploy(
     args: RuntimeArgs,
     paymentAmount: bigint,
-    accountPublicKeyHash: ByteArray,
+    accountPublicKey: PublicKey,
     signingKeyPair: nacl.SignKeyPair
   ): Deploy {
     const session = new DeployUtil.ModuleBytes(
@@ -80,7 +80,7 @@ export class Contract {
     const deploy = DeployUtil.makeDeploy(
       session,
       payment,
-      accountPublicKeyHash,
+      accountPublicKey,
       'casper-net-1'
     );
     return DeployUtil.signDeploy(deploy, signingKeyPair);
@@ -100,7 +100,7 @@ export class BoundContract {
     return this.contract.deploy(
       args,
       paymentAmount,
-      this.contractKeyPair.publicKey,
+      PublicKey.fromEd25519(this.contractKeyPair.publicKey),
       this.contractKeyPair
     );
   }
