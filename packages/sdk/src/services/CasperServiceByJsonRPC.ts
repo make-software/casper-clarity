@@ -93,11 +93,16 @@ export interface JsonBlock {
 
 export class CasperServiceByJsonRPC {
   private client: Client;
+  private eventClient: Client;
 
-  constructor(url: string) {
+  constructor(url: string, eventUrl: string) {
     const transport = new HTTPTransport(url);
     const requestManager = new RequestManager([transport]);
     this.client = new Client(requestManager);
+
+    const eventTransport = new HTTPTransport(eventUrl);
+    const eventRequestManager = new RequestManager([eventTransport]);
+    this.eventClient = new Client(eventRequestManager);
   }
 
   /**
@@ -203,6 +208,16 @@ export class CasperServiceByJsonRPC {
     return await this.client.request({
       method: 'account_put_deploy',
       params: deployToJson(signedDeploy)
+    });
+  }
+
+  async getBlockInfos(page: number, limit: number) {
+    return await this.eventClient.request({
+      method: 'get',
+      params: {
+        page,
+        limit
+      }
     });
   }
 }

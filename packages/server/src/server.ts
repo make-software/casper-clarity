@@ -117,7 +117,10 @@ const transferAmount = BigInt(process.env.TRANSFER_AMOUNT)!;
 const networkName = process.env.NETWORK_NAME!;
 
 // gRPC client to the node.
-const casperService = new CasperServiceByJsonRPC(process.env.JSON_RPC_URL!);
+const casperService = new CasperServiceByJsonRPC(
+  process.env.JSON_RPC_URL!,
+  process.env.JSON_EVENT_STORE_URL!
+);
 const storedFaucetService = new StoredFaucetService(
   storedFaucet,
   contractKeys,
