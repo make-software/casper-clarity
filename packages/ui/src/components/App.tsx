@@ -574,6 +574,7 @@ const Footer = () => (
             >
               Telegram
             </a>
+            <div className="d-block">{process.env.REACT_APP_GIT_SHA}</div>
           </small>
           <small>
             Main
