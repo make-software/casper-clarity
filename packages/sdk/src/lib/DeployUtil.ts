@@ -8,7 +8,7 @@ import blake from 'blakejs';
 import { Option } from './option';
 import * as nacl from 'tweetnacl-ts';
 import { encodeBase16 } from './Conversions';
-import { CLTypeHelper, PublicKey, ToBytes, U32 } from './CLValue';
+import { CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
@@ -17,6 +17,8 @@ import {
   toBytesU64,
   toBytesVecT
 } from './byterepr';
+import { RuntimeArgs } from './RuntimeArgs';
+import JSBI from 'jsbi';
 
 type ByteArray = Uint8Array;
 
@@ -347,6 +349,14 @@ export const setSignature = (
   approval.signer = '01' + encodeBase16(publicKey);
   deploy.approvals.push(approval);
   return deploy;
+};
+
+export const standardPayment = (paymentAmount: bigint | JSBI) => {
+  const paymentArgs = RuntimeArgs.fromMap({
+    amount: CLValue.fromU512(paymentAmount.toString())
+  });
+
+  return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());
 };
 
 export const deployToJson = (deploy: Deploy) => {

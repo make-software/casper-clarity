@@ -1,15 +1,14 @@
 import {
-  CLValue,
   Contracts,
   DeployHash,
   encodeBase16,
   Keys,
   PublicKey,
-  RuntimeArgs
+  CasperServiceByJsonRPC,
+  DeployUtil
 } from 'casperlabs-sdk';
 import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
 import { CallFaucet, StoredFaucet } from './lib/Contracts';
-import { CasperServiceByJsonRPC, DeployUtil } from 'casperlabs-sdk';
 
 // based on execution-engine/contracts/explorer/faucet-stored/src/main.rs
 const CONTRACT_NAME = 'faucet';
@@ -64,7 +63,7 @@ export class StoredFaucetService {
       sessionArgs
     );
 
-    const payment = this.standardPayment();
+    const payment = DeployUtil.standardPayment(this.paymentAmount);
     const deployByName = DeployUtil.makeDeploy(
       session,
       payment,
@@ -74,19 +73,6 @@ export class StoredFaucetService {
     const signedDeploy = DeployUtil.signDeploy(deployByName, this.contractKeys);
     await this.casperService.deploy(signedDeploy);
     return signedDeploy.hash;
-  }
-
-  private standardPayment() {
-    console.log(this.paymentAmount.toString());
-    const paymentArgs = RuntimeArgs.fromMap({
-      amount: CLValue.fromU512(this.paymentAmount.toString())
-    });
-
-    const payment = new DeployUtil.ModuleBytes(
-      Uint8Array.from([]),
-      paymentArgs.toBytes()
-    );
-    return payment;
   }
 
   /**

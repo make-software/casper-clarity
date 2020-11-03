@@ -338,18 +338,6 @@ export class DeployContractsContainer {
     }
   }
 
-  private standardPayment() {
-    const paymentArgs = RuntimeArgs.fromMap({
-      amount: CLValue.fromU512('1000000000000')
-    });
-
-    const payment = new DeployUtil.ModuleBytes(
-      Uint8Array.from([]),
-      paymentArgs.toBytes()
-    );
-    return payment;
-  }
-
   private async makeDeploy(
     publicKey: Uint8Array
   ): Promise<DeployUtil.Deploy | null> {
@@ -397,7 +385,7 @@ export class DeployContractsContainer {
       if (sessionExecutionItem != null) {
         return DeployUtil.makeDeploy(
           sessionExecutionItem,
-          this.standardPayment(),
+          DeployUtil.standardPayment(paymentAmount),
           PublicKey.fromEd25519(publicKey),
           'casper-net-1'
         );
