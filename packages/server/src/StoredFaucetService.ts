@@ -40,7 +40,8 @@ export class StoredFaucetService {
       } else {
         const deploy = this.faucetContract.deploy(
           StoredFaucet.args(),
-          this.paymentAmount
+          this.paymentAmount,
+          this.chainName
         );
         await this.casperService.deploy(deploy).catch(err => {
           console.error(err);

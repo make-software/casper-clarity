@@ -16,6 +16,7 @@ const optionDefinitions = [
   { name: 'from-private-key-path', type: String },
   { name: 'to-public-key-path', type: String },
   { name: 'amount', type: BigInt },
+  { name: 'chain-name', type: String },
   { name: 'payment-amount', type: BigInt }
 ];
 
@@ -48,7 +49,8 @@ const deploy = transfer.deploy(
   args,
   options['payment-amount'],
   PublicKey.fromEd25519(contractKeys.publicKey),
-  contractKeys
+  contractKeys,
+  options['chain-name']
 );
 
 const deployHashBase16 = hex(deploy.hash);
