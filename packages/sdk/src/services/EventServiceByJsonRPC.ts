@@ -31,6 +31,21 @@ export interface Deployhash {
   errormessage: string;
 }
 
+export interface AccountDeploy {
+  deployHash: string;
+  account: string;
+  state: string;
+  cost: number;
+  errorMessage: string;
+  blockHash: string;
+}
+export interface AccountDeploysResult {
+  data: AccountDeploy[];
+  pageCount: number;
+  itemCount: number;
+  pages: Page[];
+}
+
 export class EventServiceByJsonRPC {
   private url: string;
 
@@ -52,6 +67,17 @@ export class EventServiceByJsonRPC {
 
   async getBlockHash(blockHash: string): Promise<BlockResult> {
     const response = await axios.get(this.url + `block/${blockHash}`);
+    return response.data;
+  }
+
+  async getAccountDeploys(
+    deployHash: string,
+    page: number,
+    limit: number
+  ): Promise<AccountDeploysResult> {
+    const response = await axios.get(
+      this.url + `/accountDeploys/${deployHash}?page=${page}&limit=${limit}`
+    );
     return response.data;
   }
 }
