@@ -3,19 +3,12 @@ import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import { BlockContainer } from '../containers/BlockContainer';
 import DataTable from './DataTable';
-import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import Pages from './Pages';
-import {
-  RefreshableComponent,
-  Icon,
-  SuccessIcon,
-  FailIcon,
-  CSPR
-} from './Utils';
+import { RefreshableComponent, SuccessIcon, FailIcon, CSPR } from './Utils';
 import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { shortHash } from './Utils';
 import ObservableValueMap, { ObservableValue } from '../lib/ObservableValueMap';
-import { GetDeployResult, JsonBlock } from '../rpc/CasperServiceByJsonRPC';
+import { GetDeployResult, JsonBlock } from 'casperlabs-sdk';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 
@@ -186,14 +179,16 @@ export const Balance = observer(
   }
 );
 
-export const BlockType = (props: { header: Block.Header }) => {
-  let typ = props.header.getMessageType();
-  let lbl =
-    typ === Block.MessageType.BLOCK
-      ? 'Block'
-      : typ === Block.MessageType.BALLOT
-      ? 'Ballot'
-      : 'n/a';
+export const BlockType = (props: { block: JsonBlock }) => {
+  // let typ = props.header.getMessageType();
+  //
+  // let lbl =
+  //   typ === Block.MessageType.BLOCK
+  //     ? 'Block'
+  // : typ === Block.MessageType.BALLOT
+  // ? 'Ballot'
+  // : 'n/a';
+  let lbl = 'Block';
   return <span>{lbl}</span>;
 };
 
@@ -210,23 +205,23 @@ export const BlockRole = (props: { header: Block.Header }) => {
   return <span>{lbl}</span>;
 };
 
-export const FinalityIcon = (props: { block: BlockInfo }) => {
-  if (
-    props.block
-      .getSummary()
-      ?.getHeader()!
-      .getMessageType() === Block.MessageType.BALLOT
-  )
-    return null;
-
-  let finality = props.block.getStatus()!.getFinality();
-  if (finality === BlockInfo.Status.Finality.FINALIZED) {
-    return <SuccessIcon />;
-  } else if (finality === BlockInfo.Status.Finality.ORPHANED)
-    return <FailIcon />;
-  else {
-    return <Icon name="clock" />;
-  }
+// fixme
+export const FinalityIcon = (props: { block: JsonBlock }) => {
+  return <SuccessIcon />;
+  // if (
+  //   props.block.getSummary()?.getHeader()!.getMessageType() ===
+  //   Block.MessageType.BALLOT
+  // )
+  //   return null;
+  //
+  // let finality = props.block.getStatus()!.getFinality();
+  // if (finality === BlockInfo.Status.Finality.FINALIZED) {
+  //   return <SuccessIcon />;
+  // } else if (finality === BlockInfo.Status.Finality.ORPHANED)
+  //   return <FailIcon />;
+  // else {
+  //   return <Icon name="clock" />;
+  // }
 };
 
 export default BlockDetails;

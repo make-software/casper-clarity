@@ -2,7 +2,7 @@ import blake from 'blakejs';
 import * as fs from 'fs';
 import { Message } from 'google-protobuf';
 import * as nacl from 'tweetnacl-ts';
-import { ByteArray } from '../index';
+import { ByteArray, PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';
@@ -55,14 +55,16 @@ export class Contract {
    *
    * @param args Arguments
    * @param paymentAmount
-   * @param accountPublicKeyHash
+   * @param accountPublicKey
    * @param signingKeyPair key pair to sign the deploy
+   * @param chainName
    */
   public deploy(
     args: RuntimeArgs,
     paymentAmount: bigint,
-    accountPublicKeyHash: ByteArray,
-    signingKeyPair: nacl.SignKeyPair
+    accountPublicKey: PublicKey,
+    signingKeyPair: nacl.SignKeyPair,
+    chainName: string
   ): Deploy {
     const session = new DeployUtil.ModuleBytes(
       this.sessionWasm,
@@ -80,8 +82,8 @@ export class Contract {
     const deploy = DeployUtil.makeDeploy(
       session,
       payment,
-      accountPublicKeyHash,
-      'casper-net-1'
+      accountPublicKey,
+      chainName
     );
     return DeployUtil.signDeploy(deploy, signingKeyPair);
   }
@@ -96,12 +98,17 @@ export class BoundContract {
     private contractKeyPair: nacl.SignKeyPair
   ) {}
 
-  public deploy(args: RuntimeArgs, paymentAmount: bigint): Deploy {
+  public deploy(
+    args: RuntimeArgs,
+    paymentAmount: bigint,
+    chainName: string
+  ): Deploy {
     return this.contract.deploy(
       args,
       paymentAmount,
-      this.contractKeyPair.publicKey,
-      this.contractKeyPair
+      PublicKey.fromEd25519(this.contractKeyPair.publicKey),
+      this.contractKeyPair,
+      chainName
     );
   }
 }

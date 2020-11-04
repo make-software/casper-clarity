@@ -3,7 +3,7 @@ import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ListInline, Loading, RefreshButton, shortHash } from './Utils';
 import * as d3 from 'd3';
-import { encodeBase16 } from 'casperlabs-sdk';
+import { encodeBase16, JsonBlock } from 'casperlabs-sdk';
 import { ToggleButton, ToggleStore } from './ToggleButton';
 import { autorun } from 'mobx';
 import * as d3xyzoom from 'd3-xyzoom';
@@ -22,15 +22,15 @@ export interface Props {
   subscribeToggleStore?: ToggleStore;
   hideBallotsToggleStore?: ToggleStore;
   hideBlockHashToggleStore?: ToggleStore;
-  blocks: BlockInfo[] | null;
+  blocks: JsonBlock[] | null;
   emptyMessage?: any;
   footerMessage?: any;
   width: string | number;
   height: string | number;
-  selected?: BlockInfo;
+  selected?: JsonBlock;
   depth: number;
   onDepthChange?: (depth: number) => void;
-  onSelected?: (block: BlockInfo) => void;
+  onSelected?: (block: JsonBlock) => void;
 }
 
 @observer
@@ -257,7 +257,7 @@ export class BlockDAG extends React.Component<Props, {}> {
 
     let graph: Graph = calculateCoordinates(toGraph(blocks), width, height);
 
-    const selectedId = this.props.selected && blockHash(this.props.selected);
+    const selectedId = this.props.selected && this.props.selected.hash;
 
     const link = container
       .append('g')
@@ -266,7 +266,8 @@ export class BlockDAG extends React.Component<Props, {}> {
       .data(
         graph.links.filter((d: d3Link) => {
           if (hideBallot) {
-            return isBlock(d.source.block) && isBlock(d.target.block);
+            // return isBlock(d.source.block) && isBlock(d.target.block);
+            return true;
           } else {
             return true;
           }
@@ -295,7 +296,8 @@ export class BlockDAG extends React.Component<Props, {}> {
       .data(
         graph.nodes.filter(node => {
           if (hideBallot) {
-            return isBlock(node.block);
+            // return isBlock(node.block);
+            return true;
           } else {
             return true;
           }
@@ -307,9 +309,15 @@ export class BlockDAG extends React.Component<Props, {}> {
     node
       .append('circle')
       .attr('class', 'node')
-      .attr('r', (d: d3Node) => CircleRadius * (isBallot(d.block) ? 0.5 : 1.0))
+      .attr('r', (d: d3Node) => {
+        // fixme
+        // return CircleRadius * (isBallot(d.block) ? 0.5 : 1.0);
+        return CircleRadius;
+      })
       .attr('stroke', (d: d3Node) =>
-        selectedId && d.id === selectedId ? '#E00' : eraColor(d.eraId)
+        selectedId && d.id === selectedId
+          ? '#E00'
+          : eraColor(d.eraId.toString())
       )
       .attr('stroke-width', (d: d3Node) =>
         selectedId && d.id === selectedId ? '7px' : '4px'
@@ -408,11 +416,11 @@ interface d3Node {
   id: string;
   title: string;
   validator: string;
-  eraId: string;
+  eraId: number;
   rank: number;
   x?: number;
   y?: number;
-  block: BlockInfo;
+  block: JsonBlock;
 }
 
 interface d3Link {
@@ -443,18 +451,14 @@ class Graph {
 }
 
 /** Turn blocks into the reduced graph structure. */
-const toGraph = (blocks: BlockInfo[]) => {
+const toGraph = (blocks: JsonBlock[]) => {
   let nodes: d3Node[] = blocks.map(block => {
-    let id = blockHash(block);
     return {
-      id: id,
-      title: shortHash(id),
-      validator: validatorHash(block),
-      eraId: keyBlockHash(block),
-      rank: block
-        .getSummary()!
-        .getHeader()!
-        .getJRank(),
+      id: block.hash,
+      title: shortHash(block.hash),
+      validator: block.header.proposer,
+      eraId: block.header.era_id,
+      rank: block.header.height,
       block: block
     };
   });
@@ -462,32 +466,36 @@ const toGraph = (blocks: BlockInfo[]) => {
   let nodeMap = new Map(nodes.map(x => [x.id, x]));
 
   let links = blocks.flatMap(block => {
-    let child = blockHash(block);
+    let child = block.hash;
 
     let isChildFinalized = isFinalized(block);
     let isChildOrphaned = isOrphaned(block);
     let isChildBallot = isBallot(block);
 
-    let parents = block
-      .getSummary()!
-      .getHeader()!
-      .getParentHashesList_asU8()
-      .map(h => encodeBase16(h));
+    // fixme
+    // let parents = block
+    //   .getSummary()!
+    //   .getHeader()!
+    //   .getParentHashesList_asU8()
+    //   .map(h => encodeBase16(h));
+    let parents: JsonBlock[] = [];
 
     let parentSet = new Set(parents);
 
-    let justifications = block
-      .getSummary()!
-      .getHeader()!
-      .getJustificationsList()
-      .map(x => encodeBase16(x.getLatestBlockHash_asU8()));
+    // fixme
+    // let justifications = block
+    //   .getSummary()!
+    //   .getHeader()!
+    //   .getJustificationsList()
+    //   .map(x => encodeBase16(x.getLatestBlockHash_asU8()));
 
+    let justifications: JsonBlock[] = [];
     let source = nodeMap.get(child)!;
 
     let parentLinks = parents
-      .filter(p => nodeMap.has(p))
+      .filter(p => nodeMap.has(p.hash))
       .map(p => {
-        let target = nodeMap.get(p)!;
+        let target = nodeMap.get(p.hash)!;
         return {
           source: source,
           target: target,
@@ -502,9 +510,9 @@ const toGraph = (blocks: BlockInfo[]) => {
 
     let justificationLinks = justifications
       .filter(x => !parentSet.has(x))
-      .filter(j => nodeMap.has(j))
+      .filter(j => nodeMap.has(j.hash))
       .map(j => {
-        let target = nodeMap.get(j)!;
+        let target = nodeMap.get(j.hash)!;
         return {
           source: source,
           target: target,
@@ -570,31 +578,21 @@ const calculateCoordinates = (graph: Graph, width: number, height: number) => {
   return graph;
 };
 
-const blockHash = (block: BlockInfo) =>
-  encodeBase16(block.getSummary()!.getBlockHash_asU8());
+// fixme
+const isBlock = (block: JsonBlock) => true;
+// block.getSummary()!.getHeader()!.getMessageType() === Block.MessageType.BLOCK;
 
-const keyBlockHash = (block: BlockInfo) =>
-  encodeBase16(
-    block
-      .getSummary()!
-      .getHeader()!
-      .getKeyBlockHash_asU8()
-  );
+// fixme
+const isBallot = (block: JsonBlock) => !isBlock(block);
 
-const isBlock = (block: BlockInfo) =>
-  block
-    .getSummary()!
-    .getHeader()!
-    .getMessageType() === Block.MessageType.BLOCK;
+// fixme
+const isFinalized = (block: JsonBlock) => true;
+// block.getStatus()!.getFinality() === BlockInfo.Status.Finality.FINALIZED;
 
-const isBallot = (block: BlockInfo) => !isBlock(block);
-
-const isFinalized = (block: BlockInfo) =>
-  block.getStatus()!.getFinality() === BlockInfo.Status.Finality.FINALIZED;
-
-const isOrphaned = (block: BlockInfo) =>
-  isBlock(block) &&
-  block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
+// fixme
+const isOrphaned = (block: JsonBlock) => false;
+// isBlock(block) &&
+// block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
 
 const validatorHash = (block: BlockInfo) =>
   encodeBase16(

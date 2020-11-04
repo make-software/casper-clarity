@@ -1,6 +1,8 @@
 import { concat } from '@ethersproject/bytes';
 import {
   toBytesArrayU8,
+  toBytesBytesArray,
+  toBytesFixedVecT,
   toBytesNumber,
   toBytesString,
   toBytesStringList,
@@ -9,6 +11,7 @@ import {
 } from './byterepr';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { URef } from './uref';
+import { encodeBase16 } from './Conversions';
 
 type ByteArray = Uint8Array;
 
@@ -213,7 +216,7 @@ class FixedList<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
 
   toBytes(): ByteArray {
     // the serialization method for FixedList is the same as List
-    return toBytesVecT(this.vec);
+    return toBytesFixedVecT(this.vec);
   }
 
   clType(): CLType {
@@ -286,12 +289,24 @@ export class PublicKey extends CLTypedAndToBytes {
     ]);
   }
 
+  toAccountHash(): string {
+    let accountHash: string;
+    switch (this.tag) {
+      case 1:
+        accountHash = '01' + encodeBase16(this.publicKey);
+        break;
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+    return accountHash;
+  }
+
   static fromEd25519(publicKey: ByteArray) {
     return new PublicKey(publicKey, 1);
   }
 }
 
-interface MapEntry {
+export interface MapEntry {
   key: CLTypedAndToBytes;
   value: CLTypedAndToBytes;
 }
@@ -513,6 +528,90 @@ export class CLTypeHelper {
   }
 }
 
+export class CLTypedAndToBytesHelper {
+  static bool = (b: boolean) => {
+    return new Bool(b);
+  };
+
+  static u8 = (u8: number) => {
+    return new U8(u8);
+  };
+
+  static u32 = (u32: number) => {
+    return new U32(u32);
+  };
+
+  static i32 = (i32: number) => {
+    return new I32(i32);
+  };
+
+  static u64 = (u64: BigNumberish) => {
+    return new U64(u64);
+  };
+
+  static i64 = (i64: BigNumberish) => {
+    return new I64(i64);
+  };
+
+  static u128 = (u128: BigNumberish) => {
+    return new U128(u128);
+  };
+
+  static u256 = (u256: BigNumberish) => {
+    return new U256(u256);
+  };
+
+  static u512 = (u512: BigNumberish) => {
+    return new U512(u512);
+  };
+
+  static unit = () => {
+    return new Unit();
+  };
+
+  static string = (x: string) => {
+    return new StringValue(x);
+  };
+
+  static list<T extends CLTypedAndToBytes>(vec: T[]) {
+    // todo(abner) implement fromEmptyList
+    return new List(vec);
+  }
+
+  static tuple1<T extends CLTypedAndToBytes>(t0: T) {
+    return new Tuple1(t0);
+  }
+
+  static fixedList<T extends CLTypedAndToBytes>(vec: T[]) {
+    return new FixedList(vec.length, vec);
+  }
+
+  static tuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
+    return new Tuple2(t0, t1);
+  }
+
+  static tuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
+    return new Tuple3(t0, t1, t2);
+  }
+
+  static map(mapEntries: MapEntry[]) {
+    return new MapValue(mapEntries);
+  }
+
+  static publicKey(publicKey: ByteArray) {
+    return PublicKey.fromEd25519(publicKey);
+  }
+
+  static bytes(bytes: ByteArray) {
+    return new FixedList(
+      bytes.length,
+      Array.from(bytes).map(u => {
+        return new U8(u);
+      })
+    );
+  }
+}
+
 /**
  * A Casper value, i.e. a value which can be stored and manipulated by smart contracts.
  *
@@ -625,6 +724,13 @@ export class CLValue implements ToBytes {
 
   static fromPublicKey(publicKey: ByteArray) {
     return CLValue.fromT(PublicKey.fromEd25519(publicKey));
+  }
+
+  static fromBytes(bytes: ByteArray) {
+    return new CLValue(
+      toBytesBytesArray(bytes),
+      CLTypeHelper.fixedList(CLTypeHelper.u8(), bytes.byteLength)
+    );
   }
 }
 

@@ -3,7 +3,6 @@ import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import { DeployContainer } from '../containers/DeployContainer';
 import DataTable from './DataTable';
-import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import Pages from './Pages';
 import {
   RefreshableComponent,
@@ -13,8 +12,8 @@ import {
   CSPR
 } from './Utils';
 import ObservableValueMap from '../lib/ObservableValueMap';
-import { Balance, FinalityIcon } from './BlockDetails';
-import { decodeBase16, encodeBase16 } from 'casperlabs-sdk';
+import { Balance } from './BlockDetails';
+import { JsonDeploy, JsonExecutionResult } from 'casperlabs-sdk';
 
 // URL parameter
 type Params = {
@@ -29,7 +28,7 @@ interface Props extends RouteComponentProps<Params> {
 class _DeployDetails extends RefreshableComponent<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.deploy.init(decodeBase16(this.deployHashBase16));
+    this.props.deploy.init(this.deployHashBase16);
   }
 
   get deployHashBase16() {
@@ -48,7 +47,7 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
   componentDidUpdate() {
     // Container and component stays the same during naviagation.
     if (this.deployHashBase16 !== this.container.deployHashBase16) {
-      this.container.init(decodeBase16(this.deployHashBase16));
+      this.container.init(this.deployHashBase16);
       this.refresh();
     }
   }
@@ -62,6 +61,7 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
         />
         <ResultsTable
           deployHashBase16={this.deployHashBase16}
+          jsonExecutionResult={this.container.jsonExecutionResults!}
           deploy={this.container.deploy}
           balances={this.container.balances}
           refresh={() => this.refresh()}
@@ -75,7 +75,7 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
 export const DeployDetails = withRouter(_DeployDetails);
 
 const DeployTable = observer(
-  (props: { deployHashBase16: string; deploy: DeployInfo | null }) => {
+  (props: { deployHashBase16: string; deploy: JsonDeploy | null }) => {
     const attrs = props.deploy && deployAttrs(props.deploy);
     return (
       <DataTable
@@ -96,7 +96,8 @@ const DeployTable = observer(
 const ResultsTable = observer(
   (props: {
     deployHashBase16: string;
-    deploy: DeployInfo | null;
+    deploy: JsonDeploy | null;
+    jsonExecutionResult: JsonExecutionResult[];
     balances: ObservableValueMap<string, number>;
     refresh: () => void;
   }) => {
@@ -111,32 +112,28 @@ const ResultsTable = observer(
           'Result',
           'Message'
         ]}
-        rows={props.deploy && props.deploy.getProcessingResultsList()}
+        rows={props.jsonExecutionResult}
         renderRow={(proc, i) => {
-          const id = encodeBase16(
-            proc
-              .getBlockInfo()!
-              .getSummary()!
-              .getBlockHash_asU8()
-          );
+          const id = proc.block_hash;
           return (
             <tr key={i}>
               <td>
                 <Link to={Pages.block(id)}>{shortHash(id)}</Link>
               </td>
+              {/*fixme <td> <FinalityIcon block={proc} /> </td>*/}
               <td>
-                <FinalityIcon block={proc.getBlockInfo()!} />
+                <SuccessIcon />
               </td>
               <td className="text-right">
-                <CSPR motes={proc.getCost()} />
+                <CSPR motes={proc.result.cost} />
               </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(id)} />
               </td>
               <td className="text-center">
-                {proc.getIsError() ? <FailIcon /> : <SuccessIcon />}
+                {proc.result.error_message ? <FailIcon /> : <SuccessIcon />}
               </td>
-              <td>{proc.getErrorMessage()}</td>
+              <td>{proc.result.error_message}</td>
             </tr>
           );
         }}
@@ -146,16 +143,16 @@ const ResultsTable = observer(
   }
 );
 
-const deployAttrs: (deploy: DeployInfo) => Array<[string, any]> = (
-  deploy: DeployInfo
+const deployAttrs: (deploy: JsonDeploy) => Array<[string, any]> = (
+  deploy: JsonDeploy
 ) => {
-  const id = encodeBase16(deploy.getDeploy()!.getDeployHash_asU8());
-  const header = deploy.getDeploy()!.getHeader()!;
+  const id = deploy.hash;
+  const header = deploy.header;
   return [
     ['Deploy Hash', id],
-    ['Account Hash', encodeBase16(header.getAccountPublicKeyHash_asU8())],
-    ['Timestamp', new Date(header.getTimestamp()).toISOString()],
-    ['Gas Price', <CSPR motes={header.getGasPrice()} />]
+    ['Account Hash', header.account],
+    ['Timestamp', new Date(header.timestamp).toISOString()],
+    ['Gas Price', <CSPR motes={header.gas_price} />]
   ];
 };
 

@@ -5,18 +5,16 @@ import ErrorContainer from './ErrorContainer';
 import { CleanableFormData } from './FormData';
 import AuthService from '../services/AuthService';
 import {
-  BalanceService,
-  CasperService,
   decodeBase64,
   encodeBase16,
   encodeBase64,
-  Keys
+  Keys,
+  CasperServiceByJsonRPC,
+  BalanceServiceByJsonRPC
 } from 'casperlabs-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
 import { SignKeyPair } from 'tweetnacl-ts';
-import { CasperServiceByJsonRPC } from '../rpc/CasperServiceByJsonRPC';
-import BalanceServiceByJsonRPC from '../rpc/BalanceServiceByJsonRPC';
 
 // https://www.npmjs.com/package/tweetnacl-ts#signatures
 // https://tweetnacl.js.org/#/sign
@@ -131,19 +129,23 @@ export class AuthContainer {
       if (needsUpdate) {
         if (latestBlockHash == null) {
           const latestBlock = await this.casperService.getLatestBlockInfo();
-          latestBlockHash = latestBlock.block!.hash;
+          latestBlockHash = latestBlock.block?.hash
+            ? latestBlock.block.hash
+            : null;
         }
 
-        const latestAccountBalance = await this.balanceService.getAccountBalance(
-          latestBlockHash,
-          encodeBase16(getPublicKeyHash(account))
-        );
+        if (latestBlockHash !== null) {
+          const latestAccountBalance = await this.balanceService.getAccountBalance(
+            latestBlockHash,
+            encodeBase16(getPublicKeyHash(account))
+          );
 
-        this.balances.set(publicKeyHashBase64, {
-          checkedAt: now,
-          blockHashBase16: latestBlockHash,
-          balance: latestAccountBalance
-        });
+          this.balances.set(publicKeyHashBase64, {
+            checkedAt: now,
+            blockHashBase16: latestBlockHash,
+            balance: latestAccountBalance
+          });
+        }
       }
     }
   }

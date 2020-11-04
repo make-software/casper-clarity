@@ -7,9 +7,9 @@ import { ToggleStore } from '../components/ToggleButton';
 import {
   CasperServiceByJsonRPC,
   GetDeployResult,
-  JsonBlock
-} from '../rpc/CasperServiceByJsonRPC';
-import BalanceServiceByJsonRPC from '../rpc/BalanceServiceByJsonRPC';
+  JsonBlock,
+  BalanceServiceByJsonRPC
+} from 'casperlabs-sdk';
 
 type AccountB16 = string;
 

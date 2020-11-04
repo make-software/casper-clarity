@@ -143,6 +143,14 @@ export function toBytesVecT<T extends ToBytes>(vec: T[]) {
 }
 
 /**
+ * Serializes a vector of values of type `T` into an array of bytes.
+ */
+export function toBytesFixedVecT<T extends ToBytes>(vec: T[]) {
+  const valueByteList = vec.map(e => e.toBytes());
+  return concat(valueByteList);
+}
+
+/**
  * Serializes a list of strings into an array of bytes.
  */
 export function toBytesStringList(arr: string[]) {
