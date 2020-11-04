@@ -5,8 +5,7 @@ import { decodeBase16, encodeBase16 } from '..';
 describe('CasperServiceByJsonRPC', () => {
   it('should validate bool value and create bool Argument', async () => {
     const casperService = new CasperServiceByJsonRPC(
-      'http://192.168.2.166:7777/rpc',
-      'http://localhost:8001/blocks'
+      'http://192.168.2.166:7777/rpc'
     );
     // const status = await casperService.getLatestBlockInfo();
     const re = await casperService.getLatestBlockInfo();
