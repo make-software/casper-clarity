@@ -2,11 +2,13 @@ import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
 import {
-  CasperService,
-  decodeBase16,
   DeployUtil,
+  CasperServiceByJsonRPC,
+  Signer,
   encodeBase16,
-  Signer
+  RuntimeArgs,
+  PublicKey,
+  decodeBase16
 } from 'casperlabs-sdk';
 import { FieldState, FormState } from 'formstate';
 import {
@@ -15,30 +17,21 @@ import {
   validateInt,
   valueRequired
 } from '../lib/FormsValidator';
-import $ from 'jquery';
-import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
-import {
-  CLType,
-  Key
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
-import { decodeBase64 } from 'tweetnacl-ts';
-import JSBI from 'jsbi';
-import { publicKeyHashForEd25519 } from './AuthContainer';
 import { DeployArgumentParser } from '../lib/DeployArgumentParser';
-import MetricsService from '../services/MetricsService';
 import AuthService from '../services/AuthService';
+import { SimpleType, AccessRights } from 'casperlabs-sdk';
+import { decodeBase64 } from 'tweetnacl-ts';
+import MetricsService from '../services/MetricsService';
+import JSBI from 'jsbi';
 
 export const BytesTypeStr = 'Bytes';
 export const BytesFixedTypeStr = 'Bytes (Fixed Length)';
 
-export type SimpleType =
-  | 'Bytes'
-  | 'Bytes (Fixed Length)'
-  | CLType.SimpleMap[keyof CLType.SimpleMap];
+export type UISimpleType = 'Bytes' | 'Bytes (Fixed Length)' | SimpleType;
 
 export type ComplexType = 'Tuple' | 'Map' | 'List' | 'FixedList';
 
-export type SupportedType = SimpleType | ComplexType;
+export type SupportedType = UISimpleType | ComplexType;
 
 export const ComplexTypesString = ['Tuple', 'Map', 'List', 'FixedList'];
 
@@ -61,9 +54,7 @@ export type DeployArgument = {
   tupleInnerDeployArgs: FormDeployArguments;
   // Map, the length of it is fixed, 2 for key and value.
   mapInnerDeployArgs: FormDeployArguments;
-  URefAccessRight: FieldState<
-    Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
-  >; // null if type != ArgumentType.KEY
+  URefAccessRight: FieldState<AccessRights>; // null if type != ArgumentType.KEY
   value: FieldState<string>;
 };
 
@@ -91,7 +82,7 @@ interface RawDeployArguments {
   tupleInnerDeployArgs: RawDeployArguments[];
   // Map, the length of it is fixed, 2 for key and value.
   mapInnerDeployArgs: RawDeployArguments[];
-  URefAccessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap];
+  URefAccessRight: AccessRights;
   value: string;
 }
 
@@ -177,7 +168,7 @@ export class DeployContractsContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService,
+    private casperService: CasperServiceByJsonRPC,
     private authService: AuthService
   ) {
     this.tryRestore();
@@ -201,11 +192,10 @@ export class DeployContractsContainer {
   public static newDeployArgument(
     hasInnerDeployArgs: boolean = true,
     name: string = '',
-    type: SupportedType = CLType.Simple.BOOL,
+    type: SupportedType = SimpleType.Bool,
     value: string = '',
     secondType: KeyType | null = null,
-    accessRight: Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap] = Key
-      .URef.AccessRights.NONE
+    accessRight: AccessRights = AccessRights.None
   ) {
     const listInnerArgs = new FormState<FormDeployArgument[]>([]);
     const tupleInnerArgs = new FormState<FormDeployArgument[]>([]);
@@ -225,9 +215,7 @@ export class DeployContractsContainer {
       listInnerDeployArgs: listInnerArgs,
       tupleInnerDeployArgs: tupleInnerArgs,
       mapInnerDeployArgs: mapInnerArgs,
-      URefAccessRight: new FieldState<
-        Key.URef.AccessRightsMap[keyof Key.URef.AccessRightsMap]
-      >(accessRight),
+      URefAccessRight: new FieldState<AccessRights>(accessRight),
       value: new FieldState<string>(value)
         .disableAutoValidation()
         .validators(...(hasInnerDeployArgs ? [valueRequired] : []))
@@ -327,8 +315,7 @@ export class DeployContractsContainer {
       throw new Error('Please create an account in the Plugin first!');
     }
     // Todo: (ECO-441) make Signer return publicKeyHash directly
-    const publicKeyHash = publicKeyHashForEd25519(publicKeyBase64);
-    let deploy = await this.makeDeploy(publicKeyHash);
+    let deploy = await this.makeDeploy(decodeBase64(publicKeyBase64));
     if (!deploy) {
       return false;
     }
@@ -337,7 +324,7 @@ export class DeployContractsContainer {
     let sigBase64;
     try {
       sigBase64 = await Signer.sign(
-        encodeBase16(deploy!.getDeployHash_asU8()),
+        encodeBase16(deploy!.hash),
         publicKeyBase64
       );
       this.signing = false;
@@ -350,7 +337,7 @@ export class DeployContractsContainer {
       const jwtToken = await this.authService.getToken();
       MetricsService.metricCollect('deploy', jwtToken);
       ($(`#${this.accordionId}`) as any).collapse('hide');
-      this.deployedHash = encodeBase16(signedDeploy.getDeployHash_asU8());
+      this.deployedHash = encodeBase16(signedDeploy.hash);
       return true;
     } catch (e) {
       this.signing = false;
@@ -358,7 +345,9 @@ export class DeployContractsContainer {
     }
   }
 
-  private async makeDeploy(publicKeyHash: Uint8Array): Promise<Deploy | null> {
+  private async makeDeploy(
+    publicKey: Uint8Array
+  ): Promise<DeployUtil.Deploy | null> {
     let deployConfigurationForm = await this.deployConfiguration.validate();
     let deployArguments = await this.deployArguments.validate();
     if (deployConfigurationForm.hasError || deployArguments.hasError) {
@@ -368,46 +357,44 @@ export class DeployContractsContainer {
       const args = deployArguments.value;
       let session: ByteArray | string;
 
-      let argsProto = args.map((arg: FormState<DeployArgument>) => {
-        return DeployArgumentParser.buildArgument(arg);
-      });
+      let runtimeArgs = new RuntimeArgs(
+        args.map((arg: FormState<DeployArgument>) => {
+          return DeployArgumentParser.buildArgument(arg);
+        })
+      );
       const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
+      let sessionExecutionItem: DeployUtil.ExecutableDeployItem | null = null;
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
         session = this.selectedFileContent!;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.WASM,
+        sessionExecutionItem = new DeployUtil.ModuleBytes(
           session,
-          null,
-          paymentAmount,
-          publicKeyHash
+          runtimeArgs.toBytes()
         );
       } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
         session = decodeBase16(config.contractHash.value);
         const entryPoint = config.entryPoint.value;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.Hash,
+        sessionExecutionItem = new DeployUtil.StoredContractByHash(
           session,
-          null,
-          paymentAmount,
-          publicKeyHash,
-          [],
-          entryPoint
+          entryPoint,
+          runtimeArgs.toBytes()
         );
       } else if (config.contractType.value === DeployUtil.ContractType.Name) {
         session = config.contractName.value;
         const entryPoint = config.entryPoint.value;
-        return DeployUtil.makeDeploy(
-          argsProto,
-          DeployUtil.ContractType.Name,
+        sessionExecutionItem = new DeployUtil.StoredContractByName(
           session,
-          null,
-          paymentAmount,
-          publicKeyHash,
-          [],
-          entryPoint
+          entryPoint,
+          runtimeArgs.toBytes()
+        );
+      }
+
+      if (sessionExecutionItem != null) {
+        return DeployUtil.makeDeploy(
+          sessionExecutionItem,
+          DeployUtil.standardPayment(paymentAmount),
+          PublicKey.fromEd25519(publicKey),
+          window.config.network?.chainName || ''
         );
       }
       return Promise.resolve(null);

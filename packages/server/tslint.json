@@ -1,19 +1,16 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:recommended"
-  ],
+  "extends": ["tslint:recommended"],
   "jsRules": {},
   "rules": {
     "trailing-comma": false,
     "no-console": false,
     "object-literal-sort-keys": false,
-    "max-classes-per-file": false
+    "max-classes-per-file": false,
+    "no-bitwise": false
   },
   "rulesDirectory": [],
   "linterOptions": {
-    "exclude": [
-      "src/grpc/**/*.js"
-    ]
+    "exclude": ["src/grpc/**/*.js"]
   }
 }

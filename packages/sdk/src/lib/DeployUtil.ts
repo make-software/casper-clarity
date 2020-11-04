@@ -3,16 +3,265 @@
  *
  * @packageDocumentation
  */
-import {
-  Approval,
-  Deploy,
-  Signature
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
-import JSBI from 'jsbi';
+import { concat } from '@ethersproject/bytes';
+import blake from 'blakejs';
+import { Option } from './option';
 import * as nacl from 'tweetnacl-ts';
-import { ByteArray } from '../index';
-import { Args, BigIntValue } from './Args';
-import { protoHash } from './Contracts';
+import { encodeBase16 } from './Conversions';
+import { CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
+import {
+  toBytesArrayU8,
+  toBytesBytesArray,
+  toBytesDeployHash,
+  toBytesString,
+  toBytesU64,
+  toBytesVecT
+} from './byterepr';
+import { RuntimeArgs } from './RuntimeArgs';
+import JSBI from 'jsbi';
+import { Keys } from './index';
+
+type ByteArray = Uint8Array;
+
+export interface DeployHeader {
+  account: PublicKey;
+  timestamp: number;
+  ttl: number;
+  gasPrice: number;
+  bodyHash: ByteArray;
+  dependencies: ByteArray[];
+  chainName: string;
+}
+
+class DeployHash implements ToBytes {
+  constructor(private hash: ByteArray) {}
+
+  toBytes(): ByteArray {
+    return toBytesDeployHash(this.hash);
+  }
+}
+
+const toBytesDeployHeader = (deployHeader: DeployHeader) => {
+  return concat([
+    deployHeader.account.toBytes(),
+    toBytesU64(deployHeader.timestamp),
+    toBytesU64(deployHeader.ttl),
+    toBytesU64(deployHeader.gasPrice),
+    toBytesDeployHash(deployHeader.bodyHash),
+    toBytesVecT(deployHeader.dependencies.map(d => new DeployHash(d))),
+    toBytesString(deployHeader.chainName)
+  ]);
+};
+
+export interface Deploy {
+  hash: ByteArray;
+  header: DeployHeader;
+  payment: ExecutableDeployItem;
+  session: ExecutableDeployItem;
+  approvals: Approval[];
+}
+
+export class Approval {
+  signer: string;
+  signature: string;
+}
+
+interface ToJson {
+  toJson(): Record<string, any>;
+}
+
+export abstract class ExecutableDeployItem implements ToBytes, ToJson {
+  abstract tag: number;
+
+  abstract toBytes(): ByteArray;
+
+  abstract toJson(): Record<string, any>;
+}
+
+export class ModuleBytes extends ExecutableDeployItem {
+  tag = 0;
+  constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
+    super();
+  }
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesArrayU8(this.moduleBytes),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      ModuleBytes: {
+        module_bytes: encodeBase16(this.moduleBytes),
+        args: encodeBase16(this.args)
+      }
+    };
+  }
+}
+
+export class StoredContractByHash extends ExecutableDeployItem {
+  tag = 1;
+  constructor(
+    private hash: Uint8Array,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesBytesArray(this.hash),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      StoredContractByHash: {
+        hash: encodeBase16(this.hash),
+        entry_point: this.entryPoint,
+        args: encodeBase16(this.args)
+      }
+    };
+  }
+}
+
+export class StoredContractByName extends ExecutableDeployItem {
+  tag = 2;
+
+  constructor(
+    private name: string,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
+
+  toBytes(): ByteArray {
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesString(this.name),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      StoredContractByName: {
+        name: this.name,
+        entry_point: this.entryPoint,
+        args: encodeBase16(this.args)
+      }
+    };
+  }
+}
+
+export class StoredVersionedContractByName extends ExecutableDeployItem {
+  tag = 4;
+
+  constructor(
+    private name: string,
+    private version: number | null,
+    private entryPoint: string,
+    private args: Uint8Array
+  ) {
+    super();
+  }
+
+  toBytes(): ByteArray {
+    let serializedVersion;
+    if (this.version === null) {
+      serializedVersion = new Option(null, CLTypeHelper.u32());
+    } else {
+      serializedVersion = new Option(new U32(this.version as number));
+    }
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesString(this.name),
+      serializedVersion.toBytes(),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      StoredVersionedContractByName: {
+        name: this.name,
+        entry_point: this.entryPoint,
+        args: encodeBase16(this.args)
+      }
+    };
+  }
+}
+
+export class StoredVersionedContractByHash extends ExecutableDeployItem {
+  hash: Uint8Array;
+  version: number | null;
+  entryPoint: string;
+  args: ByteArray;
+  tag = 3;
+
+  toBytes(): ByteArray {
+    let serializedVersion;
+    if (this.version === null) {
+      serializedVersion = new Option(null, CLTypeHelper.u32());
+    } else {
+      serializedVersion = new Option(new U32(this.version as number));
+    }
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesBytesArray(this.hash),
+      serializedVersion.toBytes(),
+      toBytesString(this.entryPoint),
+      toBytesArrayU8(this.args)
+    ]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      StoredVersionedContractByHash: {
+        hash: encodeBase16(this.hash),
+        version: this.version,
+        entry_point: this.entryPoint,
+        args: encodeBase16(this.args)
+      }
+    };
+  }
+}
+
+export class Transfer extends ExecutableDeployItem {
+  args: ByteArray;
+  tag = 5;
+
+  toBytes(): ByteArray {
+    return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
+  }
+
+  toJson(): Record<string, any> {
+    return {
+      Transfer: { args: encodeBase16(this.args) }
+    };
+  }
+}
+
+export const serializeHeader = (deployHeader: DeployHeader) => {
+  return toBytesDeployHeader(deployHeader);
+};
+
+export const serializeBody = (
+  payment: ExecutableDeployItem,
+  session: ExecutableDeployItem
+) => {
+  return concat([payment.toBytes(), session.toBytes()]);
+};
 
 /**
  * Supported contract type
@@ -24,130 +273,45 @@ export enum ContractType {
 }
 
 /**
- * Make Deploy message
- *
- * @param args session arguments
- * @param type the type of session contract, has to be {@link ContractType.WASM}
- * @param session the wasm code of session contract
- * @param paymentWasm the wasm code of payment contract, set it null if you want to use the standard payment contract
- * @param paymentAmount
- * @param accountPublicKeyHash The account public key hash that used to sign the Deploy.
- * @param dependencies  List of `Deploy.deploy_hash`s that must be executed in past blocks before this deploy can be executed.
- * @param entryPoint entry point of smart contract
- */
-export function makeDeploy(
-  args: Deploy.Arg[],
-  type: ContractType.WASM,
-  session: ByteArray,
-  paymentWasm: ByteArray | null,
-  paymentAmount: bigint | JSBI,
-  accountPublicKeyHash: ByteArray,
-  dependencies?: Uint8Array[]
-): Deploy;
-
-/**
- * Make Deploy message
- *
- * @param args session arguments
- * @param type the type of session contract, has to be {@link ContractType.Hash}
- * @param session the hash of session contract
- * @param paymentWasm the wasm code of payment contract, set it null if you want to use the standard payment contract
- * @param paymentAmount
- * @param accountPublicKeyHash The account public key hash that used to sign the Deploy.
- * @param dependencies  List of `Deploy.deploy_hash`s that must be executed in past blocks before this deploy can be executed.
- * @param entryPoint entry point of smart contract
- */
-export function makeDeploy(
-  args: Deploy.Arg[],
-  type: ContractType.Hash,
-  session: ByteArray,
-  paymentWasm: ByteArray | null,
-  paymentAmount: bigint | JSBI,
-  accountPublicKey: ByteArray,
-  dependencies: Uint8Array[],
-  entryPoint: string
-): Deploy;
-
-/**
- * Makes Deploy message
- *
- * @param args session arguments
- * @param type the type of session contract, has to be {@link ContractType.Name}
- * @param sessionName the name of session contract
- * @param paymentWasm the wasm code of payment contract, set it null if you want to use the standard payment contract
- * @param paymentAmount
- * @param accountPublicKeyHash The account public key hash that used to sign the Deploy.
- * @param dependencies  List of `Deploy.deploy_hash`s that must be executed in past blocks before this deploy can be executed.
- * @param entryPoint entry point of smart contract
- */
-export function makeDeploy(
-  args: Deploy.Arg[],
-  type: ContractType.Name,
-  sessionName: string,
-  paymentWasm: ByteArray | null,
-  paymentAmount: bigint | JSBI,
-  accountPublicKeyHash: ByteArray,
-  dependencies: Uint8Array[],
-  entryPoint: string
-): Deploy;
-
-/**
  * Makes Deploy message
  */
 export function makeDeploy(
-  args: Deploy.Arg[],
-  type: ContractType,
-  session: ByteArray | string,
-  paymentWasm: ByteArray | null,
-  paymentAmount: bigint | JSBI,
-  accountPublicKeyHash: ByteArray,
-  dependencies?: Uint8Array[],
-  entryPoint?: string
+  session: ExecutableDeployItem,
+  payment: ExecutableDeployItem,
+  accountPublicKey: PublicKey,
+  chainName: string,
+  gasPrice: number = 10,
+  ttl: number = 3600000,
+  dependencies: Uint8Array[] = [],
+  timestamp?: number
 ): Deploy {
-  const sessionCode = new Deploy.Code();
-  if (type === ContractType.WASM) {
-    const wasmContract = new Deploy.Code.WasmContract();
-    wasmContract.setWasm(session);
-    sessionCode.setWasmContract(wasmContract);
-  } else if (type === ContractType.Hash) {
-    const storedContract = new Deploy.Code.StoredContract();
-    storedContract.setContractHash(session);
-    storedContract.setEntryPoint(entryPoint || '');
-    sessionCode.setStoredContract(storedContract);
-  } else {
-    const storedContract = new Deploy.Code.StoredContract();
-    storedContract.setName(session as string);
-    storedContract.setEntryPoint(entryPoint || '');
-    sessionCode.setStoredContract(storedContract);
+  const serializedBody = serializeBody(payment, session);
+  const bodyHash = blake.blake2b(serializedBody, null, 32);
+  const uniqueDependencies = dependencies.filter(
+    d =>
+      dependencies.filter(t => encodeBase16(d) === encodeBase16(t)).length < 2
+  );
+  if (!timestamp) {
+    timestamp = Date.now();
   }
-  sessionCode.setArgsList(args);
-
-  if (paymentWasm === null) {
-    paymentWasm = Buffer.from('');
-  }
-  const paymentContract = new Deploy.Code.WasmContract();
-  paymentContract.setWasm(paymentWasm);
-  const payment = new Deploy.Code();
-  payment.setWasmContract(paymentContract);
-  payment.setArgsList(Args(['amount', BigIntValue(paymentAmount)]));
-
-  const body = new Deploy.Body();
-  body.setSession(sessionCode);
-  body.setPayment(payment);
-
-  const header = new Deploy.Header();
-  header.setAccountPublicKeyHash(accountPublicKeyHash);
-  header.setTimestamp(new Date().getTime());
-  header.setBodyHash(protoHash(body));
-  // we will remove gasPrice eventually
-  header.setGasPrice(1);
-  header.setDependenciesList(dependencies ?? []);
-
-  const deploy = new Deploy();
-  deploy.setBody(body);
-  deploy.setHeader(header);
-  deploy.setDeployHash(protoHash(header));
-  return deploy;
+  const header: DeployHeader = {
+    account: accountPublicKey,
+    bodyHash,
+    chainName,
+    dependencies: uniqueDependencies,
+    gasPrice,
+    timestamp,
+    ttl
+  };
+  const serializedHeader = serializeHeader(header);
+  const deployHash = blake.blake2b(serializedHeader, null, 32);
+  return {
+    hash: deployHash,
+    header,
+    payment,
+    session,
+    approvals: []
+  };
 }
 
 /**
@@ -160,17 +324,11 @@ export const signDeploy = (
   deploy: Deploy,
   signingKeyPair: nacl.SignKeyPair
 ): Deploy => {
-  const signature = new Signature();
-  signature.setSigAlgorithm('ed25519');
-  signature.setSig(
-    nacl.sign_detached(deploy.getDeployHash_asU8(), signingKeyPair.secretKey)
-  );
-
   const approval = new Approval();
-  approval.setApproverPublicKey(signingKeyPair.publicKey);
-  approval.setSignature(signature);
-
-  deploy.setApprovalsList([approval]);
+  const signature = nacl.sign_detached(deploy.hash, signingKeyPair.secretKey);
+  approval.signer = Keys.Ed25519.publicKeyHex(signingKeyPair.publicKey);
+  approval.signature = Keys.Ed25519.publicKeyHex(signature);
+  deploy.approvals.push(approval);
 
   return deploy;
 };
@@ -187,15 +345,43 @@ export const setSignature = (
   sig: ByteArray,
   publicKey: ByteArray
 ): Deploy => {
-  const signature = new Signature();
-  signature.setSigAlgorithm('ed25519');
-  signature.setSig(sig);
-
   const approval = new Approval();
-  approval.setApproverPublicKey(publicKey);
-  approval.setSignature(signature);
-
-  deploy.setApprovalsList([approval]);
-
+  approval.signature = '01' + encodeBase16(sig);
+  approval.signer = '01' + encodeBase16(publicKey);
+  deploy.approvals.push(approval);
   return deploy;
+};
+
+export const standardPayment = (paymentAmount: bigint | JSBI) => {
+  const paymentArgs = RuntimeArgs.fromMap({
+    amount: CLValue.fromU512(paymentAmount.toString())
+  });
+
+  return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());
+};
+
+export const deployToJson = (deploy: Deploy) => {
+  const header = deploy.header;
+  const headerJson = {
+    account: header.account.toAccountHash(),
+    timestamp: new Date(header.timestamp).toISOString(),
+    ttl: '1h',
+    gas_price: header.gasPrice,
+    body_hash: encodeBase16(header.bodyHash),
+    dependencies: header.dependencies.map(it => encodeBase16(it)),
+    chain_name: header.chainName
+  };
+  const json = {
+    hash: encodeBase16(deploy.hash),
+    header: headerJson,
+    payment: deploy.payment.toJson(),
+    session: deploy.session.toJson(),
+    approvals: deploy.approvals.map(it => {
+      return {
+        signer: it.signer,
+        signature: it.signature
+      };
+    })
+  };
+  return { deploy: json };
 };

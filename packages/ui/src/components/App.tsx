@@ -29,18 +29,9 @@ import AccountSelector from './AccountSelector';
 import AccountSelectorContainer from '../containers/AccountSelectorContainer';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import ConnectedPeers from './ConnectedPeers';
-import Vesting from '../contracts/Vesting/component/Vesting';
 import { IoMdKey, IoIosWater, IoMdRocket } from 'react-icons/io';
-import {
-  FaMapMarkedAlt,
-  FaListUl,
-  FaSearch,
-  FaNetworkWired,
-  FaFileContract
-} from 'react-icons/fa';
-import { FiGrid, FiLogIn, FiLogOut } from 'react-icons/fi';
-import { MdGroup } from 'react-icons/md';
-import { VestingContainer } from '../contracts/Vesting/container/VestingContainer';
+import { FaMapMarkedAlt, FaSearch, FaNetworkWired } from 'react-icons/fa';
+import { FiLogOut } from 'react-icons/fi';
 import { DeployContractsForm } from './DeployContracts';
 import { DeployContractsContainer } from '../containers/DeployContractsContainer';
 import { useEffect } from 'react';
@@ -128,45 +119,44 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
     'Deploy Contract',
     <IoMdRocket fontSize={SideMenuIconSize} />
   ),
-  new MenuItem(
-    Pages.Explorer,
-    'Explorer',
-    <FaMapMarkedAlt fontSize={SideMenuIconSize} />
-  ),
-  new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
-  new MenuItem(
-    Pages.Deploys,
-    'Deploys',
-    <FaListUl fontSize={SideMenuIconSize} />
-  ),
+  // new MenuItem(
+  //   Pages.Explorer,
+  //   'Explorer',
+  //   <FaMapMarkedAlt fontSize={SideMenuIconSize} />
+  // ),
+  // new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
+  // new MenuItem(
+  //   Pages.Deploys,
+  //   'Deploys',
+  //   <FaListUl fontSize={SideMenuIconSize} />
+  // ),
   new MenuItem(
     Pages.Search,
     'Search',
     <FaSearch fontSize={SideMenuIconSize} />
   ),
-  new MenuItem(
-    Pages.Validators,
-    'Validators',
-    <MdGroup fontSize={SideMenuIconSize} />
-  ),
+  // new MenuItem(
+  //   Pages.Validators,
+  //   'Validators',
+  //   <MdGroup fontSize={SideMenuIconSize} />
+  // ),
   new MenuItem(
     Pages.ConnectedPeers,
     'Connected Peers',
     <FaNetworkWired fontSize={SideMenuIconSize} />
-  ),
-  new GroupedMenuItem(
-    'clarityContracts',
-    'Contracts',
-    <FaFileContract fontSize={SideMenuIconSize} />,
-    [new MenuItem(Pages.Vesting, 'Vesting')]
   )
+  // new GroupedMenuItem(
+  //   'clarityContracts',
+  //   'Contracts',
+  //   <FaFileContract fontSize={SideMenuIconSize} />,
+  //   [new MenuItem(Pages.Vesting, 'Vesting')]
+  // )
 ];
 
 export interface AppProps {
   errors: ErrorContainer;
   auth: AuthContainer;
   faucet: FaucetContainer;
-  vesting: VestingContainer;
   dag: DagContainer;
   validatorsContainer: ValidatorsContainer;
   block: BlockContainer;
@@ -333,14 +323,6 @@ class _Navigation extends RefreshableComponent<
               {this.props.networkInfoContainer.mainRank}&nbsp;
             </span>
           </p>
-          {this.props.connectedPeersContainer.peers?.length && (
-            <p>
-              Node version:&nbsp;
-              <span className={'navbar-network-highlight'}>
-                {this.props.connectedPeersContainer.peers[0].getNodeVersion()}
-              </span>
-            </p>
-          )}
         </div>
         <button
           className="navbar-toggler navbar-toggler-right"
@@ -501,10 +483,6 @@ const Content = (props: AppProps) => {
             <Route path={Pages.Deploy}>
               <Title title="Deploy Detail" />
               <DeployDetails {...props} />
-            </Route>
-            <Route path={Pages.Vesting}>
-              <Title title="Vesting Contract" />
-              <Vesting {...props} />
             </Route>
             <PrivateRoute path={Pages.DeployContracts} auth={props.auth}>
               <Title title="Deploy Contract" />

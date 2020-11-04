@@ -3,7 +3,6 @@ import { observer } from 'mobx-react';
 import { RefreshableComponent } from './Utils';
 import DataTable from './DataTable';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
-import { Node } from 'casperlabs-grpc/io/casperlabs/comm/discovery/node_pb';
 
 interface Props {
   connectedPeersContainer: ConnectedPeersContainer;
@@ -21,15 +20,13 @@ export default class ConnectedPeers extends RefreshableComponent<Props, {}> {
       <DataTable
         title="Connected Peers"
         refresh={() => this.refresh()}
-        headers={['Host', 'Protocol Port', 'Chain Id', 'Version']}
+        headers={['Node ID', 'Address']}
         rows={connectedPeersContainer.peers}
-        renderRow={(node: Node) => {
+        renderRow={node => {
           return (
-            <tr key={node.getId_asB64()}>
-              <td>{node.getHost()}</td>
-              <td>{node.getProtocolPort()} </td>
-              <td>{node.getChainId_asB64()}</td>
-              <td>{node.getNodeVersion()}</td>
+            <tr key={node.nodeId}>
+              <td>{node.nodeId}</td>
+              <td>{node.address} </td>
             </tr>
           );
         }}

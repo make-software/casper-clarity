@@ -75,10 +75,12 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
                   </tr>
                 </thead>
               )}
-              <tbody>{this.props.filterRow && 
-              this.props.filterToggleStore?.isPressed
-                      ? this.props.rows.filter(this.props.filterRow).map(this.props.renderRow)
-                      : this.props.rows.map(this.props.renderRow)}
+              <tbody>
+                {this.props.filterRow && this.props.filterToggleStore?.isPressed
+                  ? this.props.rows
+                      .filter(this.props.filterRow)
+                      .map(this.props.renderRow)
+                  : this.props.rows.map(this.props.renderRow)}
               </tbody>
             </table>
           )}

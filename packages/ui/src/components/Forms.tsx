@@ -272,7 +272,7 @@ export const TextArea = (props: {
       className="form-control"
       id="exampleFormControlTextarea1"
       disabled={props.disabled}
-      style={{fontSize: "12px"}}
+      style={{ fontSize: '12px' }}
     >
       {props.children}
     </textarea>

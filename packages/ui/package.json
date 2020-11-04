@@ -4,8 +4,11 @@
   "private": true,
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.0.2",
+    "@ethersproject/bignumber": "^5.0.7",
+    "@ethersproject/constants": "^5.0.4",
     "@fortawesome/fontawesome-free": "^5.9.0",
     "@improbable-eng/grpc-web": "^0.9.6",
+    "@msgpack/msgpack": "^2.2.0",
     "@types/bootstrap": "^4.3.2",
     "@types/d3": "^5.7.2",
     "@types/file-saver": "^2.0.1",
@@ -47,6 +50,7 @@
     "react-icons": "^3.11.0",
     "react-router-dom": "^5.1.0",
     "react-scripts": "^3.4.1",
+    "rpc-client-js": "^1.0.2",
     "rxjs": "^6.5.3",
     "tweetnacl-ts": "^1.0.3",
     "tweetnacl-util": "^0.15.0",
@@ -57,7 +61,7 @@
     "start": "react-scripts start",
     "build": "CI=false react-scripts build",
     "clean": "rm -rf build",
-    "test": "jest",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -79,6 +83,7 @@
     "@types/lodash": "^4.14.149",
     "@types/react-helmet": "^5.0.15",
     "@types/validator": "^12.0.1",
+    "@types/ws": "^7.2.6",
     "react-test-renderer": "^16.13.1"
   },
   "proxy": "http://localhost:8001/"

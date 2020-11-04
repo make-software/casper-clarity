@@ -3,14 +3,12 @@ import { observer } from 'mobx-react';
 import DagContainer, { DagStep } from '../containers/DagContainer';
 import { IconButton, ListInline, shortHash } from './Utils';
 import DataTable from './DataTable';
-import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
 import Pages from './Pages';
-import { encodeBase16 } from 'casperlabs-sdk';
 import Timestamp from './TimeStamp';
 import { BlockType } from './BlockDetails';
 import * as H from 'history';
+import { JsonBlock } from 'casperlabs-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;
@@ -62,49 +60,40 @@ class _BlockList extends React.Component<Props, {}> {
         filterToggleStore={dag.hideBallotsToggleStore}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
-        headers={[
-          'Block Hash',
-          'j-Rank',
-          'm-Rank',
-          'Timestamp',
-          'Validator',
-          'Type',
-          'Key Block Hash'
-        ]}
+        headers={['Block Hash', 'height', 'Timestamp', 'Validator', 'Type']}
         rows={dag.blocks}
-        renderRow={(block: BlockInfo) => {
-          const header = block.getSummary()!.getHeader()!;
-          const id = encodeBase16(block.getSummary()!.getBlockHash_asU8());
+        renderRow={(block: JsonBlock) => {
+          const header = block.header;
+          const id = block.hash;
           return (
             <tr key={id}>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
-              <td>{header.getJRank()}</td>
-              <td>{header.getMainRank()}</td>
+              <td>{header.height}</td>
               <td>
-                <Timestamp timestamp={header.getTimestamp()} />
+                <Timestamp timestamp={header.timestamp} />
               </td>
-              <td>{shortHash(header.getValidatorPublicKey_asU8())}</td>
+              <td>{shortHash(header.proposer)}</td>
               <td>
-                <BlockType header={header} />
+                <BlockType block={block} />
               </td>
-              <td>
-                <Link
-                  to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}
-                >
-                  {shortHash(header.getKeyBlockHash_asU8())}
-                </Link>
-              </td>
+              {/*fixme*/}
+              {/*<td>*/}
+              {/*  <Link*/}
+              {/*    to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}*/}
+              {/*  >*/}
+              {/*    {shortHash(header.getKeyBlockHash_asU8())}*/}
+              {/*  </Link>*/}
+              {/*</td>*/}
             </tr>
           );
         }}
-        filterRow={(block: BlockInfo) => {
-          let msgType = block
-            .getSummary()
-            ?.getHeader()
-            ?.getMessageType();
-          return msgType === Block.MessageType.BLOCK;
+        filterRow={(block: JsonBlock) => {
+          // fixme
+          // let msgType = block.getSummary()?.getHeader()?.getMessageType();
+          // return msgType === Block.MessageType.BLOCK;
+          return true;
         }}
         footerMessage={
           <DagStepButtons

@@ -15,9 +15,9 @@ import AuthContainer from './containers/AuthContainer';
 import ErrorContainer from './containers/ErrorContainer';
 import FaucetService from './services/FaucetService';
 import {
-  BalanceService,
-  CasperService,
-  DiagnosticsService
+  CasperServiceByJsonRPC,
+  DiagnosticsService,
+  BalanceServiceByJsonRPC
 } from 'casperlabs-sdk';
 import { Auth0Service, MockAuthService } from './services/AuthService';
 import DagContainer from './containers/DagContainer';
@@ -27,7 +27,6 @@ import SearchContainer from './containers/SearchContainer';
 import { DeployInfoListContainer } from './containers/DeployInfoListContainer';
 import AccountSelectorContainer from './containers/AccountSelectorContainer';
 import ConnectedPeersContainer from './containers/ConnectedPeersContainer';
-import { VestingContainer } from './contracts/Vesting/container/VestingContainer';
 import { DeployContractsContainer } from './containers/DeployContractsContainer';
 import ValidatorsContainer from './containers/ValidatorsContainer';
 import { NetworkInfoContainer } from './containers/NetworkInfoContainer';
@@ -40,14 +39,11 @@ const authService = window.config.auth.mock.enabled
   ? new MockAuthService()
   : new Auth0Service(window.config.auth0);
 const faucetService = new FaucetService(authService);
-const casperService = new CasperService(
+const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
-const balanceService = new BalanceService(casperService);
-const diagnosticsService = new DiagnosticsService(
-  window.config.grpc.url || window.origin
-);
-
+const balanceService = new BalanceServiceByJsonRPC(casperService);
+new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.
 const errors = new ErrorContainer();
 const auth = new AuthContainer(
@@ -63,7 +59,6 @@ const faucet = new FaucetContainer(
   // Update the balances when a new faucet request went through.
   () => auth.refreshBalances(true)
 );
-const vesting = new VestingContainer(errors, auth, casperService);
 const dag = new DagContainer(errors, casperService);
 const block = new BlockContainer(errors, casperService, balanceService);
 const deploy = new DeployContainer(errors, casperService, balanceService);
@@ -72,7 +67,7 @@ const search = new SearchContainer(errors, casperService);
 const accountSelectorContainer = new AccountSelectorContainer();
 const connectedPeersContainer = new ConnectedPeersContainer(
   errors,
-  diagnosticsService
+  casperService
 );
 const deployContractsContainer = new DeployContractsContainer(
   errors,
@@ -88,7 +83,6 @@ ReactDOM.render(
       errors={errors}
       auth={auth}
       faucet={faucet}
-      vesting={vesting}
       dag={dag}
       validatorsContainer={validatorsContainer}
       block={block}

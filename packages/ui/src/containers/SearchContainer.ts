@@ -1,12 +1,14 @@
 import { observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { CasperService, decodeBase16, GrpcError } from 'casperlabs-sdk';
-import { CleanableFormData } from './FormData';
 import {
-  BlockInfo,
-  DeployInfo
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
+  decodeBase16,
+  GrpcError,
+  CasperServiceByJsonRPC,
+  GetBlockResult,
+  GetDeployResult
+} from 'casperlabs-sdk';
+import { CleanableFormData } from './FormData';
 import { grpc } from '@improbable-eng/grpc-web';
 import { FieldState } from 'formstate';
 
@@ -41,11 +43,11 @@ class SearchFormData extends CleanableFormData {
 
 export class SearchContainer {
   @observable searchForm: SearchFormData = new SearchFormData();
-  @observable result: BlockInfo | DeployInfo | string | null = null;
+  @observable result: GetBlockResult | GetDeployResult | string | null = null;
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService
+    private casperService: CasperServiceByJsonRPC
   ) {}
 
   reset() {
@@ -64,7 +66,7 @@ export class SearchContainer {
           break;
         default:
           throw new Error(
-            `Don't know how to serach for ${this.searchForm.target}`
+            `Don't know how to search for ${this.searchForm.target}`
           );
       }
     }
@@ -73,21 +75,18 @@ export class SearchContainer {
   async searchBlock(blockHashPrefixBase16: string) {
     await this.trySearch(
       `Block ${blockHashPrefixBase16}`,
-      this.casperService.getBlockInfo(
-        blockHashPrefixBase16,
-        BlockInfo.View.BASIC
-      )
+      this.casperService.getBlockInfo(blockHashPrefixBase16)
     );
   }
 
   async searchDeploy(deployHashBase16: string) {
     await this.trySearch(
       `Deploy ${deployHashBase16}`,
-      this.casperService.getDeployInfo(decodeBase16(deployHashBase16))
+      this.casperService.getDeployInfo(deployHashBase16)
     );
   }
 
-  private async trySearch<T extends BlockInfo | DeployInfo>(
+  private async trySearch<T extends GetBlockResult | GetDeployResult>(
     what: string,
     fetch: Promise<T>
   ) {

@@ -1,20 +1,16 @@
-import { Deploy } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
-import { Args, ByteArray } from 'casperlabs-sdk';
+import { RuntimeArgs, CLValue } from 'casperlabs-sdk';
 
 export class CallFaucet {
-  public static args(
-    accountPublicKeyHash: ByteArray,
-    amount: bigint
-  ): Deploy.Arg[] {
-    return Args.Args(
-      ['target', Args.BytesValue(accountPublicKeyHash)],
-      ['amount', Args.BigIntValue(amount)]
-    );
+  public static args(accountHash: Uint8Array, amount: bigint): RuntimeArgs {
+    return RuntimeArgs.fromMap({
+      target: CLValue.fromBytes(accountHash),
+      amount: CLValue.fromU512(amount.toString())
+    });
   }
 }
 
 export class StoredFaucet {
-  public static args(): Deploy.Arg[] {
-    return [];
+  public static args(): RuntimeArgs {
+    return RuntimeArgs.fromMap({});
   }
 }

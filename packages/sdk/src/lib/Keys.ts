@@ -1,14 +1,14 @@
 import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
-import { ByteArray, encodeBase64 } from '../index';
+import { ByteArray, encodeBase16, encodeBase64 } from '../index';
 import { byteHash } from './Contracts';
 
 // Based on Keys.scala
 const publicKeyHashUtil = (signatureAlgorithm: string) => {
   const separator = Buffer.from([0]);
   const prefix = Buffer.concat([
-    Buffer.from(signatureAlgorithm.toUpperCase()),
+    Buffer.from(signatureAlgorithm.toLowerCase()),
     separator
   ]);
 
@@ -36,6 +36,14 @@ export class Ed25519 {
   public static publicKeyHash: (
     publicKey: ByteArray
   ) => ByteArray = publicKeyHashUtil('ed25519');
+
+  /**
+   * Get the public key hex for public key
+   * @param publicKey
+   */
+  public static publicKeyHex(publicKey: ByteArray) {
+    return '01' + encodeBase16(publicKey);
+  }
 
   /**
    * Parse the key pair from publicKey file and privateKey file

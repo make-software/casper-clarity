@@ -2,12 +2,12 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { encodeBase16 } from 'casperlabs-sdk';
+import { encodeBase16, JsonBlock } from 'casperlabs-sdk';
 import { Icon } from './Utils';
 import { Bond } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 
 export const BondedValidatorsTable = observer(
-  (props: { block: BlockInfo; lastFinalizedBlock: BlockInfo | undefined }) => {
+  (props: { block: JsonBlock; lastFinalizedBlock: BlockInfo | undefined }) => {
     let finalizedBondedValidators = new Set();
 
     // Since js doesn't support taking tuple as the key of map/set, we need encode it.
@@ -25,11 +25,13 @@ export const BondedValidatorsTable = observer(
         finalizedBonds.map(bond => key(bond))
       );
     }
-    let bondsList = props.block
-      .getSummary()!
-      .getHeader()!
-      .getState()!
-      .getBondsList();
+    // fixme
+    // let bondsList = props.block
+    //   .getSummary()!
+    //   .getHeader()!
+    //   .getState()!
+    //   .getBondsList();
+    let bondsList: any[] = [];
     return (
       <DataTable
         title={`Bonded Validators List (${bondsList.length})`}

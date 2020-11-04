@@ -5,12 +5,12 @@ import ErrorContainer from './ErrorContainer';
 import { CleanableFormData } from './FormData';
 import AuthService from '../services/AuthService';
 import {
-  BalanceService,
-  CasperService,
   decodeBase64,
   encodeBase16,
   encodeBase64,
-  Keys
+  Keys,
+  CasperServiceByJsonRPC,
+  BalanceServiceByJsonRPC
 } from 'casperlabs-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
@@ -61,8 +61,8 @@ export class AuthContainer {
   constructor(
     private errors: ErrorContainer,
     private authService: AuthService,
-    private casperService: CasperService,
-    private balanceService: BalanceService
+    private casperService: CasperServiceByJsonRPC,
+    private balanceService: BalanceServiceByJsonRPC
   ) {
     this.init();
   }
@@ -115,7 +115,7 @@ export class AuthContainer {
 
   async refreshBalances(force?: boolean) {
     const now = new Date();
-    let latestBlockHash: BlockHash | null = null;
+    let latestBlockHash: string | null = null;
 
     for (let account of this.accounts || []) {
       const publicKeyHashBase64 = getPublicKeyHashBase64(account);
@@ -129,19 +129,23 @@ export class AuthContainer {
       if (needsUpdate) {
         if (latestBlockHash == null) {
           const latestBlock = await this.casperService.getLatestBlockInfo();
-          latestBlockHash = latestBlock.getSummary()!.getBlockHash_asU8();
+          latestBlockHash = latestBlock.block?.hash
+            ? latestBlock.block.hash
+            : null;
         }
 
-        const latestAccountBalance = await this.balanceService.getAccountBalance(
-          latestBlockHash,
-          getPublicKeyHash(account)
-        );
+        if (latestBlockHash !== null) {
+          const latestAccountBalance = await this.balanceService.getAccountBalance(
+            latestBlockHash,
+            encodeBase16(getPublicKeyHash(account))
+          );
 
-        this.balances.set(publicKeyHashBase64, {
-          checkedAt: now,
-          blockHash: latestBlockHash,
-          balance: latestAccountBalance
-        });
+          this.balances.set(publicKeyHashBase64, {
+            checkedAt: now,
+            blockHashBase16: latestBlockHash,
+            balance: latestAccountBalance
+          });
+        }
       }
     }
   }
