@@ -47,6 +47,7 @@
     "react-dom": "^16.8.6",
     "react-ga": "^2.7.0",
     "react-helmet": "^5.2.1",
+    "react-icons": "^3.11.0",
     "react-router-dom": "^5.1.0",
     "react-scripts": "^3.4.1",
     "rpc-client-js": "^1.0.2",

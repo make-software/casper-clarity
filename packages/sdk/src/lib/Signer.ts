@@ -6,10 +6,20 @@
  */
 
 /**
- * Check whether CasperLabs Signer extension is ready
+ * Check whether CasperLabs Signer extension is connected
  */
-export const isConnected: () => boolean = () => {
-  return !!window?.casperlabsHelper?.isConnected();
+export const isConnected: () => Promise<boolean | undefined> = async () => {
+  const response = await window.casperlabsHelper!.isConnected();
+  return response;
+};
+
+/**
+ * Attempt connection to Signer
+ *
+ * @throws Error if already connected.
+ */
+export const sendConnectionRequest: () => void = () => {
+  return window.casperlabsHelper!.requestConnection();
 };
 
 /**

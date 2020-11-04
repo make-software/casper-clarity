@@ -54,15 +54,16 @@ export class DeployContractsForm extends React.Component<Props, {}> {
 
   render() {
     const { deployContractsContainer } = this.props;
-    let hint = Signer.isConnected() ? (
+    // George-Note: This always succeeds as it doesn't handle the promise result
+    let hint = this.props.deployContractsContainer.checkConnectionToSigner() ? (
       <p>
-        <SuccessIcon /> We will use CasperLabs Sign Helper plugin to sign the
+        <SuccessIcon /> We will use CasperLabs Signer extension to sign the
         deploy
       </p>
     ) : (
       <p>
         <FailIcon />
-        Please install the CasperLabs Sign Helper plugin
+        Please install or connect the CasperLabs Signer extension
       </p>
     );
     let modalAccountForm = (
