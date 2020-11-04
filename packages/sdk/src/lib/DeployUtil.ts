@@ -19,6 +19,7 @@ import {
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
 import JSBI from 'jsbi';
+import { Keys } from './index';
 
 type ByteArray = Uint8Array;
 
@@ -325,8 +326,8 @@ export const signDeploy = (
 ): Deploy => {
   const approval = new Approval();
   const signature = nacl.sign_detached(deploy.hash, signingKeyPair.secretKey);
-  approval.signer = '01' + encodeBase16(signingKeyPair.publicKey);
-  approval.signature = '01' + encodeBase16(signature);
+  approval.signer = Keys.Ed25519.publicKeyHex(signingKeyPair.publicKey);
+  approval.signature = Keys.Ed25519.publicKeyHex(signature);
   deploy.approvals.push(approval);
 
   return deploy;
