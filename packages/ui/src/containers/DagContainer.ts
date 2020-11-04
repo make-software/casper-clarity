@@ -231,15 +231,15 @@ export class DagContainer {
     // todo: (ECO-399) Use a more elegant loading style to indicate it is loading
     // fixme
     // or maybe spin the loading button so that the user can know it is refreshing.
+    await this.errors.capture(
+      this.casperService
+        .getBlockInfos(this.depth, this.maxRank)
+        .then((blocks: any) => {
+          this.blocks = observable.array(blocks);
+        })
+    );
     // await this.errors.capture(
-    //   this.casperService
-    //     .getBlockInfos(this.depth, this.maxRank)
-    //     .then(blocks => {
-    //       this.blocks = observable.array(blocks);
-    //     })
-    // );
-    // await this.errors.capture(
-    //   this.casperService.getLastFinalizedBlockInfo().then(block => {
+    //   this.casperService.getLastFinalizedBlockInfo().then((block: any) => {
     //     this.lastFinalizedBlock = block;
     //   })
     // );

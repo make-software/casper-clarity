@@ -12,15 +12,15 @@ import { JsonBlock } from 'casperlabs-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;
-  maxRank: string | null;
-  depth: string | null;
+  page: string | null;
+  limit: string | null;
 }
 
 @observer
 class _BlockList extends React.Component<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.dag.refreshWithDepthAndMaxRank(props.maxRank, props.depth);
+    this.props.dag.refreshWithDepthAndMaxRank(props.page, props.limit);
   }
 
   async refresh() {
@@ -35,15 +35,12 @@ class _BlockList extends React.Component<Props, {}> {
   // when receive new props of depth and maxRank, we need parse them and set related state variables.
   componentWillReceiveProps(nextProps: Props) {
     if (
-      this.props.depth === nextProps.depth &&
-      this.props.maxRank === nextProps.maxRank
+      this.props.page === nextProps.page &&
+      this.props.limit === nextProps.limit
     ) {
       return;
     }
-    this.props.dag.refreshWithDepthAndMaxRank(
-      nextProps.maxRank,
-      nextProps.depth
-    );
+    this.props.dag.refreshWithDepthAndMaxRank(nextProps.page, nextProps.limit);
   }
 
   render() {
