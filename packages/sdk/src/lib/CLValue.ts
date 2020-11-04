@@ -186,7 +186,6 @@ class StringValue extends CLTypedAndToBytes {
 class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   constructor(private vec: T[]) {
     super();
-    // todo(abner) implement EmptyList
     if (vec.length === 0) {
       throw new Error("Can't create instance for empty list");
     }
@@ -312,7 +311,6 @@ export interface MapEntry {
 }
 
 class MapValue extends CLTypedAndToBytes {
-  // todo(abner) implements EmptyMapValue
   constructor(private v: MapEntry[]) {
     super();
   }
@@ -698,7 +696,6 @@ export class CLValue implements ToBytes {
   };
 
   static fromList<T extends CLTypedAndToBytes>(vec: T[]) {
-    // todo(abner) implement fromEmptyList
     return CLValue.fromT(new List(vec));
   }
 
