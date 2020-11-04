@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ListInline, Loading, RefreshButton, shortHash } from './Utils';
 import * as d3 from 'd3';

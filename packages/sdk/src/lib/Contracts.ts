@@ -6,7 +6,6 @@ import { ByteArray, PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';
-import { Deploy } from './DeployUtil';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -65,7 +64,7 @@ export class Contract {
     accountPublicKey: PublicKey,
     signingKeyPair: nacl.SignKeyPair,
     chainName: string
-  ): Deploy {
+  ): DeployUtil.Deploy {
     const session = new DeployUtil.ModuleBytes(
       this.sessionWasm,
       args.toBytes()
@@ -102,7 +101,7 @@ export class BoundContract {
     args: RuntimeArgs,
     paymentAmount: bigint,
     chainName: string
-  ): Deploy {
+  ): DeployUtil.Deploy {
     return this.contract.deploy(
       args,
       paymentAmount,
