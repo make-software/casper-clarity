@@ -17,7 +17,7 @@ export interface Page {
 }
 
 export interface BlocksResult {
-  data: BlockResult[];
+  data: BlockResult[] | null;
   pageCount: number;
   itemCount: number;
   pages: Page[];
@@ -47,9 +47,9 @@ export interface AccountDeploysResult {
 }
 
 export class EventServiceByJsonRPC {
-  private url: string;
+  private url: string | undefined;
 
-  constructor(url: string) {
+  constructor(url: string | undefined) {
     this.url = url;
   }
 
