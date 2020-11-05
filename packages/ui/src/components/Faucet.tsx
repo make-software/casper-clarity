@@ -125,7 +125,7 @@ const StatusTable = observer(
       refresh={() => props.onRefresh()}
       rows={props.requests}
       headers={['Timestamp', 'Account', 'Deploy Hash', 'Status']}
-      renderRow={(request: FaucetRequest, idx: number) => {
+      renderRow={(request: FaucetRequest, idx) => {
         return (
           <tr key={idx}>
             <td>{request.timestamp.toLocaleString()}</td>

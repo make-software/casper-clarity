@@ -1,4 +1,4 @@
-import { action, IObservableArray, observable, reaction } from 'mobx';
+import { action, IObservableArray, observable, reaction, toJS } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
 import {
@@ -7,7 +7,13 @@ import {
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ToggleStore } from '../components/ToggleButton';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
-import { CasperServiceByJsonRPC, JsonBlock } from 'casperlabs-sdk';
+import {
+  BlockResult,
+  CasperServiceByJsonRPC,
+  EventServiceByJsonRPC,
+  JsonBlock,
+  BlocksResult
+} from 'casperlabs-sdk';
 
 const DEFAULT_DEPTH = 100;
 
@@ -27,8 +33,24 @@ export class DagStep {
     return this.container.depth;
   }
 
+  get page() {
+    return this.container.page;
+  }
+
+  get limit() {
+    return this.container.count;
+  }
+
   set maxRank(rank: number) {
     this.container.maxRank = rank;
+  }
+
+  set page(_page: number) {
+    this.container.page = _page;
+  }
+
+  set limit(_limit: number) {
+    this.container.count = _limit;
   }
 
   private get currentMaxRank() {
@@ -54,9 +76,12 @@ export class DagStep {
 
 export class DagContainer {
   @observable blocks: IObservableArray<JsonBlock> | null = null;
+  @observable eventStoreBlocks: BlocksResult | null = null;
   @observable selectedBlock: JsonBlock | null = null;
   @observable depth = 10;
   @observable maxRank = 0;
+  @observable page: number = 0;
+  @observable count: number = 10;
   @observable validatorsListToggleStore: ToggleStore = new ToggleStore(false);
   @observable lastFinalizedBlock: BlockInfo | undefined = undefined;
   @observable hideBallotsToggleStore: ToggleStore = new ToggleStore(false);
@@ -65,7 +90,8 @@ export class DagContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperServiceByJsonRPC
+    private casperService: CasperServiceByJsonRPC,
+    private eventService: EventServiceByJsonRPC
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
       {
@@ -78,11 +104,11 @@ export class DagContainer {
       () => this.refreshBlockDag()
     );
 
-    // react to the change of maxRank and depth, so that outer components only need to set DAG's props
+    // react to the change of maxRank, depth, page and count, so that outer components only need to set DAG's props
     // DAG manage the refresh by itself.
     reaction(
       () => {
-        return [this.maxRank, this.depth];
+        return [this.maxRank, this.depth, this.page, this.count];
       },
       () => {
         this.refreshBlockDagAndSetupSubscriber();
@@ -99,10 +125,25 @@ export class DagContainer {
     this.updateMaxRankAndDepth(maxRank, depth);
   }
 
+  refreshWithPageNumberAndCount(
+    pageStr: string | null,
+    countStr: string | null
+  ) {
+    let page = parseInt(pageStr || '') || 1;
+    let count = parseInt(countStr || '') || 10;
+    this.updateWithPageNumberAndCount(page, count);
+  }
+
   @action
   updateMaxRankAndDepth(rank: number, depth: number) {
     this.maxRank = rank;
     this.depth = depth;
+  }
+
+  @action
+  updateWithPageNumberAndCount(page: number, count: number) {
+    this.page = page;
+    this.count = count;
   }
 
   get minRank() {
@@ -231,11 +272,19 @@ export class DagContainer {
     // todo: (ECO-399) Use a more elegant loading style to indicate it is loading
     // fixme
     // or maybe spin the loading button so that the user can know it is refreshing.
+    // await this.errors.capture(
+    //   this.casperService
+    //     .getBlockInfos(this.depth, this.maxRank)
+    //     .then((blocks: any) => {
+    //       this.blocks = observable.array(blocks);
+    //     })
+    // );
+    console.log('refresh block dag');
     await this.errors.capture(
-      this.casperService
-        .getBlockInfos(this.depth, this.maxRank)
-        .then((blocks: any) => {
-          this.blocks = observable.array(blocks);
+      this.eventService
+        .getBlocks(this.page, this.count)
+        .then((blocks: BlocksResult): any => {
+          this.eventStoreBlocks = blocks;
         })
     );
     // await this.errors.capture(

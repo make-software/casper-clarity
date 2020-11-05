@@ -1,5 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
+import { toJS } from 'mobx';
 import DagContainer, { DagStep } from '../containers/DagContainer';
 import { IconButton, ListInline, shortHash } from './Utils';
 import DataTable from './DataTable';
@@ -8,7 +9,7 @@ import Pages from './Pages';
 import Timestamp from './TimeStamp';
 import { BlockType } from './BlockDetails';
 import * as H from 'history';
-import { JsonBlock } from 'casperlabs-sdk';
+import { BlocksResult, BlockResult } from 'casperlabs-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;
@@ -20,7 +21,7 @@ export interface Props extends RouteComponentProps<{}> {
 class _BlockList extends React.Component<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.dag.refreshWithDepthAndMaxRank(props.page, props.limit);
+    this.props.dag.refreshWithPageNumberAndCount(props.page, props.limit);
   }
 
   async refresh() {
@@ -40,11 +41,16 @@ class _BlockList extends React.Component<Props, {}> {
     ) {
       return;
     }
-    this.props.dag.refreshWithDepthAndMaxRank(nextProps.page, nextProps.limit);
+    this.props.dag.refreshWithPageNumberAndCount(
+      nextProps.page,
+      nextProps.limit
+    );
   }
 
   render() {
     const { dag } = this.props;
+    console.log('blocks', toJS(dag.eventStoreBlocks));
+
     return (
       <DataTable
         title={
@@ -57,24 +63,29 @@ class _BlockList extends React.Component<Props, {}> {
         filterToggleStore={dag.hideBallotsToggleStore}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
-        headers={['Block Hash', 'height', 'Timestamp', 'Validator', 'Type']}
-        rows={dag.blocks}
-        renderRow={(block: JsonBlock) => {
-          const header = block.header;
-          const id = block.hash;
+        headers={[
+          'Block Hash',
+          'parentHeash',
+          'Timestamp',
+          'eraId',
+          'Proposer',
+          'State',
+          'Height'
+        ]}
+        rows={dag.eventStoreBlocks?.data}
+        renderRow={(block: BlockResult) => {
+          const id = block.blockHash;
           return (
             <tr key={id}>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
-              <td>{header.height}</td>
-              <td>
-                <Timestamp timestamp={header.timestamp} />
-              </td>
-              <td>{shortHash(header.proposer)}</td>
-              <td>
-                <BlockType block={block} />
-              </td>
+              <td>{block.parentHash}</td>
+              <td>{block.timestamp}</td>
+              <td>{block.eraId}</td>
+              <td>{block.proposer}</td>
+              <td>{block.state}</td>
+              <td>{block.height}</td>
               {/*fixme*/}
               {/*<td>*/}
               {/*  <Link*/}
@@ -86,17 +97,18 @@ class _BlockList extends React.Component<Props, {}> {
             </tr>
           );
         }}
-        filterRow={(block: JsonBlock) => {
+        filterRow={(block: BlockResult) => {
           // fixme
           // let msgType = block.getSummary()?.getHeader()?.getMessageType();
           // return msgType === Block.MessageType.BLOCK;
           return true;
         }}
         footerMessage={
-          <DagStepButtons
+          <DagPageButtons
             step={dag.step}
             history={this.props.history}
-            urlWithRankAndDepth={Pages.blocksWithMaxRankAndDepth}
+            urlWithPageNumberAndCount={Pages.blocksWithPageAndLimit}
+            pageCount={dag.eventStoreBlocks?.pageCount}
           />
         }
       />
@@ -142,4 +154,30 @@ export const DagStepButtons = (props: {
       />
     </ListInline>
   );
+};
+
+export const DagPageButtons = (props: {
+  step: DagStep;
+  history: H.History;
+  urlWithPageNumberAndCount: (page: number, limit: number) => string;
+  pageCount: number | undefined;
+}) => {
+  const itemRendered = [];
+  if (props.pageCount && props.pageCount > 0)
+    for (let i = 1; i <= props.pageCount; i++) {
+      itemRendered.push(
+        <button
+          onClick={() =>
+            props.history.push(
+              props.urlWithPageNumberAndCount(i, props.step.limit)
+            )
+          }
+          title={i.toString()}
+          className="link icon-button"
+        >
+          {i}
+        </button>
+      );
+    }
+  return <ListInline>{itemRendered}</ListInline>;
 };

@@ -3,19 +3,20 @@ import * as React from 'react';
 import { Loading, RefreshButton } from './Utils';
 import { ToggleButton, ToggleStore } from './ToggleButton';
 import { observer } from 'mobx-react';
+import { BlockResult } from 'casperlabs-sdk';
 
 export interface Props<T> {
   title: string;
   refresh?: () => void;
   subscribeToggleStore?: ToggleStore;
   filterToggleStore?: ToggleStore;
-  filterRow?: (x: T, idx: number) => Boolean;
+  filterRow?: (block: BlockResult) => Boolean;
   filterTtl?: string;
   filterLbl?: string;
   headers: string[];
-  rows: T[] | null;
+  rows: BlockResult[] | null | undefined | any;
   emptyMessage?: any;
-  renderRow: (x: T, idx: number) => any;
+  renderRow: (block: BlockResult | any, id?: number) => any;
   renderHeader?: (x: string) => any;
   footerMessage?: any;
 }

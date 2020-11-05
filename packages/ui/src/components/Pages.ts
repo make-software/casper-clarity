@@ -39,4 +39,7 @@ export default class Pages {
     maxRank: number,
     depth: number
   ) => `${Pages.Blocks}?maxRank=${maxRank}&depth=${depth}`;
+
+  static readonly blocksWithPageAndLimit = (page: number, limit: number) =>
+    `/blocks?page=${page}&limit=${limit}`;
 }
