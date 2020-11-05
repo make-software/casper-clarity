@@ -58,10 +58,7 @@ const deployHashBase16 = hex(deploy.hash);
 console.log(`Transferring tokens to account ${accountPublicKeyBase16}`);
 console.log(`Deploying ${deployHashBase16} to ${options['host-url']}`);
 
-const deployService = new CasperServiceByJsonRPC(
-  options['host-url'][0],
-  process.env.JSON_EVENT_STORE_URL!
-);
+const deployService = new CasperServiceByJsonRPC(options['host-url'][0]);
 
 deployService
   .deploy(deploy)
