@@ -1,4 +1,4 @@
-import { CasperServiceByJsonRPC, Contracts, Keys } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC, Keys } from 'casperlabs-sdk';
 import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'express-jwt';
@@ -103,12 +103,6 @@ const contractKeys = Keys.Ed25519.parseKeyFiles(
   process.env.FAUCET_ACCOUNT_PRIVATE_KEY_PATH!
 );
 
-// Faucet contract and deploy factory.
-const storedFaucet = new Contracts.BoundContract(
-  new Contracts.Contract(process.env.FAUCET_CONTRACT_PATH!),
-  contractKeys
-);
-
 // Constant payment amount.
 const paymentAmount = BigInt(process.env.PAYMENT_AMOUNT!);
 // How much to send to a user in a faucet request.
@@ -121,7 +115,6 @@ const chainName = process.env.CHAIN_NAME!;
 const jsonRpcUrl = process.env.JSON_RPC_URL!;
 const casperService = new CasperServiceByJsonRPC(jsonRpcUrl);
 const storedFaucetService = new StoredFaucetService(
-  storedFaucet,
   contractKeys,
   paymentAmount,
   transferAmount,
