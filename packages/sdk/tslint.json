@@ -9,6 +9,8 @@
     "max-classes-per-file": false,
     "no-namespace": false,
     "member-access": false,
+    "no-empty-interface": false,
+    "no-bitwise": false,
     "interface-name": false
   },
   "rulesDirectory": [],

@@ -1,11 +1,10 @@
 import AuthService from './AuthService';
-import { decodeBase16 } from 'casperlabs-sdk';
 
 /** Call the API on the server backend. */
 export default class FaucetService {
   constructor(private authService: AuthService) {}
 
-  async requestTokens(accountPublicKeyHashBase64: string): Promise<DeployHash> {
+  async requestTokens(accountPublicKeyHashBase64: string): Promise<string> {
     const token = await this.authService.getToken();
     const response = await fetch('/api/faucet', {
       method: 'POST',
@@ -21,6 +20,6 @@ export default class FaucetService {
       throw new Error(json.error);
     }
 
-    return decodeBase16(json.deployHashBase16);
+    return json.deployHashBase16;
   }
 }

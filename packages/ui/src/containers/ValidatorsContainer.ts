@@ -1,5 +1,9 @@
 import ErrorContainer from './ErrorContainer';
-import { CasperService } from 'casperlabs-sdk';
+import {
+  encodeBase16,
+  CasperServiceByJsonRPC,
+  JsonBlock
+} from 'casperlabs-sdk';
 import { action, computed, observable } from 'mobx';
 import {
   BlockInfo,
@@ -33,7 +37,7 @@ export class ValidatorsContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService
+    private casperService: CasperServiceByJsonRPC
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
       {
@@ -51,7 +55,8 @@ export class ValidatorsContainer {
 
   @action.bound
   async refresh() {
-    this.latestFinalizedBlock = await this.casperService.getLastFinalizedBlockInfo();
+    // fixme
+    // this.latestFinalizedBlock = await this.casperService.getLastFinalizedBlockInfo();
     this.getValidatorInfos();
   }
 
@@ -101,10 +106,12 @@ export class ValidatorsContainer {
 
   @action.bound
   private async getValidatorInfos() {
-    let latestRankNMsgs = await this.casperService.getBlockInfos(
-      computeN(this.bondedValidators.size),
-      0
-    );
+    // fixme
+    // let latestRankNMsgs = await this.casperService.getBlockInfos(
+    //   computeN(this.bondedValidators.size),
+    //   0
+    // );
+    let latestRankNMsgs: BlockInfo[] = [];
 
     this.upsert(latestRankNMsgs);
 
@@ -131,39 +138,43 @@ export class ValidatorsContainer {
         return bondedValidators.has(vId) && !this.validatorInfoMaps.has(vId);
       })
       .map(j => {
-        return this.casperService.getBlockInfo(j.getLatestBlockHash());
+        return this.casperService
+          .getBlockInfo(encodeBase16(j.getLatestBlockHash() as ByteArray))
+          .then(d => d.block!);
       });
 
-    let blockInfos: BlockInfo[] = await Promise.all(promises);
+    let blockInfos: JsonBlock[] = await Promise.all(promises);
 
-    this.upsert(blockInfos);
+    // fixme
+    this.upsert([]);
   }
 
   private subscriberHandler(e: Event) {
-    if (e.hasBlockAdded()) {
-      let block = e.getBlockAdded()?.getBlock();
-      if (block) {
-        this.upsert([block]);
-      }
-    } else if (e.hasNewFinalizedBlock()) {
-      this.errors.capture(
-        this.casperService
-          .getBlockInfo(e.getNewFinalizedBlock()!.getBlockHash())
-          .then(LFB => {
-            this.latestFinalizedBlock = LFB;
-            let bondedValidators = this.bondedValidators;
-            let forceRequestByJustification = false;
-            bondedValidators.forEach(vId => {
-              if (!this.validatorInfoMaps.has(vId)) {
-                forceRequestByJustification = true;
-              }
-            });
-            if (forceRequestByJustification) {
-              this.getValidationInfoByJustifications();
-            }
-          })
-      );
-    }
+    // fixme
+    // if (e.hasBlockAdded()) {
+    //   let block = e.getBlockAdded()?.getBlock();
+    //   if (block) {
+    //     this.upsert([block]);
+    //   }
+    // } else if (e.hasNewFinalizedBlock()) {
+    //   this.errors.capture(
+    //     this.casperService
+    //       .getBlockInfo(e.getNewFinalizedBlock()!.getBlockHash())
+    //       .then(LFB => {
+    //         this.latestFinalizedBlock = LFB;
+    //         let bondedValidators = this.bondedValidators;
+    //         let forceRequestByJustification = false;
+    //         bondedValidators.forEach(vId => {
+    //           if (!this.validatorInfoMaps.has(vId)) {
+    //             forceRequestByJustification = true;
+    //           }
+    //         });
+    //         if (forceRequestByJustification) {
+    //           this.getValidationInfoByJustifications();
+    //         }
+    //       })
+    //   );
+    // }
   }
 }
 

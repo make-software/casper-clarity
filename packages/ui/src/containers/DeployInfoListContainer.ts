@@ -1,11 +1,8 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { ByteArray, CasperService } from 'casperlabs-sdk';
-import {
-  BlockInfo,
-  DeployInfo
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
+import { ByteArray, CasperServiceByJsonRPC } from 'casperlabs-sdk';
+import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 
 export class DeployInfoListContainer {
   @observable deployInfosList: DeployInfo[] | null = null;
@@ -17,7 +14,7 @@ export class DeployInfoListContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperService
+    private casperService: CasperServiceByJsonRPC
   ) {}
 
   /** Call whenever the page switches to a new account. */
@@ -38,19 +35,20 @@ export class DeployInfoListContainer {
   async fetchData() {
     if (this.accountPublicKeyHash === null) return;
     if (this.pageToken === '') return; // no more data
-    await this.errors.capture(
-      this.casperService
-        .getDeployInfos(
-          this.accountPublicKeyHash,
-          this.pageSize,
-          BlockInfo.View.BASIC,
-          this.pageToken || ''
-        )
-        .then(listDeployInfosResponse => {
-          this.deployInfosList = listDeployInfosResponse.getDeployInfosList();
-          this.nextPageToken = listDeployInfosResponse.getNextPageToken();
-          this.prevPageToken = listDeployInfosResponse.getPrevPageToken();
-        })
-    );
+    // fixme
+    // await this.errors.capture(
+    //   this.casperService
+    //     .getDeployInfos(
+    //       this.accountPublicKeyHash,
+    //       this.pageSize,
+    //       BlockInfo.View.BASIC,
+    //       this.pageToken || ''
+    //     )
+    //     .then(listDeployInfosResponse => {
+    //       this.deployInfosList = listDeployInfosResponse.getDeployInfosList();
+    //       this.nextPageToken = listDeployInfosResponse.getNextPageToken();
+    //       this.prevPageToken = listDeployInfosResponse.getPrevPageToken();
+    //     })
+    // );
   }
 }

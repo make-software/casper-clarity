@@ -2,7 +2,7 @@ import { action, observable, reaction } from 'mobx';
 import { ToggleStore } from '../components/ToggleButton';
 import { Subscription } from 'rxjs';
 import { Event } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { CasperService, SubscribeTopics } from 'casperlabs-sdk';
+import { SubscribeTopics, CasperServiceByJsonRPC } from 'casperlabs-sdk';
 
 enum SubscribeState {
   UN_INIT,
@@ -23,7 +23,7 @@ export class ToggleableSubscriber {
    */
   constructor(
     private subscribeTopics: SubscribeTopics,
-    private casperService: CasperService,
+    private casperService: CasperServiceByJsonRPC,
     private eventHandler: (event: Event) => void,
     private additionalEnable: () => boolean,
     private forceRefresh: () => void
@@ -83,13 +83,14 @@ export class ToggleableSubscriber {
           this.forceRefresh();
         }
 
-        let obs = this.casperService.subscribeEvents(this.subscribeTopics);
+        // fixme
+        // let obs = this.casperService.subscribeEvents(this.subscribeTopics);
 
-        this.eventsSubscriber = obs.subscribe({
-          next: e => {
-            this.eventHandler(e);
-          }
-        });
+        // this.eventsSubscriber = obs.subscribe({
+        //   next: e => {
+        //     this.eventHandler(e);
+        //   }
+        // });
       }
     } else {
       // disable subscriber

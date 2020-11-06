@@ -1,14 +1,19 @@
-$font-family-base: 'Sarabun', sans-serif;
 // https://startbootstrap.com/template-overviews/sb-admin/
 @import 'sb-admin/sb-admin.scss';
 @import '~bootstrap/scss/bootstrap';
 @import 'account-selector';
 @import 'toggle-button';
+@import 'font';
+
+$font-family-base: 'Segoe UI', sans-serif;
 
 #mainNav.navbar-dark {
   .username {
-    padding: 0.5rem 1rem;
-    color: fade-out($white, 0.5);
+    padding: 0.5rem 1.5rem;
+    .welcome {
+      color: fade-out($white, 0.5);
+      padding-right: 0.5rem;
+    }
   }
 }
 
@@ -16,7 +21,15 @@ $font-family-base: 'Sarabun', sans-serif;
   padding-top: 0.8rem;
   padding-bottom: 0.8rem;
   img {
-    height: 40px;
+    height: 20px;
+    display: block;
+  }
+  .navbar-brand-tile {
+    font: normal normal normal 20px/26px Sarabun;
+  }
+  .navbar-brand-icon {
+    font-size: 26px;
+    vertical-align: top;
   }
 }
 
@@ -76,8 +89,13 @@ div.svg-hint {
   padding: 5px;
 }
 
+.svg-additional {
+  position: absolute;
+  right: 16px;
+}
+
 #mainNav.navbar-dark .navbar-collapse .navbar-sidenav {
-  background: #000000;
+  background: #202020;
 }
 
 .bg-dark {
@@ -105,7 +123,17 @@ div.svg-hint {
 }
 
 footer.sticky-footer {
-  background-color: #efeded;
+  background-color: black;
+  small {
+    color: #b8b8b8;
+    padding: 0 1rem;
+    a {
+      color: #3191ff;
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
 }
 
 //.bg-success {

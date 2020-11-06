@@ -23,7 +23,8 @@
     ]
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "../sdk/src/@types/**/*"
   ],
   "exclude": [
     "./src/**/*.test.ts"

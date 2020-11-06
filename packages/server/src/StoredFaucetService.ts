@@ -1,15 +1,14 @@
-import { StateQuery } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 import {
-  CasperService,
   Contracts,
   DeployHash,
-  DeployUtil,
   encodeBase16,
-  Keys
+  Keys,
+  PublicKey,
+  CasperServiceByJsonRPC,
+  DeployUtil
 } from 'casperlabs-sdk';
 import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
 import { CallFaucet, StoredFaucet } from './lib/Contracts';
-import DeployService from './services/DeployService';
 
 // based on execution-engine/contracts/explorer/faucet-stored/src/main.rs
 const CONTRACT_NAME = 'faucet';
@@ -27,10 +26,10 @@ export class StoredFaucetService {
     private contractKeys: SignKeyPair,
     private paymentAmount: bigint,
     private transferAmount: bigint,
-    private deployService: DeployService,
-    private casperService: CasperService
+    private casperService: CasperServiceByJsonRPC,
+    private chainName: string
   ) {
-    this.periodCheckState();
+    this.periodCheckState().then();
   }
 
   async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<DeployHash> {
@@ -41,10 +40,13 @@ export class StoredFaucetService {
       } else {
         const deploy = this.faucetContract.deploy(
           StoredFaucet.args(),
-          this.paymentAmount
+          this.paymentAmount,
+          this.chainName
         );
-        await this.deployService.deploy(deploy);
-        this.deployHash = deploy.getDeployHash_asU8();
+        await this.casperService.deploy(deploy).catch(err => {
+          console.error(err);
+        });
+        this.deployHash = deploy.hash;
       }
     }
 
@@ -52,19 +54,27 @@ export class StoredFaucetService {
     if (this.deployHash) {
       dependencies.push(this.deployHash);
     }
-    const deployByName = DeployUtil.makeDeploy(
-      CallFaucet.args(accountPublicKeyHash, this.transferAmount),
-      DeployUtil.ContractType.Name,
+
+    const sessionArgs = CallFaucet.args(
+      accountPublicKeyHash,
+      this.transferAmount
+    ).toBytes();
+    const session = new DeployUtil.StoredContractByName(
       CONTRACT_NAME,
-      null,
-      this.paymentAmount,
-      Keys.Ed25519.publicKeyHash(this.contractKeys.publicKey),
-      dependencies,
-      ENTRY_POINT_NAME
+      ENTRY_POINT_NAME,
+      sessionArgs
+    );
+
+    const payment = DeployUtil.standardPayment(this.paymentAmount);
+    const deployByName = DeployUtil.makeDeploy(
+      session,
+      payment,
+      PublicKey.fromEd25519(this.contractKeys.publicKey),
+      this.chainName
     );
     const signedDeploy = DeployUtil.signDeploy(deployByName, this.contractKeys);
-    await this.deployService.deploy(signedDeploy);
-    return signedDeploy.getDeployHash_asU8();
+    await this.casperService.deploy(signedDeploy);
+    return signedDeploy.hash;
   }
 
   /**
@@ -88,16 +98,21 @@ export class StoredFaucetService {
    */
   private async checkState() {
     try {
-      const LFB = await this.casperService.getLastFinalizedBlockInfo();
-      const blockHash = LFB.getSummary()!.getBlockHash_asU8();
-      const stateQuery = new StateQuery();
-      stateQuery.setKeyBase16(encodeBase16(this.contractKeys.publicKey));
-      stateQuery.setKeyVariant(StateQuery.KeyVariant.ADDRESS);
-      stateQuery.setPathSegmentsList([CONTRACT_NAME]);
+      const LFB = await this.casperService.getLatestBlockInfo().then(it => {
+        return it.block;
+      });
+      if (!LFB) {
+        return false;
+      }
+      const globalStateHash = LFB.header!.state_root_hash!;
 
+      const accountHash = Keys.Ed25519.publicKeyHash(
+        this.contractKeys.publicKey
+      );
       const state = await this.casperService.getBlockState(
-        blockHash,
-        stateQuery
+        globalStateHash,
+        'account-hash-' + encodeBase16(accountHash),
+        [CONTRACT_NAME]
       );
       return state;
     } catch {

@@ -1,6 +1,11 @@
-import { ByteArray, Contracts, Keys } from 'casperlabs-sdk';
+import {
+  ByteArray,
+  CasperServiceByJsonRPC,
+  Contracts,
+  Keys,
+  PublicKey
+} from 'casperlabs-sdk';
 import commandLineArgs from 'command-line-args';
-import DeployService from './services/DeployService';
 
 // https://www.npmjs.com/package/command-line-args
 
@@ -11,6 +16,7 @@ const optionDefinitions = [
   { name: 'from-private-key-path', type: String },
   { name: 'to-public-key-path', type: String },
   { name: 'amount', type: BigInt },
+  { name: 'chain-name', type: String },
   { name: 'payment-amount', type: BigInt }
 ];
 
@@ -42,16 +48,17 @@ const args = Contracts.Transfer.args(accountPublicKey, options.amount);
 const deploy = transfer.deploy(
   args,
   options['payment-amount'],
-  Keys.Ed25519.publicKeyHash(contractKeys.publicKey),
-  contractKeys
+  PublicKey.fromEd25519(contractKeys.publicKey),
+  contractKeys,
+  options['chain-name']
 );
 
-const deployHashBase16 = hex(deploy.getDeployHash_asU8());
+const deployHashBase16 = hex(deploy.hash);
 
 console.log(`Transferring tokens to account ${accountPublicKeyBase16}`);
 console.log(`Deploying ${deployHashBase16} to ${options['host-url']}`);
 
-const deployService = new DeployService(options['host-url']);
+const deployService = new CasperServiceByJsonRPC(options['host-url'][0]);
 
 deployService
   .deploy(deploy)

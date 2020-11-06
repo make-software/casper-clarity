@@ -12,6 +12,7 @@ interface Config {
   };
   network: {
     name?: string;
+    chainName?: string;
   };
   auth: {
     mock: {
