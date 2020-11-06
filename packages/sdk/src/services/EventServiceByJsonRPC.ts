@@ -16,7 +16,7 @@ export interface Page {
   url: string;
 }
 
-export interface BlocksResult {
+export interface blocksResult {
   data: BlockResult[] | null;
   pageCount: number;
   itemCount: number;
