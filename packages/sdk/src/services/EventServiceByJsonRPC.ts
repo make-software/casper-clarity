@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 export interface BlockResult {
-  blockHash: string;
-  parentHash: string;
+  block_hash: string;
+  parent_hash: string;
   timestamp: string;
-  eraId: number;
+  era_id: number;
   proposer: string;
   state: string;
   height: number;
@@ -18,31 +18,31 @@ export interface Page {
 
 export interface blocksResult {
   data: BlockResult[] | null;
-  pageCount: number;
-  itemCount: number;
+  page_count: number;
+  item_count: number;
   pages: Page[];
 }
 
 export interface Deployhash {
-  blockHash: string;
-  deployHash: string;
+  block_hash: string;
+  deploy_hash: string;
   state: string;
   cost: number;
-  errormessage: string;
+  error_message: string;
 }
 
 export interface AccountDeploy {
-  deployHash: string;
+  deploy_hash: string;
   account: string;
   state: string;
   cost: number;
-  errorMessage: string;
-  blockHash: string;
+  error_message: string;
+  block_hash: string;
 }
 export interface AccountDeploysResult {
   data: AccountDeploy[];
-  pageCount: number;
-  itemCount: number;
+  page_count: number;
+  item_count: number;
   pages: Page[];
 }
 
