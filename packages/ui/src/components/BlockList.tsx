@@ -106,19 +106,21 @@ class _BlockList extends React.Component<Props, {}> {
         footerMessage={
           <div id="react-paginate">
             <ReactPaginate
-            previousLabel={'previous'}
-            nextLabel={'next'}
-            breakLabel={'...'}
-            breakClassName={'break-me'}
-            pageCount={10000}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={5}
-            onPageChange={(props) => this.props.history.push(
-              Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
-            )}
-            containerClassName={'pagination'}
-            activeClassName={'active'}
-          />
+              previousLabel={'previous'}
+              nextLabel={'next'}
+              breakLabel={'...'}
+              breakClassName={'break-me'}
+              pageCount={dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount ? dag.eventStoreBlocks.pageCount : 1}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={5}
+              onPageChange={props =>
+                this.props.history.push(
+                  Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
+                )
+              }
+              containerClassName={'pagination'}
+              activeClassName={'active'}
+            />
           </div>
         }
       />

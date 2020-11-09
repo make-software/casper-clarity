@@ -10,7 +10,7 @@ export interface Props<T> {
   refresh?: () => void;
   subscribeToggleStore?: ToggleStore;
   filterToggleStore?: ToggleStore;
-  filterRow?: (x:T, idx: number) => Boolean;
+  filterRow?: (x: T, idx: number) => Boolean;
   filterTtl?: string;
   filterLbl?: string;
   headers: string[];
