@@ -43,9 +43,8 @@ const faucetService = new FaucetService(authService);
 const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
-const eventService = new EventServiceByJsonRPC(
-  process.env.REACT_APP_EVENT_STORE_URL
-);
+console.log('wondow.config', window.config);
+const eventService = new EventServiceByJsonRPC(window.config.eventStoreUrl);
 const balanceService = new BalanceServiceByJsonRPC(casperService);
 new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.

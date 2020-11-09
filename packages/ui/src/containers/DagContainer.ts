@@ -179,89 +179,7 @@ export class DagContainer {
 
   // fixme
   @action.bound
-  private subscriberHandler(event: Event) {
-    // if (event.hasBlockAdded()) {
-    //   let block = event.getBlockAdded()?.getBlock();
-    //   if (block) {
-    //     let index: number | undefined = this.blocks?.findIndex(
-    //       b => b.hash === block!.getSummary()?.getBlockHash_asB64()
-    //     );
-    //
-    //     if (index === -1) {
-    //       blocks with rank < maxRank+1-depth will be culled
-    // let blockRank = block!.getSummary()!.getHeader()!.getJRank();
-    // let oldMaxRank = this.blocks ? this.blocks[0].header.height : 0;
-    // let maxRank = Math.max(oldMaxRank, blockRank);
-    // let culledThreshold = maxRank + 1 - this.depth;
-    // if (blockRank >= culledThreshold) {
-    //   The new block should be added to DAG.
-    // let remainingBlocks = this.blocks
-    //   ? this.blocks.filter(b => {
-    //       let rank = b.header.height;
-    //       if (rank !== undefined) {
-    //         return rank >= culledThreshold;
-    //       }
-    //       return false;
-    //     })
-    //   : [];
-    // insert item to an ordered array
-    // find first index I so that the newAddedBlock.jRank >= remainingBlocks[i].jRank
-    // let i = 0;
-    // for (; i < remainingBlocks.length; i++) {
-    //   if (blockRank >= remainingBlocks[i].header.height) {
-    //     break;
-    //   }
-    // }
-    // remainingBlocks.splice(i, 0, block);
-    // runInAction(() => {
-    //   this.blocks = observable.array(remainingBlocks);
-    // });
-    // } else {
-    //   otherwise ignore the new block and do nothing
-    // }
-    // }
-    // }
-    // } else if (event.hasNewFinalizedBlock()) {
-    //   const directFinalizedBlockHash = event
-    //     .getNewFinalizedBlock()!
-    //     .getBlockHash_asB64();
-    //
-    //   const orphanedBlocks = new Set(
-    //     event
-    //       .getNewFinalizedBlock()!
-    //       .getIndirectlyOrphanedBlockHashesList_asB64()
-    //   );
-    //   const finalizedBlocks = new Set(
-    //     event
-    //       .getNewFinalizedBlock()!
-    //       .getIndirectlyFinalizedBlockHashesList_asB64()
-    //   );
-    //   finalizedBlocks.add(directFinalizedBlockHash);
-    //
-    //   let updatedLastFinalizedBlock = false;
-    //   this.blocks?.forEach(block => {
-    //     let bh = block.getSummary()!.getBlockHash_asB64();
-    //     if (finalizedBlocks.has(bh)) {
-    //       block.getStatus()?.setFinality(BlockInfo.Status.Finality.FINALIZED);
-    //     } else if (orphanedBlocks.has(bh)) {
-    //       block.getStatus()?.setFinality(BlockInfo.Status.Finality.ORPHANED);
-    //     }
-    //     if (!updatedLastFinalizedBlock && bh === directFinalizedBlockHash) {
-    //       this.lastFinalizedBlock = block;
-    //       updatedLastFinalizedBlock = true;
-    //     }
-    //   });
-    //   if (!updatedLastFinalizedBlock) {
-    //     this.errors.capture(
-    //       this.casperService
-    //         .getBlockInfo(event.getNewFinalizedBlock()!.getBlockHash())
-    //         .then(block => {
-    //           this.lastFinalizedBlock = block;
-    //         })
-    //     );
-    //   }
-    // }
-  }
+  private subscriberHandler(event: Event) {}
 
   async refreshBlockDagAndSetupSubscriber() {
     await this.refreshBlockDag();
@@ -269,16 +187,6 @@ export class DagContainer {
   }
 
   private async refreshBlockDag() {
-    // todo: (ECO-399) Use a more elegant loading style to indicate it is loading
-    // fixme
-    // or maybe spin the loading button so that the user can know it is refreshing.
-    // await this.errors.capture(
-    //   this.casperService
-    //     .getBlockInfos(this.depth, this.maxRank)
-    //     .then((blocks: any) => {
-    //       this.blocks = observable.array(blocks);
-    //     })
-    // );
     await this.errors.capture(
       this.eventService
         .getBlocks(this.page, this.count)
@@ -286,11 +194,6 @@ export class DagContainer {
           this.eventStoreBlocks = blocks;
         })
     );
-    // await this.errors.capture(
-    //   this.casperService.getLastFinalizedBlockInfo().then((block: any) => {
-    //     this.lastFinalizedBlock = block;
-    //   })
-    // );
   }
 }
 
