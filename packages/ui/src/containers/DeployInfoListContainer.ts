@@ -1,15 +1,8 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import {
-  ByteArray,
-  CasperService,
-  CasperServiceByJsonRPC
-} from 'casperlabs-sdk';
-import {
-  BlockInfo,
-  DeployInfo
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
+import { ByteArray, CasperServiceByJsonRPC } from 'casperlabs-sdk';
+import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 
 export class DeployInfoListContainer {
   @observable deployInfosList: DeployInfo[] | null = null;
