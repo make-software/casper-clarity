@@ -35,11 +35,6 @@ export default class Pages {
     depth: number
   ) => `${Pages.Explorer}?maxRank=${maxRank}&depth=${depth}`;
 
-  static readonly blocksWithMaxRankAndDepth = (
-    maxRank: number,
-    depth: number
-  ) => `${Pages.Blocks}?maxRank=${maxRank}&depth=${depth}`;
-
   static readonly blocksWithPageAndLimit = (page: number, limit: number) =>
     `/blocks?page=${page}&limit=${limit}`;
 }
