@@ -10,11 +10,11 @@ export interface Props<T> {
   refresh?: () => void;
   subscribeToggleStore?: ToggleStore;
   filterToggleStore?: ToggleStore;
-  filterRow?: (block: BlockResult) => Boolean;
+  filterRow?: (x:T, idx: number) => Boolean;
   filterTtl?: string;
   filterLbl?: string;
   headers: string[];
-  rows: BlockResult[] | null | undefined | any;
+  rows: T[] | null | undefined;
   emptyMessage?: any;
   renderRow: (block: BlockResult | any, id?: number) => any;
   renderHeader?: (x: string) => any;

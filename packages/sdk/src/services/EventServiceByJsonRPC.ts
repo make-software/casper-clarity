@@ -55,9 +55,9 @@ export interface AccountDeploysResult {
 }
 
 export class EventServiceByJsonRPC {
-  private url: string | undefined;
+  private url?: string;
 
-  constructor(url: string | undefined) {
+  constructor(url?: string) {
     this.url = url;
   }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { toJS } from 'mobx';
+import ReactPaginate from 'react-paginate';
 import DagContainer, { DagStep } from '../containers/DagContainer';
 import { IconButton, ListInline, shortHash } from './Utils';
 import DataTable from './DataTable';
@@ -49,7 +50,6 @@ class _BlockList extends React.Component<Props, {}> {
 
   render() {
     const { dag } = this.props;
-    console.log('blocks', toJS(dag.eventStoreBlocks));
 
     return (
       <DataTable
@@ -104,12 +104,22 @@ class _BlockList extends React.Component<Props, {}> {
           return true;
         }}
         footerMessage={
-          <DagPageButtons
-            step={dag.step}
-            history={this.props.history}
-            urlWithPageNumberAndCount={Pages.blocksWithPageAndLimit}
-            pageCount={dag.eventStoreBlocks?.pageCount}
+          <div id="react-paginate">
+            <ReactPaginate
+            previousLabel={'previous'}
+            nextLabel={'next'}
+            breakLabel={'...'}
+            breakClassName={'break-me'}
+            pageCount={10000}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={5}
+            onPageChange={(props) => this.props.history.push(
+              Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
+            )}
+            containerClassName={'pagination'}
+            activeClassName={'active'}
           />
+          </div>
         }
       />
     );
