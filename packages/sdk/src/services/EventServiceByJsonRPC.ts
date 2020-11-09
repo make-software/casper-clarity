@@ -23,6 +23,14 @@ export interface BlocksResult {
   pages: Page[];
 }
 
+export interface DeployResult {
+  deployHash: string;
+  state: string;
+  cost: number;
+  errorMessage: string;
+  blockHash: string;
+}
+
 export interface Deployhash {
   blockHash: string;
   deployHash: string;
@@ -60,13 +68,13 @@ export class EventServiceByJsonRPC {
     return response.data;
   }
 
-  async getDeployHash(deployHash: string): Promise<number> {
+  async getDeployHash(deployHash: string): Promise<DeployResult> {
     const response = await axios.get(this.url + `/deploy/${deployHash}`);
     return response.data;
   }
 
   async getBlockHash(blockHash: string): Promise<BlockResult> {
-    const response = await axios.get(this.url + `block/${blockHash}`);
+    const response = await axios.get(this.url + `/block/${blockHash}`);
     return response.data;
   }
 

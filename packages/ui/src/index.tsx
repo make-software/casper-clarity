@@ -64,7 +64,7 @@ const faucet = new FaucetContainer(
   () => auth.refreshBalances(true)
 );
 const dag = new DagContainer(errors, casperService, eventService);
-const block = new BlockContainer(errors, casperService, balanceService);
+const block = new BlockContainer(errors, balanceService, eventService);
 const deploy = new DeployContainer(errors, casperService, balanceService);
 const deployInfoList = new DeployInfoListContainer(errors, casperService);
 const search = new SearchContainer(errors, casperService);

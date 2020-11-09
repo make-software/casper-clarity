@@ -279,7 +279,6 @@ export class DagContainer {
     //       this.blocks = observable.array(blocks);
     //     })
     // );
-    console.log('refresh block dag');
     await this.errors.capture(
       this.eventService
         .getBlocks(this.page, this.count)
