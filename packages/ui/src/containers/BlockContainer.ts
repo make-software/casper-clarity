@@ -72,7 +72,7 @@ export class BlockContainer {
       return;
     }
     for (let deploy of this.deploys) {
-      const accountKey = deploy.blockHash;
+      const accountKey = deploy.account;
       const balance = await this.balanceService.getAccountBalance(
         this.blockHashBase16,
         accountKey

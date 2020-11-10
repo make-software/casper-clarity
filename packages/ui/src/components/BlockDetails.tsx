@@ -124,7 +124,7 @@ const DeploysTable = observer(
         rows={props.deploys}
         renderRow={(deploy: DeployResult, i) => {
           const id = deploy.deployHash;
-          const accountId = deploy.blockHash;
+          const accountId = deploy.account;
           return (
             <tr key={i}>
               <td>
