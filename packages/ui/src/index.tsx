@@ -17,7 +17,8 @@ import FaucetService from './services/FaucetService';
 import {
   CasperServiceByJsonRPC,
   DiagnosticsService,
-  BalanceServiceByJsonRPC
+  BalanceServiceByJsonRPC,
+  EventServiceByJsonRPC
 } from 'casperlabs-sdk';
 import { Auth0Service, MockAuthService } from './services/AuthService';
 import DagContainer from './containers/DagContainer';
@@ -42,6 +43,7 @@ const faucetService = new FaucetService(authService);
 const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
+const eventService = new EventServiceByJsonRPC(window.config.eventStoreUrl);
 const balanceService = new BalanceServiceByJsonRPC(casperService);
 new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.
@@ -59,8 +61,8 @@ const faucet = new FaucetContainer(
   // Update the balances when a new faucet request went through.
   () => auth.refreshBalances(true)
 );
-const dag = new DagContainer(errors, casperService);
-const block = new BlockContainer(errors, casperService, balanceService);
+const dag = new DagContainer(errors, casperService, eventService);
+const block = new BlockContainer(errors, balanceService, eventService);
 const deploy = new DeployContainer(errors, casperService, balanceService);
 const deployInfoList = new DeployInfoListContainer(errors, casperService);
 const search = new SearchContainer(errors, casperService);

@@ -5,10 +5,18 @@ import { BlockContainer } from '../containers/BlockContainer';
 import DataTable from './DataTable';
 import Pages from './Pages';
 import { RefreshableComponent, SuccessIcon, FailIcon, CSPR } from './Utils';
-import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
+import {
+  Block,
+  Deploy
+} from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { shortHash } from './Utils';
 import ObservableValueMap, { ObservableValue } from '../lib/ObservableValueMap';
-import { GetDeployResult, JsonBlock } from 'casperlabs-sdk';
+import {
+  BlockResult,
+  DeployResult,
+  GetDeployResult,
+  JsonBlock
+} from 'casperlabs-sdk';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 
@@ -74,7 +82,7 @@ export const BlockDetails = withRouter(_BlockDetails);
 const BlockTable = observer(
   (props: {
     blockHashBase16: string;
-    block: JsonBlock | null;
+    block: BlockResult | null;
     refresh: () => void;
   }) => {
     const attrs = props.block && blockAttrs(props.block);
@@ -98,7 +106,7 @@ const BlockTable = observer(
 const DeploysTable = observer(
   (props: {
     blockHashBase16: string;
-    deploys: GetDeployResult[] | null;
+    deploys: DeployResult[] | null;
     balances: ObservableValueMap<string, number>;
   }) => {
     return (
@@ -108,14 +116,15 @@ const DeploysTable = observer(
           'Deploy Hash',
           'Account',
           'Gas Price',
-          'Cost',
+          'State',
           'Remaining Balance',
-          'Message'
+          'Status',
+          'Error Message'
         ]}
         rows={props.deploys}
-        renderRow={(deploy, i) => {
-          const id = deploy.deploy.hash;
-          const accountId = deploy.deploy.header.account;
+        renderRow={(deploy: DeployResult, i) => {
+          const id = deploy.deployHash;
+          const accountId = deploy.account;
           return (
             <tr key={i}>
               <td>
@@ -123,22 +132,18 @@ const DeploysTable = observer(
               </td>
               <td>{shortHash(accountId)}</td>
               <td className="text-right">
-                <CSPR motes={deploy.deploy.header.gas_price} />
+                <CSPR motes={deploy.cost} />
               </td>
               <td className="text-right">
-                <CSPR motes={deploy.execution_results[0].result.cost} />
+                <span>{deploy.state}</span>
               </td>
               <td className="text-right">
                 <Balance balance={props.balances.get(accountId)} />
               </td>
               <td className="text-center">
-                {deploy.execution_results[0].result.error_message ? (
-                  <FailIcon />
-                ) : (
-                  <SuccessIcon />
-                )}
+                {deploy.errorMessage ? <FailIcon /> : <SuccessIcon />}
               </td>
-              <td>{deploy.execution_results[0].result.error_message}</td>
+              <td>{deploy.errorMessage}</td>
             </tr>
           );
         }}
@@ -147,20 +152,18 @@ const DeploysTable = observer(
   }
 );
 
-const blockAttrs: (block: JsonBlock) => Array<[string, any]> = (
-  block: JsonBlock
+const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
+  block: BlockResult
 ) => {
-  const id = block.hash;
-  const header = block.header;
-  const proposer = header.proposer;
+  const id = block.blockHash;
   return [
     ['Block Hash', id],
-    ['Height', header.height],
-    ['Era ID', header.era_id],
-    ['Timestamp', new Date(header.timestamp).toISOString()],
-    ['Proposer', proposer],
-    ['Deploy Count', header.deploy_hashes.length],
-    ['Parent Hash', <BlockLink blockHashBase16={header.parent_hash} />]
+    ['ParentHash', block.parentHash],
+    ['Timestamp', block.timestamp],
+    ['Era ID', block.eraId],
+    ['Proposer', block.proposer],
+    ['State', block.state],
+    ['Parent Hash', <BlockLink blockHashBase16={block.parentHash} />]
   ];
 };
 

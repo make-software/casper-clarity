@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Loading, RefreshButton } from './Utils';
 import { ToggleButton, ToggleStore } from './ToggleButton';
 import { observer } from 'mobx-react';
+import { BlockResult } from 'casperlabs-sdk';
 
 export interface Props<T> {
   title: string;
@@ -13,9 +14,9 @@ export interface Props<T> {
   filterTtl?: string;
   filterLbl?: string;
   headers: string[];
-  rows: T[] | null;
+  rows: T[] | null | undefined;
   emptyMessage?: any;
-  renderRow: (x: T, idx: number) => any;
+  renderRow: (block: BlockResult | any, id?: number) => any;
   renderHeader?: (x: string) => any;
   footerMessage?: any;
 }
