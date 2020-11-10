@@ -2,10 +2,14 @@
 import { expect } from 'chai';
 import { DeployArgumentParser } from '../../src/lib/DeployArgumentParser';
 import {
-  CLType,
-  CLValueInstance
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
-import { Args, decodeBase16, encodeBase16 } from 'casperlabs-sdk';
+  Args,
+  CLTypedAndToBytesHelper,
+  CLTypeHelper,
+  CLValue,
+  encodeBase16,
+  MapEntry,
+  SimpleType
+} from 'casperlabs-sdk';
 import {
   BytesTypeStr,
   DeployContractsContainer
@@ -24,28 +28,26 @@ describe('DeployArgumentParser', () => {
   });
 
   it('should validate number value correctly', function() {
-    expect(DeployArgumentParser.validateBigInt(3, CLType.Simple.U8)).to.be
-      .false;
-    expect(
-      DeployArgumentParser.validateBigInt(256, CLType.Simple.U8)
-    ).to.include('is not a valid U8, which should be in [0, 255]');
-    expect(
-      DeployArgumentParser.validateBigInt(-1, CLType.Simple.U8)
-    ).to.include('is not a valid U8, which should be in [0, 255]');
+    expect(DeployArgumentParser.validateBigInt(3, SimpleType.U8)).to.be.false;
+    expect(DeployArgumentParser.validateBigInt(256, SimpleType.U8)).to.include(
+      'is not a valid U8, which should be in [0, 255]'
+    );
+    expect(DeployArgumentParser.validateBigInt(-1, SimpleType.U8)).to.include(
+      'is not a valid U8, which should be in [0, 255]'
+    );
 
-    expect(DeployArgumentParser.validateBigInt(-1, CLType.Simple.I32)).to.be
+    expect(DeployArgumentParser.validateBigInt(-1, SimpleType.I32)).to.be.false;
+    expect(DeployArgumentParser.validateBigInt(2 ** 12, SimpleType.I32)).to.be
       .false;
-    expect(DeployArgumentParser.validateBigInt(2 ** 12, CLType.Simple.I32)).to
-      .be.false;
     expect(
-      DeployArgumentParser.validateBigInt(2 ** 32, CLType.Simple.I32)
+      DeployArgumentParser.validateBigInt(2 ** 32, SimpleType.I32)
     ).to.include(
       `is not a valid I32, which should be in [${-1 * 2 ** 31}, ${2 ** 31 - 1}]`
     );
 
-    expect(
-      DeployArgumentParser.validateBigInt([], CLType.Simple.I32)
-    ).to.include(`[] is not a valid number literal`);
+    expect(DeployArgumentParser.validateBigInt([], SimpleType.I32)).to.include(
+      `[] is not a valid number literal`
+    );
   });
 
   it('should validate string', function() {
@@ -76,7 +78,7 @@ describe('DeployArgumentParser', () => {
     const innerDeployArg = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
     const listInnerDeployArgs = [innerDeployArg];
     // success
@@ -113,14 +115,14 @@ describe('DeployArgumentParser', () => {
     const stringArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
 
     // bool
     const boolArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.BOOL
+      SimpleType.Bool
     );
 
     // bytes
@@ -171,7 +173,7 @@ describe('DeployArgumentParser', () => {
     const stringArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
 
     // bytes
@@ -182,7 +184,7 @@ describe('DeployArgumentParser', () => {
     );
 
     // number
-    DeployContractsContainer.newDeployArgument(false, '', CLType.Simple.I32);
+    DeployContractsContainer.newDeployArgument(false, '', SimpleType.I32);
     expect(
       DeployArgumentParser.validateMap(
         [bytesArgType, stringArgType],
@@ -231,45 +233,21 @@ describe('DeployArgumentParser', () => {
     listDeployArg.$.listInnerDeployArgs.$[0] = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
     const listArg = DeployArgumentParser.buildArgument(listDeployArg);
-    expect(listArg.getName()).to.eq('list');
-    expect(
-      listArg
-        .getValue()
-        .getClType()
-        .toObject()
-    ).to.deep.equal(Args.Types.list(Args.Types.string()).toObject());
-    expect(
-      listArg
-        .getValue()
-        .getValue()
-        .toObject()
-    ).to.deep.equal(
-      Args.Values.list([
-        Args.Values.string('A'),
-        Args.Values.string('B')
-      ]).toObject()
+    expect(listArg.name).to.eq('list');
+    expect(listArg.value).to.deep.equal(
+      CLValue.fromList([
+        CLTypedAndToBytesHelper.string('A'),
+        CLTypedAndToBytesHelper.string('B')
+      ])
     );
 
     // empty list
     listDeployArg.$.value.onChange('[]');
     await delay(200);
-    const emptyList = DeployArgumentParser.buildArgument(listDeployArg);
-    expect(emptyList.getName()).to.eq('list');
-    expect(
-      emptyList
-        .getValue()
-        .getClType()
-        .toObject()
-    ).to.deep.equal(Args.Types.list(Args.Types.string()).toObject());
-    expect(
-      emptyList
-        .getValue()
-        .getValue()
-        .toObject()
-    ).to.deep.equal(Args.Values.list([]).toObject());
+    expect(() => DeployArgumentParser.buildArgument(listDeployArg)).to.throws();
   });
 
   it('should create fixed length list Argument', function() {
@@ -282,26 +260,15 @@ describe('DeployArgumentParser', () => {
     listDeployArg.$.listInnerDeployArgs.$[0] = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
     const fixedList = DeployArgumentParser.buildArgument(listDeployArg);
-    expect(fixedList.getName()).to.eq('fixedList');
-    expect(
-      fixedList
-        .getValue()
-        .getClType()
-        .toObject()
-    ).to.deep.equal(Args.Types.fixedList(Args.Types.string(), 2).toObject());
-    expect(
-      fixedList
-        .getValue()
-        .getValue()
-        .toObject()
-    ).to.deep.equal(
-      Args.Values.fixedList([
-        Args.Values.string('A'),
-        Args.Values.string('B')
-      ]).toObject()
+    expect(fixedList.name).to.eq('fixedList');
+    expect(fixedList.value).to.deep.equal(
+      CLValue.fromFixedList([
+        CLTypedAndToBytesHelper.string('A'),
+        CLTypedAndToBytesHelper.string('B')
+      ])
     );
   });
 
@@ -310,14 +277,14 @@ describe('DeployArgumentParser', () => {
     const stringArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
 
     // bool
     const boolArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.BOOL
+      SimpleType.Bool
     );
 
     // bytes
@@ -336,9 +303,9 @@ describe('DeployArgumentParser', () => {
     tupleArgs.$.tupleInnerDeployArgs.$[0] = stringArgType;
 
     const tuple = DeployArgumentParser.buildArgument(tupleArgs);
-    expect(tuple.getName()).to.eq('tuple');
-    expect(tuple.getValue().getClType()).to.deep.equal(
-      Args.Types.tuple1(Args.Types.string())
+    expect(tuple.name).to.eq('tuple');
+    expect(tuple.value).to.deep.equal(
+      CLValue.fromTuple1(CLTypedAndToBytesHelper.string('A'))
     );
 
     tupleArgs.$.tupleInnerDeployArgs.$.push(boolArgType);
@@ -346,11 +313,11 @@ describe('DeployArgumentParser', () => {
     await delay(200);
 
     const tuple2 = DeployArgumentParser.buildArgument(tupleArgs);
-    expect(tuple2.getValue().getClType()).to.deep.equal(
-      Args.Types.tuple2(Args.Types.string(), Args.Types.bool())
-    );
-    expect(tuple2.getValue().getValue()).to.deep.equal(
-      Args.Values.tuple2(Args.Values.string('A'), Args.Values.bool(true))
+    expect(tuple2.value).to.deep.equal(
+      CLValue.fromTuple2(
+        CLTypedAndToBytesHelper.string('A'),
+        CLTypedAndToBytesHelper.bool(true)
+      )
     );
 
     const bytes = encodeBase16(Buffer.from('test'));
@@ -359,19 +326,11 @@ describe('DeployArgumentParser', () => {
     await delay(200);
 
     const tuple3 = DeployArgumentParser.buildArgument(tupleArgs);
-    expect(tuple3.getValue().getClType()).to.deep.equal(
-      Args.Types.tuple3(
-        Args.Types.string(),
-        Args.Types.bool(),
-        Args.Types.list(Args.Types.u8())
-      )
-    );
-
-    expect(tuple3.getValue().getValue()).to.deep.equal(
-      Args.Values.tuple3(
-        Args.Values.string('A'),
-        Args.Values.bool(true),
-        Args.Values.bytes(decodeBase16(bytes))
+    expect(tuple3.value).to.deep.equal(
+      CLValue.fromTuple3(
+        CLTypedAndToBytesHelper.string('A'),
+        CLTypedAndToBytesHelper.bool(true),
+        CLTypedAndToBytesHelper.bytes(Buffer.from('test'))
       )
     );
   });
@@ -381,14 +340,14 @@ describe('DeployArgumentParser', () => {
     const stringArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.STRING
+      SimpleType.String
     );
 
     // bool
     const boolArgType = DeployContractsContainer.newDeployArgument(
       false,
       '',
-      CLType.Simple.BOOL
+      SimpleType.Bool
     );
 
     // bytes
@@ -410,30 +369,20 @@ describe('DeployArgumentParser', () => {
     // set type of value
     mapArgs.$.mapInnerDeployArgs.$[1] = stringArgType;
 
-    const map = DeployArgumentParser.buildArgument(mapArgs);
-    expect(map.getName()).to.eq('map');
-    expect(map.getValue().getClType()).to.deep.equal(
-      Args.Types.map(Args.Types.bytes(), Args.Types.string())
-    );
-    expect(
-      map
-        .getValue()
-        .getValue()
-        .getMapValue()
-        .getValuesList()
-    ).to.deep.equal([]);
+    expect(() => DeployArgumentParser.buildArgument(mapArgs)).to.throws();
 
     mapArgs.$.value.onChange(`[["${encodeBase16(Buffer.from('A'))}", "A"]]`);
     await delay(200);
 
     const map2 = DeployArgumentParser.buildArgument(mapArgs);
-    const expectMapEntry = new CLValueInstance.MapEntry();
-    expectMapEntry.setKey(Args.Values.bytes(Buffer.from('A')));
-    expectMapEntry.setValue(Args.Values.string('A'));
+    const expectMapEntry: MapEntry = {
+      key: CLTypedAndToBytesHelper.bytes(Buffer.from('A')),
+      value: CLTypedAndToBytesHelper.string('A')
+    };
 
-    expect(map2.getValue().getValue()).to.deep.equal(
-      Args.Values.map([expectMapEntry])
-    );
+    const expectMap = CLValue.fromMap([expectMapEntry]);
+
+    expect(map2.value).to.deep.equal(expectMap);
   });
 });
 

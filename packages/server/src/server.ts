@@ -1,4 +1,4 @@
-import { CasperServiceByJsonRPC, Contracts, Keys } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC, Keys } from 'casperlabs-sdk';
 import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'express-jwt';
@@ -103,12 +103,6 @@ const contractKeys = Keys.Ed25519.parseKeyFiles(
   process.env.FAUCET_ACCOUNT_PRIVATE_KEY_PATH!
 );
 
-// Faucet contract and deploy factory.
-const storedFaucet = new Contracts.BoundContract(
-  new Contracts.Contract(process.env.FAUCET_CONTRACT_PATH!),
-  contractKeys
-);
-
 // Constant payment amount.
 const paymentAmount = BigInt(process.env.PAYMENT_AMOUNT!);
 // How much to send to a user in a faucet request.
@@ -118,9 +112,9 @@ const networkName = process.env.NETWORK_NAME!;
 const chainName = process.env.CHAIN_NAME!;
 
 // gRPC client to the node.
-const casperService = new CasperServiceByJsonRPC(process.env.JSON_RPC_URL!);
+const jsonRpcUrl = process.env.JSON_RPC_URL!;
+const casperService = new CasperServiceByJsonRPC(jsonRpcUrl);
 const storedFaucetService = new StoredFaucetService(
-  storedFaucet,
   contractKeys,
   paymentAmount,
   transferAmount,
@@ -156,13 +150,15 @@ const checkJwt: express.RequestHandler = isMock
       })
     });
 
-app.use(
-  '/rpc',
-  createProxyMiddleware('/rpc', {
-    target: 'http://192.168.2.166:50101',
-    changeOrigin: true
-  })
-);
+if (process.env.SERVER_USE_TLS === 'true') {
+  app.use(
+    '/rpc',
+    createProxyMiddleware('/rpc', {
+      target: jsonRpcUrl,
+      changeOrigin: true
+    })
+  );
+}
 
 // Render the `config.js` file dynamically.
 app.get('/config.js', (_, res) => {

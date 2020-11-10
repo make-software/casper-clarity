@@ -517,14 +517,7 @@ export class DeployArgumentParser {
         return CLValue.fromList(argsList);
       }
     } else {
-      // fixme implement fixedListEmpty and listEmpty
-      // const innerType = firstType as SimpleType;
-      // if (isFixedList) {
-      //   return Args.Instances.fixedListEmpty(innerType);
-      // } else {
-      //   return Args.Instances.listEmpty(innerType);
-      // }
-      throw new Error("Can't create empty list now");
+      throw new Error("Can't create empty list");
     }
   }
 
@@ -546,14 +539,14 @@ export class DeployArgumentParser {
     const valueSecondType = mapInnerDeployArgs[1].$.secondType.$;
     const valueURefAccessRight = mapInnerDeployArgs[1].$.URefAccessRight.$;
     const mapEntries: MapEntry[] = argValueInJson.map((arg: any) => {
-      const key = DeployArgumentParser.buildSimpleArgs(
-        keyType as SimpleType,
+      const key = DeployArgumentParser.buildInnerSimpleArgs(
+        keyType as UISimpleType,
         keySecondType,
         arg[0],
         keyURefAccessRight
       );
-      const value = DeployArgumentParser.buildSimpleArgs(
-        valueType as SimpleType,
+      const value = DeployArgumentParser.buildInnerSimpleArgs(
+        valueType as UISimpleType,
         valueSecondType,
         arg[1],
         valueURefAccessRight
@@ -563,7 +556,7 @@ export class DeployArgumentParser {
     if (mapEntries.length > 0) {
       return CLValue.fromMap(mapEntries);
     } else {
-      throw new Error("The map couldn't be empty");
+      throw new Error("Can't create empty Map");
     }
   }
 
