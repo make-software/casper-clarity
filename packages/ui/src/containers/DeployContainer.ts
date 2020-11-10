@@ -4,14 +4,15 @@ import ErrorContainer from './ErrorContainer';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import {
   CasperServiceByJsonRPC,
-  JsonDeploy,
+  EventServiceByJsonRPC,
   JsonExecutionResult,
-  BalanceServiceByJsonRPC
+  BalanceServiceByJsonRPC,
+  DeployResult
 } from 'casperlabs-sdk';
 
 export class DeployContainer {
   @observable deployHashBase16: string | null = null;
-  @observable deploy: JsonDeploy | null = null;
+  @observable deploy: DeployResult | null = null;
   @observable jsonExecutionResults: JsonExecutionResult[] | null = null;
   @observable balances: ObservableValueMap<
     string,
@@ -21,7 +22,8 @@ export class DeployContainer {
   constructor(
     private errors: ErrorContainer,
     private casperService: CasperServiceByJsonRPC,
-    private balanceService: BalanceServiceByJsonRPC
+    private balanceService: BalanceServiceByJsonRPC,
+    private eventService: EventServiceByJsonRPC
   ) {}
 
   /** Call whenever the page switches to a new deploy. */
@@ -35,29 +37,28 @@ export class DeployContainer {
   async loadDeploy() {
     if (this.deployHashBase16 == null) return;
     await this.errors.capture(
-      this.casperService.getDeployInfo(this.deployHashBase16).then(deploy => {
-        this.deploy = deploy.deploy;
-        this.jsonExecutionResults = deploy.execution_results;
+      this.eventService.getDeployHash(this.deployHashBase16).then(deploy => {
+        this.deploy = deploy;
       })
     );
   }
 
   /** Load the balances of the account at each block where the deploy was executed. */
-  async loadBalances() {
-    if (this.deploy == null) {
-      return;
-    }
-    for (let proc of this.jsonExecutionResults!) {
-      const blockHash = proc.block_hash;
-      const balance = await this.balanceService.getAccountBalance(
-        blockHash,
-        this.deploy.header.account
-      );
-      if (balance !== undefined) {
-        this.balances.set(blockHash, balance);
-      }
-    }
-  }
+  // async loadBalances() {
+  //   if (this.deploy == null) {
+  //     return;
+  //   }
+  //   for (let proc of this.jsonExecutionResults!) {
+  //     const blockHash = proc.block_hash;
+  //     const balance = await this.balanceService.getAccountBalance(
+  //       blockHash,
+  //       this.deploy.header.account
+  //     );
+  //     if (balance !== undefined) {
+  //       this.balances.set(blockHash, balance);
+  //     }
+  //   }
+  // }
 }
 
 export default DeployContainer;

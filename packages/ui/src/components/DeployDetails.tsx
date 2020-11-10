@@ -13,7 +13,7 @@ import {
 } from './Utils';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { Balance } from './BlockDetails';
-import { JsonDeploy, JsonExecutionResult } from 'casperlabs-sdk';
+import { DeployResult, JsonDeploy, JsonExecutionResult } from 'casperlabs-sdk';
 
 // URL parameter
 type Params = {
@@ -41,7 +41,7 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
 
   async refresh() {
     await this.container.loadDeploy();
-    await this.container.loadBalances();
+    // await this.container.loadBalances();
   }
 
   componentDidUpdate() {
@@ -75,7 +75,7 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
 export const DeployDetails = withRouter(_DeployDetails);
 
 const DeployTable = observer(
-  (props: { deployHashBase16: string; deploy: JsonDeploy | null }) => {
+  (props: { deployHashBase16: string; deploy: DeployResult | null }) => {
     const attrs = props.deploy && deployAttrs(props.deploy);
     return (
       <DataTable
@@ -96,7 +96,7 @@ const DeployTable = observer(
 const ResultsTable = observer(
   (props: {
     deployHashBase16: string;
-    deploy: JsonDeploy | null;
+    deploy: DeployResult | null;
     jsonExecutionResult: JsonExecutionResult[];
     balances: ObservableValueMap<string, number>;
     refresh: () => void;
@@ -143,16 +143,16 @@ const ResultsTable = observer(
   }
 );
 
-const deployAttrs: (deploy: JsonDeploy) => Array<[string, any]> = (
-  deploy: JsonDeploy
+const deployAttrs: (deploy: DeployResult) => Array<[string, any]> = (
+  deploy: DeployResult
 ) => {
-  const id = deploy.hash;
-  const header = deploy.header;
+  const id = deploy.deployHash;
   return [
     ['Deploy Hash', id],
-    ['Account Hash', header.account],
-    ['Timestamp', new Date(header.timestamp).toISOString()],
-    ['Gas Price', <CSPR motes={header.gas_price} />]
+    ['Account Hash', deploy.account],
+    ['Cost', deploy.cost],
+    ['State', deploy.state],
+    ['Error Message', deploy.errorMessage]
   ];
 };
 
