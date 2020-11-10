@@ -64,13 +64,13 @@ class _BlockList extends React.Component<Props, {}> {
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
         headers={[
-          'Block Hash',
-          'parentHeash',
-          'Timestamp',
-          'eraId',
-          'Proposer',
+          'Height',
+          'Era Id',
           'State',
-          'Height'
+          'Block Hash',
+          'Parent Hash',
+          'Timestamp',
+          'Proposer',
         ]}
         rows={dag.eventStoreBlocks?.data}
         renderRow={(block: BlockResult) => {
@@ -110,7 +110,11 @@ class _BlockList extends React.Component<Props, {}> {
               nextLabel={'next'}
               breakLabel={'...'}
               breakClassName={'break-me'}
-              pageCount={dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount ? dag.eventStoreBlocks.pageCount : 1}
+              pageCount={
+                dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount
+                  ? dag.eventStoreBlocks.pageCount
+                  : 1
+              }
               marginPagesDisplayed={2}
               pageRangeDisplayed={5}
               onPageChange={props =>

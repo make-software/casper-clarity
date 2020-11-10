@@ -118,7 +118,7 @@ const DeploysTable = observer(
           'Gas Price',
           'State',
           'Remaining Balance',
-          'Message',
+          'Status',
           'Error Message'
         ]}
         rows={props.deploys}
