@@ -70,7 +70,7 @@ class _BlockList extends React.Component<Props, {}> {
           'Block Hash',
           'Parent Hash',
           'Timestamp',
-          'Proposer',
+          'Proposer'
         ]}
         rows={dag.eventStoreBlocks?.data}
         renderRow={(block: BlockResult) => {

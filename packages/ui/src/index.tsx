@@ -43,7 +43,6 @@ const faucetService = new FaucetService(authService);
 const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
-console.log('wondow.config', window.config);
 const eventService = new EventServiceByJsonRPC(window.config.eventStoreUrl);
 const balanceService = new BalanceServiceByJsonRPC(casperService);
 new DiagnosticsService(window.config.grpc.url || window.origin);
