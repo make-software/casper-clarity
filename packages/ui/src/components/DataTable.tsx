@@ -28,7 +28,7 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
       <div className="card mb-3">
         <div className="card-header">
           <span>{this.props.title}</span>
-          {this.props.refresh && (
+          {/* {this.props.refresh && (
             <div className="float-right">
               <RefreshButton refresh={() => this.props.refresh!()} />
             </div>
@@ -52,7 +52,7 @@ export default class DataTable<T> extends React.Component<Props<T>, {}> {
                 size="sm"
               />
             </div>
-          )}
+          )} */}
         </div>
         <div className="card-body" style={{ overflow: 'auto' }}>
           {this.props.rows == null ? (
