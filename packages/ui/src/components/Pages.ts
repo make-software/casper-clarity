@@ -37,4 +37,10 @@ export default class Pages {
 
   static readonly blocksWithPageAndLimit = (page: number, limit: number) =>
     `/blocks?page=${page}&limit=${limit}`;
+
+  static readonly accountDeploysWithPageAndLimit = (
+    accountKey: string,
+    page: number,
+    limit: number
+  ) => `/accounts/${accountKey}/deploys?page=${page}&limit=${limit}`;
 }

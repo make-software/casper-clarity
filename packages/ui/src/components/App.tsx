@@ -454,6 +454,8 @@ const Content = (props: AppProps) => {
               <Title title="Deploys" />
               <DeployInfoListDetails
                 pageToken={query.get('pageToken')}
+                page={query.get('page')}
+                limit={query.get('limit')}
                 {...props}
               />
             </Route>

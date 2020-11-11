@@ -7,7 +7,7 @@ export class DeployInfoListContainer {
   @observable deployInfosList: AccountDeploysResult;
   @observable pageNumber: number = 1;
   @observable deployHash: string = '';
-  pageSize: number = 10;
+  @observable pageSize: number = 10;
 
   constructor(
     private errors: ErrorContainer,

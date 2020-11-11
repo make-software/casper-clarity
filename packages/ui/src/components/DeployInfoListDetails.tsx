@@ -1,10 +1,12 @@
 import React from 'react';
 import { observer } from 'mobx-react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { AccountDeploy } from 'casperlabs-sdk';
+import ReactPaginate from 'react-paginate';
 import { RefreshableComponent } from './Utils';
 import DataTable from './DataTable';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { DeployInfoListContainer } from '../containers/DeployInfoListContainer';
-import { AccountDeploy } from 'casperlabs-sdk';
+import Pages from './Pages';
 
 // URL parameter
 type Params = {
@@ -14,6 +16,8 @@ type Params = {
 interface Props extends RouteComponentProps<Params> {
   deployInfoList: DeployInfoListContainer;
   pageToken: string | null;
+  page: string | null;
+  limit: string | null;
 }
 
 @observer
@@ -29,6 +33,16 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
 
   async refresh() {
     await this.props.deployInfoList.fetchData();
+  }
+
+  async componentWillReceiveProps(nextProps: Props) {
+    const { page, limit } = this.props;
+    if (page === nextProps.page && limit === nextProps.limit) {
+      return;
+    }
+    this.props.deployInfoList.pageNumber = page ? parseInt(page) : 1;
+    this.props.deployInfoList.pageSize = limit ? parseInt(limit) : 10;
+    await this.refresh();
   }
 
   render() {
@@ -59,6 +73,26 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
             </tr>
           );
         }}
+        footerMessage={
+          <div id="react-paginate">
+            <ReactPaginate
+              previousLabel={'previous'}
+              nextLabel={'next'}
+              breakLabel={'...'}
+              breakClassName={'break-me'}
+              pageCount={deployInfoList.deployInfosList.pageCount}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={5}
+              onPageChange={props =>
+                this.props.history.push(
+                  deployInfoList.deployInfosList.pages[props.selected].url
+                )
+              }
+              containerClassName={'pagination'}
+              activeClassName={'active'}
+            />
+          </div>
+        }
       />
     );
   }
