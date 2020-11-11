@@ -69,7 +69,7 @@ const deploy = new DeployContainer(
   balanceService,
   eventService
 );
-const deployInfoList = new DeployInfoListContainer(errors, casperService);
+const deployInfoList = new DeployInfoListContainer(errors, eventService);
 const search = new SearchContainer(errors, casperService);
 const accountSelectorContainer = new AccountSelectorContainer();
 const connectedPeersContainer = new ConnectedPeersContainer(
