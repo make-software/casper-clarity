@@ -27,7 +27,6 @@ export interface DeployResult {
   deployHash: string;
   state: string;
   cost: number;
-  account: string;
   errorMessage: string;
   account: string;
   blockHash: string;
