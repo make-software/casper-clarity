@@ -55,7 +55,7 @@ export interface AccountDeploysResult {
   pages: Page[];
 }
 
-export class EventServiceByJsonRPC {
+export class EventService {
   private url?: string;
 
   constructor(url?: string) {
