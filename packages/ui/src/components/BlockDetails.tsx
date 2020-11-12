@@ -158,7 +158,6 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
   const id = block.blockHash;
   return [
     ['Block Hash', id],
-    ['ParentHash', block.parentHash],
     ['Timestamp', block.timestamp],
     ['Era ID', block.eraId],
     ['Proposer', block.proposer],
