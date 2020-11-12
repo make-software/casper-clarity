@@ -80,12 +80,12 @@ class _BlockList extends React.Component<Props, {}> {
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
+              <td>{block.height}</td>
+              <td>{block.eraId}</td>
+              <td>{block.state}</td>
               <td>{block.parentHash}</td>
               <td>{block.timestamp}</td>
-              <td>{block.eraId}</td>
               <td>{block.proposer}</td>
-              <td>{block.state}</td>
-              <td>{block.height}</td>
               {/*fixme*/}
               {/*<td>*/}
               {/*  <Link*/}
