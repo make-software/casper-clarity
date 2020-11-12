@@ -161,8 +161,7 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
     ['Timestamp', block.timestamp],
     ['Era ID', block.eraId],
     ['Proposer', block.proposer],
-    ['State', block.state],
-    ['Parent Hash', <BlockLink blockHashBase16={block.parentHash} />]
+    ['State', block.state]
   ];
 };
 
