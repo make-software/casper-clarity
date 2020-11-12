@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
 import { AccountDeploy } from 'casperlabs-sdk';
 import ReactPaginate from 'react-paginate';
 import { RefreshableComponent } from './Utils';
@@ -54,7 +54,6 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
         refresh={() => this.refresh()}
         headers={[
           'Deploy Hash',
-          'Account',
           'State',
           'Cost',
           'Error Message',
@@ -65,11 +64,14 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
           return (
             <tr key={deployInfo.deployHash}>
               <td>{deployInfo.deployHash}</td>
-              <td>{deployInfo.account}</td>
               <td>{deployInfo.state}</td>
               <td className="text-center">{deployInfo.cost}</td>
               <td>{deployInfo.errorMessage}</td>
-              <td>{deployInfo.blockHash}</td>
+              <td>
+                <Link to={Pages.block(deployInfo.blockHash)}>
+                  {deployInfo.blockHash}
+                </Link>
+              </td>
             </tr>
           );
         }}
