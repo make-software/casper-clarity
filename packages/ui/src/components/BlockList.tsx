@@ -77,12 +77,12 @@ class _BlockList extends React.Component<Props, {}> {
           const id = block.blockHash;
           return (
             <tr key={id}>
-              <td>
-                <Link to={Pages.block(id)}>{id}</Link>
-              </td>
               <td>{block.height}</td>
               <td>{block.eraId}</td>
               <td>{block.state}</td>
+              <td>
+                <Link to={Pages.block(id)}>{id}</Link>
+              </td>
               <td>{block.parentHash}</td>
               <td>{block.timestamp}</td>
               <td>{block.proposer}</td>
@@ -102,7 +102,11 @@ class _BlockList extends React.Component<Props, {}> {
               nextLabel={'next'}
               breakLabel={'...'}
               breakClassName={'break-me'}
-              pageCount={5}
+              pageCount={
+                dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount
+                  ? dag.eventStoreBlocks.pageCount
+                  : 1
+              }
               marginPagesDisplayed={2}
               pageRangeDisplayed={5}
               onPageChange={props =>
