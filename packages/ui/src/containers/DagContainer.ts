@@ -10,7 +10,7 @@ import { ToggleableSubscriber } from './ToggleableSubscriber';
 import {
   BlockResult,
   CasperServiceByJsonRPC,
-  EventServiceByJsonRPC,
+  EventService,
   JsonBlock,
   BlocksResult
 } from 'casperlabs-sdk';
@@ -91,7 +91,7 @@ export class DagContainer {
   constructor(
     private errors: ErrorContainer,
     private casperService: CasperServiceByJsonRPC,
-    private eventService: EventServiceByJsonRPC
+    private eventService: EventService
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
       {

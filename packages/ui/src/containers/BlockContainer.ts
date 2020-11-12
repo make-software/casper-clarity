@@ -7,7 +7,7 @@ import { ToggleStore } from '../components/ToggleButton';
 import {
   GetDeployResult,
   BalanceServiceByJsonRPC,
-  EventServiceByJsonRPC,
+  EventService,
   BlockResult,
   DeployResult
 } from 'casperlabs-sdk';
@@ -32,7 +32,7 @@ export class BlockContainer {
   constructor(
     private errors: ErrorContainer,
     private balanceService: BalanceServiceByJsonRPC,
-    private eventService: EventServiceByJsonRPC
+    private eventService: EventService
   ) {}
 
   /** Call whenever the page switches to a new block. */

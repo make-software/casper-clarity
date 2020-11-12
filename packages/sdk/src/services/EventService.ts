@@ -29,6 +29,7 @@ export interface DeployResult {
   cost: number;
   account: string;
   errorMessage: string;
+  account: string;
   blockHash: string;
 }
 
@@ -55,7 +56,7 @@ export interface AccountDeploysResult {
   pages: Page[];
 }
 
-export class EventServiceByJsonRPC {
+export class EventService {
   private url?: string;
 
   constructor(url?: string) {
