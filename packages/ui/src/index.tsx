@@ -18,7 +18,7 @@ import {
   CasperServiceByJsonRPC,
   DiagnosticsService,
   BalanceServiceByJsonRPC,
-  EventServiceByJsonRPC
+  EventService
 } from 'casperlabs-sdk';
 import { Auth0Service, MockAuthService } from './services/AuthService';
 import DagContainer from './containers/DagContainer';
@@ -43,7 +43,7 @@ const faucetService = new FaucetService(authService);
 const casperService = new CasperServiceByJsonRPC(
   window.config.grpc.url || window.origin
 );
-const eventService = new EventServiceByJsonRPC(window.config.eventStoreUrl);
+const eventService = new EventService(window.config.eventStoreUrl);
 const balanceService = new BalanceServiceByJsonRPC(casperService);
 new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.
