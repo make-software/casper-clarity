@@ -4,7 +4,7 @@ import ErrorContainer from './ErrorContainer';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import {
   CasperServiceByJsonRPC,
-  EventServiceByJsonRPC,
+  EventService,
   JsonExecutionResult,
   BalanceServiceByJsonRPC,
   DeployResult
@@ -23,7 +23,7 @@ export class DeployContainer {
     private errors: ErrorContainer,
     private casperService: CasperServiceByJsonRPC,
     private balanceService: BalanceServiceByJsonRPC,
-    private eventService: EventServiceByJsonRPC
+    private eventService: EventService
   ) {}
 
   /** Call whenever the page switches to a new deploy. */

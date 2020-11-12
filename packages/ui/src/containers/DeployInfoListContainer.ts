@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { AccountDeploysResult, EventServiceByJsonRPC } from 'casperlabs-sdk';
+import { AccountDeploysResult, EventService } from 'casperlabs-sdk';
 
 export class DeployInfoListContainer {
   @observable deployInfosList: AccountDeploysResult;
@@ -11,7 +11,7 @@ export class DeployInfoListContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private eventService: EventServiceByJsonRPC
+    private eventService: EventService
   ) {}
 
   /** Call whenever the page switches to a new account. */
