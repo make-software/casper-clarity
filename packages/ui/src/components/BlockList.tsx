@@ -1,5 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
+import { toJS } from 'mobx';
+import ReactPaginate from 'react-paginate';
 import DagContainer, { DagStep } from '../containers/DagContainer';
 import { IconButton, ListInline, shortHash } from './Utils';
 import DataTable from './DataTable';
@@ -8,19 +10,19 @@ import Pages from './Pages';
 import Timestamp from './TimeStamp';
 import { BlockType } from './BlockDetails';
 import * as H from 'history';
-import { JsonBlock } from 'casperlabs-sdk';
+import { BlocksResult, BlockResult } from 'casperlabs-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;
-  maxRank: string | null;
-  depth: string | null;
+  page: string | null;
+  limit: string | null;
 }
 
 @observer
 class _BlockList extends React.Component<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.dag.refreshWithDepthAndMaxRank(props.maxRank, props.depth);
+    this.props.dag.refreshWithPageNumberAndCount(props.page, props.limit);
   }
 
   async refresh() {
@@ -35,19 +37,20 @@ class _BlockList extends React.Component<Props, {}> {
   // when receive new props of depth and maxRank, we need parse them and set related state variables.
   componentWillReceiveProps(nextProps: Props) {
     if (
-      this.props.depth === nextProps.depth &&
-      this.props.maxRank === nextProps.maxRank
+      this.props.page === nextProps.page &&
+      this.props.limit === nextProps.limit
     ) {
       return;
     }
-    this.props.dag.refreshWithDepthAndMaxRank(
-      nextProps.maxRank,
-      nextProps.depth
+    this.props.dag.refreshWithPageNumberAndCount(
+      nextProps.page,
+      nextProps.limit
     );
   }
 
   render() {
     const { dag } = this.props;
+
     return (
       <DataTable
         title={
@@ -60,24 +63,29 @@ class _BlockList extends React.Component<Props, {}> {
         filterToggleStore={dag.hideBallotsToggleStore}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
-        headers={['Block Hash', 'height', 'Timestamp', 'Validator', 'Type']}
-        rows={dag.blocks}
-        renderRow={(block: JsonBlock) => {
-          const header = block.header;
-          const id = block.hash;
+        headers={[
+          'Height',
+          'Era Id',
+          'State',
+          'Block Hash',
+          'Parent Hash',
+          'Timestamp',
+          'Proposer'
+        ]}
+        rows={dag.eventStoreBlocks?.data}
+        renderRow={(block: BlockResult) => {
+          const id = block.blockHash;
           return (
             <tr key={id}>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
-              <td>{header.height}</td>
-              <td>
-                <Timestamp timestamp={header.timestamp} />
-              </td>
-              <td>{shortHash(header.proposer)}</td>
-              <td>
-                <BlockType block={block} />
-              </td>
+              <td>{block.parentHash}</td>
+              <td>{block.timestamp}</td>
+              <td>{block.eraId}</td>
+              <td>{block.proposer}</td>
+              <td>{block.state}</td>
+              <td>{block.height}</td>
               {/*fixme*/}
               {/*<td>*/}
               {/*  <Link*/}
@@ -89,18 +97,35 @@ class _BlockList extends React.Component<Props, {}> {
             </tr>
           );
         }}
-        filterRow={(block: JsonBlock) => {
+        filterRow={(block: BlockResult) => {
           // fixme
           // let msgType = block.getSummary()?.getHeader()?.getMessageType();
           // return msgType === Block.MessageType.BLOCK;
           return true;
         }}
         footerMessage={
-          <DagStepButtons
-            step={dag.step}
-            history={this.props.history}
-            urlWithRankAndDepth={Pages.blocksWithMaxRankAndDepth}
-          />
+          <div id="react-paginate">
+            <ReactPaginate
+              previousLabel={'previous'}
+              nextLabel={'next'}
+              breakLabel={'...'}
+              breakClassName={'break-me'}
+              pageCount={
+                dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount
+                  ? dag.eventStoreBlocks.pageCount
+                  : 1
+              }
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={5}
+              onPageChange={props =>
+                this.props.history.push(
+                  Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
+                )
+              }
+              containerClassName={'pagination'}
+              activeClassName={'active'}
+            />
+          </div>
         }
       />
     );
@@ -145,4 +170,30 @@ export const DagStepButtons = (props: {
       />
     </ListInline>
   );
+};
+
+export const DagPageButtons = (props: {
+  step: DagStep;
+  history: H.History;
+  urlWithPageNumberAndCount: (page: number, limit: number) => string;
+  pageCount: number | undefined;
+}) => {
+  const itemRendered = [];
+  if (props.pageCount && props.pageCount > 0)
+    for (let i = 1; i <= props.pageCount; i++) {
+      itemRendered.push(
+        <button
+          onClick={() =>
+            props.history.push(
+              props.urlWithPageNumberAndCount(i, props.step.limit)
+            )
+          }
+          title={i.toString()}
+          className="link icon-button"
+        >
+          {i}
+        </button>
+      );
+    }
+  return <ListInline>{itemRendered}</ListInline>;
 };

@@ -6,3 +6,4 @@ export { GrpcError } from './Errors';
 export { SubscribeTopics } from './CasperService';
 export * from './CasperServiceByJsonRPC';
 export * from './BalanceServiceByJsonRPC';
+export * from './EventService';

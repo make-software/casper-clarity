@@ -1,4 +1,4 @@
-import { action, IObservableArray, observable, reaction } from 'mobx';
+import { action, IObservableArray, observable, reaction, toJS } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
 import {
@@ -7,7 +7,13 @@ import {
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ToggleStore } from '../components/ToggleButton';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
-import { CasperServiceByJsonRPC, JsonBlock } from 'casperlabs-sdk';
+import {
+  BlockResult,
+  CasperServiceByJsonRPC,
+  EventService,
+  JsonBlock,
+  BlocksResult
+} from 'casperlabs-sdk';
 
 const DEFAULT_DEPTH = 100;
 
@@ -27,8 +33,24 @@ export class DagStep {
     return this.container.depth;
   }
 
+  get page() {
+    return this.container.page;
+  }
+
+  get limit() {
+    return this.container.count;
+  }
+
   set maxRank(rank: number) {
     this.container.maxRank = rank;
+  }
+
+  set page(_page: number) {
+    this.container.page = _page;
+  }
+
+  set limit(_limit: number) {
+    this.container.count = _limit;
   }
 
   private get currentMaxRank() {
@@ -54,9 +76,12 @@ export class DagStep {
 
 export class DagContainer {
   @observable blocks: IObservableArray<JsonBlock> | null = null;
+  @observable eventStoreBlocks: BlocksResult | null = null;
   @observable selectedBlock: JsonBlock | null = null;
   @observable depth = 10;
   @observable maxRank = 0;
+  @observable page: number = 0;
+  @observable count: number = 10;
   @observable validatorsListToggleStore: ToggleStore = new ToggleStore(false);
   @observable lastFinalizedBlock: BlockInfo | undefined = undefined;
   @observable hideBallotsToggleStore: ToggleStore = new ToggleStore(false);
@@ -65,7 +90,8 @@ export class DagContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperServiceByJsonRPC
+    private casperService: CasperServiceByJsonRPC,
+    private eventService: EventService
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
       {
@@ -78,11 +104,11 @@ export class DagContainer {
       () => this.refreshBlockDag()
     );
 
-    // react to the change of maxRank and depth, so that outer components only need to set DAG's props
+    // react to the change of maxRank, depth, page and count, so that outer components only need to set DAG's props
     // DAG manage the refresh by itself.
     reaction(
       () => {
-        return [this.maxRank, this.depth];
+        return [this.maxRank, this.depth, this.page, this.count];
       },
       () => {
         this.refreshBlockDagAndSetupSubscriber();
@@ -99,10 +125,25 @@ export class DagContainer {
     this.updateMaxRankAndDepth(maxRank, depth);
   }
 
+  refreshWithPageNumberAndCount(
+    pageStr: string | null,
+    countStr: string | null
+  ) {
+    let page = parseInt(pageStr || '') || 1;
+    let count = parseInt(countStr || '') || 10;
+    this.updateWithPageNumberAndCount(page, count);
+  }
+
   @action
   updateMaxRankAndDepth(rank: number, depth: number) {
     this.maxRank = rank;
     this.depth = depth;
+  }
+
+  @action
+  updateWithPageNumberAndCount(page: number, count: number) {
+    this.page = page;
+    this.count = count;
   }
 
   get minRank() {
@@ -138,89 +179,7 @@ export class DagContainer {
 
   // fixme
   @action.bound
-  private subscriberHandler(event: Event) {
-    // if (event.hasBlockAdded()) {
-    //   let block = event.getBlockAdded()?.getBlock();
-    //   if (block) {
-    //     let index: number | undefined = this.blocks?.findIndex(
-    //       b => b.hash === block!.getSummary()?.getBlockHash_asB64()
-    //     );
-    //
-    //     if (index === -1) {
-    //       blocks with rank < maxRank+1-depth will be culled
-    // let blockRank = block!.getSummary()!.getHeader()!.getJRank();
-    // let oldMaxRank = this.blocks ? this.blocks[0].header.height : 0;
-    // let maxRank = Math.max(oldMaxRank, blockRank);
-    // let culledThreshold = maxRank + 1 - this.depth;
-    // if (blockRank >= culledThreshold) {
-    //   The new block should be added to DAG.
-    // let remainingBlocks = this.blocks
-    //   ? this.blocks.filter(b => {
-    //       let rank = b.header.height;
-    //       if (rank !== undefined) {
-    //         return rank >= culledThreshold;
-    //       }
-    //       return false;
-    //     })
-    //   : [];
-    // insert item to an ordered array
-    // find first index I so that the newAddedBlock.jRank >= remainingBlocks[i].jRank
-    // let i = 0;
-    // for (; i < remainingBlocks.length; i++) {
-    //   if (blockRank >= remainingBlocks[i].header.height) {
-    //     break;
-    //   }
-    // }
-    // remainingBlocks.splice(i, 0, block);
-    // runInAction(() => {
-    //   this.blocks = observable.array(remainingBlocks);
-    // });
-    // } else {
-    //   otherwise ignore the new block and do nothing
-    // }
-    // }
-    // }
-    // } else if (event.hasNewFinalizedBlock()) {
-    //   const directFinalizedBlockHash = event
-    //     .getNewFinalizedBlock()!
-    //     .getBlockHash_asB64();
-    //
-    //   const orphanedBlocks = new Set(
-    //     event
-    //       .getNewFinalizedBlock()!
-    //       .getIndirectlyOrphanedBlockHashesList_asB64()
-    //   );
-    //   const finalizedBlocks = new Set(
-    //     event
-    //       .getNewFinalizedBlock()!
-    //       .getIndirectlyFinalizedBlockHashesList_asB64()
-    //   );
-    //   finalizedBlocks.add(directFinalizedBlockHash);
-    //
-    //   let updatedLastFinalizedBlock = false;
-    //   this.blocks?.forEach(block => {
-    //     let bh = block.getSummary()!.getBlockHash_asB64();
-    //     if (finalizedBlocks.has(bh)) {
-    //       block.getStatus()?.setFinality(BlockInfo.Status.Finality.FINALIZED);
-    //     } else if (orphanedBlocks.has(bh)) {
-    //       block.getStatus()?.setFinality(BlockInfo.Status.Finality.ORPHANED);
-    //     }
-    //     if (!updatedLastFinalizedBlock && bh === directFinalizedBlockHash) {
-    //       this.lastFinalizedBlock = block;
-    //       updatedLastFinalizedBlock = true;
-    //     }
-    //   });
-    //   if (!updatedLastFinalizedBlock) {
-    //     this.errors.capture(
-    //       this.casperService
-    //         .getBlockInfo(event.getNewFinalizedBlock()!.getBlockHash())
-    //         .then(block => {
-    //           this.lastFinalizedBlock = block;
-    //         })
-    //     );
-    //   }
-    // }
-  }
+  private subscriberHandler(event: Event) {}
 
   async refreshBlockDagAndSetupSubscriber() {
     await this.refreshBlockDag();
@@ -228,21 +187,13 @@ export class DagContainer {
   }
 
   private async refreshBlockDag() {
-    // todo: (ECO-399) Use a more elegant loading style to indicate it is loading
-    // fixme
-    // or maybe spin the loading button so that the user can know it is refreshing.
-    // await this.errors.capture(
-    //   this.casperService
-    //     .getBlockInfos(this.depth, this.maxRank)
-    //     .then(blocks => {
-    //       this.blocks = observable.array(blocks);
-    //     })
-    // );
-    // await this.errors.capture(
-    //   this.casperService.getLastFinalizedBlockInfo().then(block => {
-    //     this.lastFinalizedBlock = block;
-    //   })
-    // );
+    await this.errors.capture(
+      this.eventService
+        .getBlocks(this.page, this.count)
+        .then((blocks: BlocksResult): any => {
+          this.eventStoreBlocks = blocks;
+        })
+    );
   }
 }
 

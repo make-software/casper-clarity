@@ -463,8 +463,8 @@ const Content = (props: AppProps) => {
             <Route path={Pages.Explorer}>
               <Title title="Explorer" />
               <Explorer
-                maxRank={query.get('maxRank')}
-                depth={query.get('depth')}
+                page={query.get('page')}
+                limit={query.get('limit')}
                 {...props}
               />
             </Route>
@@ -475,8 +475,8 @@ const Content = (props: AppProps) => {
             <Route path={Pages.Blocks}>
               <Title title="Blocks" />
               <BlockList
-                maxRank={query.get('maxRank')}
-                depth={query.get('depth')}
+                page={query.get('page')}
+                limit={query.get('limit')}
                 {...props}
               />
             </Route>
@@ -552,6 +552,7 @@ const Footer = () => (
             >
               Telegram
             </a>
+            <div className="d-block">{process.env.REACT_APP_GIT_SHA}</div>
           </small>
           <small>
             Main

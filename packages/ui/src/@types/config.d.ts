@@ -22,6 +22,7 @@ interface Config {
   grpc: {
     url?: string;
   };
+  eventStoreUrl: string;
 }
 
 interface Auth0Config {

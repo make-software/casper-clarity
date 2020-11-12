@@ -5,22 +5,25 @@ import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_p
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { ToggleStore } from '../components/ToggleButton';
 import {
-  CasperServiceByJsonRPC,
   GetDeployResult,
-  JsonBlock,
-  BalanceServiceByJsonRPC
+  BalanceServiceByJsonRPC,
+  EventService,
+  BlockResult,
+  DeployResult
 } from 'casperlabs-sdk';
+import { ToggleableSubscriber } from './ToggleableSubscriber';
+import { DeployRequest } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 
 type AccountB16 = string;
 
 export class BlockContainer {
   @observable blockHashBase16: string | null = null;
-  @observable block: JsonBlock | null = null;
+  @observable block: BlockResult | null = null;
   @observable neighborhood: BlockInfo[] | null = null;
   // How much of the DAG to load around the block.
   @observable depth = 10;
   @observable hideBallotsToggleStore: ToggleStore = new ToggleStore(false);
-  @observable deploys: GetDeployResult[] | null = null;
+  @observable deploys: DeployResult[] | null = null;
   @observable balances: ObservableValueMap<
     AccountB16,
     number
@@ -28,8 +31,8 @@ export class BlockContainer {
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperServiceByJsonRPC,
-    private balanceService: BalanceServiceByJsonRPC
+    private balanceService: BalanceServiceByJsonRPC,
+    private eventService: EventService
   ) {}
 
   /** Call whenever the page switches to a new block. */
@@ -44,22 +47,23 @@ export class BlockContainer {
   async loadBlock() {
     if (this.blockHashBase16 == null) return;
     await this.errors.capture(
-      this.casperService.getBlockInfo(this.blockHashBase16).then(res => {
-        this.block = res.block;
+      this.eventService.getBlockHash(this.blockHashBase16).then(res => {
+        this.block = res;
       })
     );
   }
 
   async loadDeploys() {
-    if (this.block == null || !this.block?.header.deploy_hashes) {
-      this.deploys = null;
-      return;
+    this.deploys = [];
+    if (!this.block || this.block.deploys.length <= 0) {
+      this.deploys = [];
+    } else {
+      this.block.deploys.map(deploy => {
+        this.eventService.getDeployHash(deploy).then(res => {
+          this.deploys?.push(res);
+        });
+      });
     }
-    this.deploys = await Promise.all<GetDeployResult>(
-      this.block.header.deploy_hashes.map(d =>
-        this.casperService.getDeployInfo(d)
-      )
-    );
   }
 
   /** Load the balances of accounts that executed deploys in this block. */
@@ -68,7 +72,7 @@ export class BlockContainer {
       return;
     }
     for (let deploy of this.deploys) {
-      const accountKey = deploy.deploy.header.account;
+      const accountKey = deploy.account;
       const balance = await this.balanceService.getAccountBalance(
         this.blockHashBase16,
         accountKey
