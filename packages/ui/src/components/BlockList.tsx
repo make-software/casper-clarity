@@ -86,14 +86,6 @@ class _BlockList extends React.Component<Props, {}> {
               <td>{block.parentHash}</td>
               <td>{block.timestamp}</td>
               <td>{block.proposer}</td>
-              {/*fixme*/}
-              {/*<td>*/}
-              {/*  <Link*/}
-              {/*    to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}*/}
-              {/*  >*/}
-              {/*    {shortHash(header.getKeyBlockHash_asU8())}*/}
-              {/*  </Link>*/}
-              {/*</td>*/}
             </tr>
           );
         }}
@@ -110,11 +102,7 @@ class _BlockList extends React.Component<Props, {}> {
               nextLabel={'next'}
               breakLabel={'...'}
               breakClassName={'break-me'}
-              pageCount={
-                dag.eventStoreBlocks && dag.eventStoreBlocks.pageCount
-                  ? dag.eventStoreBlocks.pageCount
-                  : 1
-              }
+              pageCount={5}
               marginPagesDisplayed={2}
               pageRangeDisplayed={5}
               onPageChange={props =>
