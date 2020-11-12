@@ -68,7 +68,6 @@ class _BlockList extends React.Component<Props, {}> {
           'Era Id',
           'State',
           'Block Hash',
-          'Parent Hash',
           'Timestamp',
           'Proposer'
         ]}
@@ -83,7 +82,6 @@ class _BlockList extends React.Component<Props, {}> {
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
-              <td>{block.parentHash}</td>
               <td>{block.timestamp}</td>
               <td>{block.proposer}</td>
             </tr>
