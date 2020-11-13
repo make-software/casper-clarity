@@ -524,7 +524,6 @@ const Alerts = observer((props: AppProps) => {
   if (props.errors.lastError == null) return null;
   // Not using the `data-dismiss="alert"` to dismiss via Bootstrap JS
   // becuase then it doesn't re-render when there's a new error.
-  console.log('props.deploy', props.deploy);
   if (
     props.deploy.deploy === null &&
     props.deploy.deployHashBase16?.includes('deploy')

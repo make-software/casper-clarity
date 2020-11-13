@@ -47,7 +47,6 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
 
   render() {
     const { deployInfoList } = this.props;
-    console.log();
     return (
       <DataTable
         title={`Latest Deploys for account ${this.accountPublicKeyBase16}`}
