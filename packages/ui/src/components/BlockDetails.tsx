@@ -117,7 +117,6 @@ const DeploysTable = observer(
           'Account',
           'Gas Price',
           'State',
-          'Remaining Balance',
           'Status',
           'Error Message'
         ]}
@@ -136,9 +135,6 @@ const DeploysTable = observer(
               </td>
               <td className="text-right">
                 <span>{deploy.state}</span>
-              </td>
-              <td className="text-right">
-                <Balance balance={props.balances.get(accountId)} />
               </td>
               <td className="text-center">
                 {deploy.errorMessage ? <FailIcon /> : <SuccessIcon />}
