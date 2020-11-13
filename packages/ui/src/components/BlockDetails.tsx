@@ -156,7 +156,7 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
     ['Height', block.height],
     ['Era ID', block.eraId],
     ['State', block.state],
-    ['Block Hash', id],
+    ['Block Hash', <Link to={id}>{id}</Link>],
     ['Timestamp', block.timestamp],
     ['Proposer', block.proposer]
   ];
