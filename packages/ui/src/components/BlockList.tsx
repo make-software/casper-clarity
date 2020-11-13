@@ -58,7 +58,7 @@ class _BlockList extends React.Component<Props, {}> {
             ? 'Latest Blocks'
             : `Blocks from rank ${dag.minRank} to ${dag.maxRank}`
         }
-        refresh={() => this.refresh()}
+        // refresh={() => this.refresh()}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
         headers={[
