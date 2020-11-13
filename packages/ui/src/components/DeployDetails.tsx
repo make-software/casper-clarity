@@ -149,6 +149,7 @@ const deployAttrs: (deploy: DeployResult) => Array<[string, any]> = (
   const id = deploy.deployHash;
   return [
     ['Deploy Hash', id],
+    ['Block Hash', deploy.blockHash],
     ['Account Hash', deploy.account],
     ['Cost', deploy.cost],
     ['State', deploy.state],
