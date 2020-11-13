@@ -20,29 +20,33 @@ export class BalanceServiceByJsonRPC {
     blockHashBase16: string,
     accountPublicKeyHashBase16: string
   ): Promise<number | undefined> {
-    const stateRootHash = await this.casperService.getStateRootHash(
-      blockHashBase16
-    );
-    let balanceUref = this.balanceUrefs.get(accountPublicKeyHashBase16);
-
-    // Find the balance Uref and cache it if we don't have it.
-    if (!balanceUref) {
-      balanceUref = await this.casperService.getAccountBalanceUref(
-        stateRootHash,
-        accountPublicKeyHashBase16
+    try {
+      const stateRootHash = await this.casperService.getStateRootHash(
+        blockHashBase16
       );
-      if (balanceUref) {
-        this.balanceUrefs.set(accountPublicKeyHashBase16, balanceUref);
-      }
-    }
+      let balanceUref = this.balanceUrefs.get(accountPublicKeyHashBase16);
 
-    if (!balanceUref) {
+      // Find the balance Uref and cache it if we don't have it.
+      if (!balanceUref) {
+        balanceUref = await this.casperService.getAccountBalanceUref(
+          stateRootHash,
+          accountPublicKeyHashBase16
+        );
+        if (balanceUref) {
+          this.balanceUrefs.set(accountPublicKeyHashBase16, balanceUref);
+        }
+      }
+
+      if (!balanceUref) {
+        return undefined;
+      }
+
+      return await this.casperService.getAccountBalance(
+        stateRootHash,
+        balanceUref
+      );
+    } catch (e) {
       return undefined;
     }
-
-    return await this.casperService.getAccountBalance(
-      stateRootHash,
-      balanceUref
-    );
   }
 }

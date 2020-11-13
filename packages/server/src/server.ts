@@ -150,7 +150,7 @@ const checkJwt: express.RequestHandler = isMock
       })
     });
 
-if (process.env.SERVER_USE_TLS === 'true') {
+if (process.env.JSON_RPC_PROXY === 'true') {
   app.use(
     '/rpc',
     createProxyMiddleware('/rpc', {

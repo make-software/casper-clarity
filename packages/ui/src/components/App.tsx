@@ -319,13 +319,15 @@ class _Navigation extends RefreshableComponent<
             <span className={'navbar-network-highlight'}>
               {window.config?.network?.name}&nbsp;
             </span>
-            Validators count:&nbsp;
+            Block Height:&nbsp;
             <span className={'navbar-network-highlight'}>
-              {this.props.networkInfoContainer.validatorSize}&nbsp;
+              {this.props.networkInfoContainer.blockHeight}&nbsp;
             </span>
-            Main rank:&nbsp;
+          </p>
+          <p>
+            Block Hash:&nbsp;
             <span className={'navbar-network-highlight'}>
-              {this.props.networkInfoContainer.mainRank}&nbsp;
+              {this.props.networkInfoContainer.blockHash || 'null'}&nbsp;
             </span>
           </p>
         </div>

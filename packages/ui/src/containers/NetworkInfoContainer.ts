@@ -4,7 +4,8 @@ import { observable } from 'mobx';
 
 export class NetworkInfoContainer {
   @observable validatorSize: number = 0;
-  @observable mainRank: number = 0;
+  @observable blockHeight: number = 0;
+  @observable blockHash?: string;
   constructor(
     private errors: ErrorContainer,
     private casperService: CasperServiceByJsonRPC
@@ -12,13 +13,7 @@ export class NetworkInfoContainer {
 
   async refresh() {
     const lastBlock = await this.casperService.getLatestBlockInfo();
-
-    // fixme
-    // this.validatorSize = latestFinalizedBlock
-    //   .getSummary()!
-    //   .getHeader()!
-    //   .getState()!
-    //   .getBondsList()!.length;
-    this.mainRank = lastBlock.block?.header.height || 0;
+    this.blockHeight = lastBlock.block?.header.height || 0;
+    this.blockHash = lastBlock.block?.hash;
   }
 }
