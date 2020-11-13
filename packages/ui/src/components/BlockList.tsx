@@ -59,8 +59,6 @@ class _BlockList extends React.Component<Props, {}> {
             : `Blocks from rank ${dag.minRank} to ${dag.maxRank}`
         }
         refresh={() => this.refresh()}
-        subscribeToggleStore={dag.toggleableSubscriber.subscribeToggleStore}
-        filterToggleStore={dag.hideBallotsToggleStore}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
         headers={[
