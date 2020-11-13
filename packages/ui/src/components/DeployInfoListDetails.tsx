@@ -47,7 +47,6 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
 
   render() {
     const { deployInfoList } = this.props;
-    console.log();
     return (
       <DataTable
         title={`Latest Deploys for account ${this.accountPublicKeyBase16}`}
@@ -63,7 +62,11 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
         renderRow={(deployInfo: AccountDeploy) => {
           return (
             <tr key={deployInfo.deployHash}>
-              <td>{deployInfo.deployHash}</td>
+              <td>
+                <Link to={Pages.deploy(deployInfo.deployHash)}>
+                  {deployInfo.deployHash}
+                </Link>
+              </td>
               <td>{deployInfo.state}</td>
               <td className="text-center">{deployInfo.cost}</td>
               <td>{deployInfo.errorMessage}</td>

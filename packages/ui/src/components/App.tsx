@@ -526,6 +526,28 @@ const Alerts = observer((props: AppProps) => {
   if (props.errors.lastError == null) return null;
   // Not using the `data-dismiss="alert"` to dismiss via Bootstrap JS
   // becuase then it doesn't re-render when there's a new error.
+  if (
+    props.deploy.deploy === null &&
+    props.deploy.deployHashBase16?.includes('deploy')
+  )
+    return (
+      <div id="alert-message">
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          <button
+            type="button"
+            className="close"
+            aria-label="Close"
+            onClick={_ => props.errors.dismissLast()}
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <strong>Error! Deploy not found</strong>
+        </div>
+      </div>
+    );
   return (
     <div id="alert-message">
       <div

@@ -59,13 +59,6 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
           deployHashBase16={this.deployHashBase16}
           deploy={this.container.deploy}
         />
-        <ResultsTable
-          deployHashBase16={this.deployHashBase16}
-          jsonExecutionResult={this.container.jsonExecutionResults!}
-          deploy={this.container.deploy}
-          balances={this.container.balances}
-          refresh={() => this.refresh()}
-        />
       </div>
     );
   }
@@ -93,55 +86,55 @@ const DeployTable = observer(
   }
 );
 
-const ResultsTable = observer(
-  (props: {
-    deployHashBase16: string;
-    deploy: DeployResult | null;
-    jsonExecutionResult: JsonExecutionResult[];
-    balances: ObservableValueMap<string, number>;
-    refresh: () => void;
-  }) => {
-    return (
-      <DataTable
-        title={`Results for deploy ${props.deployHashBase16}`}
-        headers={[
-          'Block Hash',
-          'Finality',
-          'Cost',
-          'Remaining Balance',
-          'Result',
-          'Message'
-        ]}
-        rows={props.jsonExecutionResult}
-        renderRow={(proc, i) => {
-          const id = proc.block_hash;
-          return (
-            <tr key={i}>
-              <td>
-                <Link to={Pages.block(id)}>{shortHash(id)}</Link>
-              </td>
-              {/*fixme <td> <FinalityIcon block={proc} /> </td>*/}
-              <td>
-                <SuccessIcon />
-              </td>
-              <td className="text-right">
-                <CSPR motes={proc.result.cost} />
-              </td>
-              <td className="text-right">
-                <Balance balance={props.balances.get(id)} />
-              </td>
-              <td className="text-center">
-                {proc.result.error_message ? <FailIcon /> : <SuccessIcon />}
-              </td>
-              <td>{proc.result.error_message}</td>
-            </tr>
-          );
-        }}
-        refresh={() => props.refresh()}
-      />
-    );
-  }
-);
+// const ResultsTable = observer(
+//   (props: {
+//     deployHashBase16: string;
+//     deploy: DeployResult | null;
+//     jsonExecutionResult: JsonExecutionResult[];
+//     balances: ObservableValueMap<string, number>;
+//     refresh: () => void;
+//   }) => {
+//     return (
+//       <DataTable
+//         title={`Results for deploy ${props.deployHashBase16}`}
+//         headers={[
+//           'Block Hash',
+//           'Finality',
+//           'Cost',
+//           'Remaining Balance',
+//           'Result',
+//           'Message'
+//         ]}
+//         rows={props.jsonExecutionResult}
+//         renderRow={(proc, i) => {
+//           const id = proc.block_hash;
+//           return (
+//             <tr key={i}>
+//               <td>
+//                 <Link to={Pages.block(id)}>{shortHash(id)}</Link>
+//               </td>
+//               {/*fixme <td> <FinalityIcon block={proc} /> </td>*/}
+//               <td>
+//                 <SuccessIcon />
+//               </td>
+//               <td className="text-right">
+//                 <CSPR motes={proc.result.cost} />
+//               </td>
+//               <td className="text-right">
+//                 <Balance balance={props.balances.get(id)} />
+//               </td>
+//               <td className="text-center">
+//                 {proc.result.error_message ? <FailIcon /> : <SuccessIcon />}
+//               </td>
+//               <td>{proc.result.error_message}</td>
+//             </tr>
+//           );
+//         }}
+//         refresh={() => props.refresh()}
+//       />
+//     );
+//   }
+// );
 
 const deployAttrs: (deploy: DeployResult) => Array<[string, any]> = (
   deploy: DeployResult
@@ -149,9 +142,11 @@ const deployAttrs: (deploy: DeployResult) => Array<[string, any]> = (
   const id = deploy.deployHash;
   return [
     ['Deploy Hash', id],
+    ['Block Hash', deploy.blockHash],
     ['Account Hash', deploy.account],
     ['Cost', deploy.cost],
     ['State', deploy.state],
+    ['Status', deploy.errorMessage ? <FailIcon /> : <SuccessIcon />],
     ['Error Message', deploy.errorMessage]
   ];
 };
