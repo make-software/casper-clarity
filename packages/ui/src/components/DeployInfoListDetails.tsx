@@ -63,7 +63,11 @@ class _DeployInfoListDetails extends RefreshableComponent<Props, {}> {
         renderRow={(deployInfo: AccountDeploy) => {
           return (
             <tr key={deployInfo.deployHash}>
-              <td>{deployInfo.deployHash}</td>
+              <td>
+                <Link to={Pages.deploy(deployInfo.deployHash)}>
+                  {deployInfo.deployHash}
+                </Link>
+              </td>
               <td>{deployInfo.state}</td>
               <td className="text-center">{deployInfo.cost}</td>
               <td>{deployInfo.errorMessage}</td>
