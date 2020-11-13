@@ -3,45 +3,75 @@ import * as nacl from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
 import { ByteArray, encodeBase16, encodeBase64 } from '../index';
 import { byteHash } from './Contracts';
+import { SignKeyPair } from 'tweetnacl-ts';
 
-// Based on Keys.scala
-const publicKeyHashUtil = (signatureAlgorithm: string) => {
+enum SignatureAlgorithm {
+  Ed25519 = 'ed25519'
+}
+
+function publicKeyHashHelper(
+  signatureAlgorithm: SignatureAlgorithm,
+  publicKey: ByteArray
+) {
   const separator = Buffer.from([0]);
   const prefix = Buffer.concat([
     Buffer.from(signatureAlgorithm.toLowerCase()),
     separator
   ]);
 
-  return (publicKey: ByteArray) => {
-    if (publicKey.length === 0) {
-      return Buffer.from([]);
-    } else {
-      return byteHash(Buffer.concat([prefix, Buffer.from(publicKey)]));
-    }
-  };
-};
+  if (publicKey.length === 0) {
+    return Buffer.from([]);
+  } else {
+    return byteHash(Buffer.concat([prefix, Buffer.from(publicKey)]));
+  }
+}
 
-// Based on SignatureAlgorithm.scala
-export class Ed25519 {
-  /**
-   * Generating a new key pair
-   */
-  public static newKeyPair() {
-    return nacl.sign_keyPair();
+export abstract class AsymmetricKey {
+  public readonly publicKey: ByteArray;
+  public readonly privateKey: ByteArray;
+  protected readonly signatureAlgorithm: SignatureAlgorithm;
+
+  constructor(publicKey: ByteArray, privateKey: ByteArray) {
+    this.publicKey = publicKey;
+    this.privateKey = privateKey;
   }
 
   /**
    * Compute a unique hash from the algorithm name(Ed25519 here) and a public key, used for accounts.
    */
-  public static publicKeyHash: (
-    publicKey: ByteArray
-  ) => ByteArray = publicKeyHashUtil('ed25519');
+  public publicKeyHash(): ByteArray {
+    return publicKeyHashHelper(this.signatureAlgorithm, this.publicKey);
+  }
 
   /**
-   * Get the public key hex for public key
-   * @param publicKey
+   * Get the account hex
    */
-  public static publicKeyHex(publicKey: ByteArray) {
+  public abstract accountHex(): string;
+
+  public abstract exportPublicKeyInPem(): string;
+  public abstract exportPrivateKeyInPem(): string;
+  public abstract sign(msg: ByteArray): ByteArray;
+}
+
+// Based on SignatureAlgorithm.scala
+export class Ed25519 extends AsymmetricKey {
+  signatureAlgorithm = SignatureAlgorithm.Ed25519;
+
+  constructor(keyPair: SignKeyPair) {
+    super(keyPair.publicKey, keyPair.secretKey);
+  }
+  /**
+   * Generating a new key pair
+   */
+  public static new() {
+    return new Ed25519(nacl.sign_keyPair());
+  }
+
+  public accountHex(): string {
+    return Ed25519.accountHex(this.publicKey);
+  }
+
+  static accountHex(publicKey: ByteArray): string {
     return '01' + encodeBase16(publicKey);
   }
 
@@ -53,27 +83,31 @@ export class Ed25519 {
   public static parseKeyFiles(
     publicKeyPath: string,
     privateKeyPath: string
-  ): nacl.SignKeyPair {
+  ): AsymmetricKey {
     const publicKey = Ed25519.parsePublicKeyFile(publicKeyPath);
     const privateKey = Ed25519.parsePrivateKeyFile(privateKeyPath);
     // nacl expects that the private key will contain both.
-    return {
+    return new Ed25519({
       publicKey,
       secretKey: Buffer.concat([privateKey, publicKey])
-    };
+    });
+  }
+
+  public static publicKeyHash(publicKey: ByteArray): ByteArray {
+    return publicKeyHashHelper(SignatureAlgorithm.Ed25519, publicKey);
   }
 
   public static parseKeyPair(
     publicKey: ByteArray,
     privateKey: ByteArray
-  ): nacl.SignKeyPair {
+  ): AsymmetricKey {
     const publ = Ed25519.parsePublicKey(publicKey);
     const priv = Ed25519.parsePrivateKey(privateKey);
     // nacl expects that the private key will contain both.
-    return {
+    return new Ed25519({
       publicKey: publ,
       secretKey: Buffer.concat([priv, publ])
-    };
+    });
   }
 
   public static parsePrivateKeyFile(path: string): ByteArray {
@@ -139,13 +173,13 @@ export class Ed25519 {
     return key;
   }
 
-  static privateKeyEncodeInPem(privateKey: ByteArray) {
+  public exportPrivateKeyInPem() {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 46, 2, 1, 0, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32]);
     const encoded = encodeBase64(
       Buffer.concat([
         derPrefix,
-        Buffer.from(Ed25519.parsePrivateKey(privateKey))
+        Buffer.from(Ed25519.parsePrivateKey(this.privateKey))
       ])
     );
     return (
@@ -155,14 +189,18 @@ export class Ed25519 {
     );
   }
 
-  static publicKeyEncodeInPem(publicKey: ByteArray) {
+  public exportPublicKeyInPem() {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0] );
     const encoded = encodeBase64(
-      Buffer.concat([derPrefix, Buffer.from(publicKey)])
+      Buffer.concat([derPrefix, Buffer.from(this.publicKey)])
     );
     return (
       '-----BEGIN PUBLIC KEY-----\n' + encoded + '\n-----END PUBLIC KEY-----\n'
     );
+  }
+
+  sign(msg: ByteArray): ByteArray {
+    return nacl.sign_detached(msg, this.privateKey);
   }
 }

@@ -1,5 +1,4 @@
 import { computed, observable } from 'mobx';
-import * as nacl from 'tweetnacl-ts';
 import { saveAs } from 'file-saver';
 import ErrorContainer from './ErrorContainer';
 import { CleanableFormData } from './FormData';
@@ -14,7 +13,7 @@ import {
 } from 'casperlabs-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
-import { SignKeyPair } from 'tweetnacl-ts';
+import { AsymmetricKey } from 'casperlabs-sdk/dist/lib/Keys';
 
 // https://www.npmjs.com/package/tweetnacl-ts#signatures
 // https://tweetnacl.js.org/#/sign
@@ -165,13 +164,11 @@ export class AuthContainer {
     if (form instanceof NewAccountFormData && form.clean()) {
       // Save the private and public keys to disk.
       saveToFile(
-        Keys.Ed25519.privateKeyEncodeInPem(decodeBase64(form.privateKeyBase64)),
+        form.getKeys.exportPrivateKeyInPem(),
         `${form.name.$}_secret_key.pem`
       );
       saveToFile(
-        Keys.Ed25519.publicKeyEncodeInPem(
-          decodeBase64(form.publicKeyBase64.$!)
-        ),
+        form.getKeys.exportPublicKeyInPem(),
         `${form.name.$}_public_key.pem`
       );
       const publicKeyBase16 = encodeBase16(
@@ -279,16 +276,16 @@ class AccountFormData extends CleanableFormData {
 
 export class NewAccountFormData extends AccountFormData {
   @observable privateKeyBase64: string = '';
-  private keys: SignKeyPair;
+  private keys: AsymmetricKey;
 
   constructor(accounts: UserAccount[]) {
     super(accounts);
     // Generate key pair and assign to public and private keys.
-    this.keys = nacl.sign_keyPair();
+    this.keys = Keys.Ed25519.new();
     this.publicKeyBase64 = new FieldState<string>(
       encodeBase64(this.keys.publicKey)
     );
-    this.privateKeyBase64 = encodeBase64(this.keys.secretKey);
+    this.privateKeyBase64 = encodeBase64(this.keys.privateKey);
   }
 
   get getKeys() {

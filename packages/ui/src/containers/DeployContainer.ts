@@ -37,7 +37,7 @@ export class DeployContainer {
   async loadDeploy() {
     if (this.deployHashBase16 == null) return;
     await this.errors.capture(
-      this.eventService.getDeployHash(this.deployHashBase16).then(deploy => {
+      this.eventService.getDeployByHash(this.deployHashBase16).then(deploy => {
         this.deploy = deploy;
       })
     );

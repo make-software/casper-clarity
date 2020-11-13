@@ -6,7 +6,6 @@
 import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
 import { Option } from './option';
-import * as nacl from 'tweetnacl-ts';
 import { encodeBase16 } from './Conversions';
 import { CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
 import {
@@ -20,6 +19,7 @@ import {
 import { RuntimeArgs } from './RuntimeArgs';
 import JSBI from 'jsbi';
 import { Keys } from './index';
+import { AsymmetricKey } from './Keys';
 
 type ByteArray = Uint8Array;
 
@@ -318,16 +318,16 @@ export function makeDeploy(
  * Uses the provided key pair to sign the Deploy message
  *
  * @param deploy
- * @param signingKeyPair
+ * @param signingKey the keyPair to sign deploy
  */
 export const signDeploy = (
   deploy: Deploy,
-  signingKeyPair: nacl.SignKeyPair
+  signingKey: AsymmetricKey
 ): Deploy => {
   const approval = new Approval();
-  const signature = nacl.sign_detached(deploy.hash, signingKeyPair.secretKey);
-  approval.signer = Keys.Ed25519.publicKeyHex(signingKeyPair.publicKey);
-  approval.signature = Keys.Ed25519.publicKeyHex(signature);
+  const signature = signingKey.sign(deploy.hash);
+  approval.signer = signingKey.accountHex();
+  approval.signature = Keys.Ed25519.accountHex(signature);
   deploy.approvals.push(approval);
 
   return deploy;

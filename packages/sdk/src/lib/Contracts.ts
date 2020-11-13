@@ -1,11 +1,11 @@
 import blake from 'blakejs';
 import * as fs from 'fs';
 import { Message } from 'google-protobuf';
-import * as nacl from 'tweetnacl-ts';
 import { ByteArray, PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';
+import { AsymmetricKey } from './Keys';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -62,7 +62,7 @@ export class Contract {
     args: RuntimeArgs,
     paymentAmount: bigint,
     accountPublicKey: PublicKey,
-    signingKeyPair: nacl.SignKeyPair,
+    signingKeyPair: AsymmetricKey,
     chainName: string
   ): DeployUtil.Deploy {
     const session = new DeployUtil.ModuleBytes(
@@ -94,7 +94,7 @@ export class Contract {
 export class BoundContract {
   constructor(
     private contract: Contract,
-    private contractKeyPair: nacl.SignKeyPair
+    private contractKeyPair: AsymmetricKey
   ) {}
 
   public deploy(

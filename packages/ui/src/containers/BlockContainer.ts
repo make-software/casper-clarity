@@ -47,7 +47,7 @@ export class BlockContainer {
   async loadBlock() {
     if (this.blockHashBase16 == null) return;
     await this.errors.capture(
-      this.eventService.getBlockHash(this.blockHashBase16).then(res => {
+      this.eventService.getBlockByHash(this.blockHashBase16).then(res => {
         this.block = res;
       })
     );
@@ -59,7 +59,7 @@ export class BlockContainer {
       this.deploys = [];
     } else {
       this.block.deploys.map(deploy => {
-        this.eventService.getDeployHash(deploy).then(res => {
+        this.eventService.getDeployByHash(deploy).then(res => {
           this.deploys?.push(res);
         });
       });

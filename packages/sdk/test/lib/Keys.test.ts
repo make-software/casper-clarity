@@ -23,8 +23,10 @@ describe('Ed25519', () => {
 
   it('should generate PEM file for Ed25519 correct', () => {
     const naclKeyPair = Ed25519.newKeyPair();
-    const publicKeyInPem = Ed25519.publicKeyEncodeInPem(naclKeyPair.publicKey);
-    const privateKeyInPem = Ed25519.privateKeyEncodeInPem(
+    const publicKeyInPem = Ed25519.exportPublicKeyEncodeInPem(
+      naclKeyPair.publicKey
+    );
+    const privateKeyInPem = Ed25519.exportPrivateKeyEncodeInPem(
       naclKeyPair.secretKey
     );
 
