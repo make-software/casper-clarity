@@ -68,7 +68,6 @@ class _BlockList extends React.Component<Props, {}> {
           'Era Id',
           'State',
           'Block Hash',
-          'Parent Hash',
           'Timestamp',
           'Proposer'
         ]}
@@ -77,23 +76,14 @@ class _BlockList extends React.Component<Props, {}> {
           const id = block.blockHash;
           return (
             <tr key={id}>
+              <td>{block.height}</td>
+              <td>{block.eraId}</td>
+              <td>{block.state}</td>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>
-              <td>{block.parentHash}</td>
               <td>{block.timestamp}</td>
-              <td>{block.eraId}</td>
               <td>{block.proposer}</td>
-              <td>{block.state}</td>
-              <td>{block.height}</td>
-              {/*fixme*/}
-              {/*<td>*/}
-              {/*  <Link*/}
-              {/*    to={Pages.block(encodeBase16(header.getKeyBlockHash_asU8()))}*/}
-              {/*  >*/}
-              {/*    {shortHash(header.getKeyBlockHash_asU8())}*/}
-              {/*  </Link>*/}
-              {/*</td>*/}
             </tr>
           );
         }}
@@ -119,7 +109,10 @@ class _BlockList extends React.Component<Props, {}> {
               pageRangeDisplayed={5}
               onPageChange={props =>
                 this.props.history.push(
-                  Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
+                  Pages.blocksWithPageAndLimit(
+                    props.selected + 1,
+                    dag.step.limit
+                  )
                 )
               }
               containerClassName={'pagination'}

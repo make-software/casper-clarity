@@ -30,8 +30,13 @@ import AccountSelectorContainer from '../containers/AccountSelectorContainer';
 import ConnectedPeersContainer from '../containers/ConnectedPeersContainer';
 import ConnectedPeers from './ConnectedPeers';
 import { IoMdKey, IoIosWater, IoMdRocket } from 'react-icons/io';
-import { FaMapMarkedAlt, FaSearch, FaNetworkWired } from 'react-icons/fa';
-import { FiLogOut } from 'react-icons/fi';
+import {
+  FaMapMarkedAlt,
+  FaSearch,
+  FaNetworkWired,
+  FaListUl
+} from 'react-icons/fa';
+import { FiLogOut, FiGrid } from 'react-icons/fi';
 import { DeployContractsForm } from './DeployContracts';
 import { DeployContractsContainer } from '../containers/DeployContractsContainer';
 import { useEffect } from 'react';
@@ -124,12 +129,12 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   //   'Explorer',
   //   <FaMapMarkedAlt fontSize={SideMenuIconSize} />
   // ),
-  // new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
-  // new MenuItem(
-  //   Pages.Deploys,
-  //   'Deploys',
-  //   <FaListUl fontSize={SideMenuIconSize} />
-  // ),
+  new MenuItem(Pages.Blocks, 'Blocks', <FiGrid fontSize={SideMenuIconSize} />),
+  new MenuItem(
+    Pages.Deploys,
+    'Deploys',
+    <FaListUl fontSize={SideMenuIconSize} />
+  ),
   new MenuItem(
     Pages.Search,
     'Search',
@@ -449,6 +454,8 @@ const Content = (props: AppProps) => {
               <Title title="Deploys" />
               <DeployInfoListDetails
                 pageToken={query.get('pageToken')}
+                page={query.get('page')}
+                limit={query.get('limit')}
                 {...props}
               />
             </Route>

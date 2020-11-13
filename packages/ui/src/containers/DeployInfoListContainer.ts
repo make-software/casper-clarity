@@ -1,54 +1,47 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { ByteArray, CasperServiceByJsonRPC } from 'casperlabs-sdk';
-import { DeployInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
+import { AccountDeploysResult, EventService } from 'casperlabs-sdk';
 
 export class DeployInfoListContainer {
-  @observable deployInfosList: DeployInfo[] | null = null;
-  @observable pageToken: string | null = null;
-  @observable nextPageToken: string | null = null;
-  @observable prevPageToken: string | null = null;
-  @observable accountPublicKeyHash: ByteArray | null = null;
-  pageSize: number = 5;
+  @observable deployInfosList: AccountDeploysResult;
+  @observable pageNumber: number = 1;
+  @observable deployHash: string = '';
+  @observable pageSize: number = 10;
 
   constructor(
     private errors: ErrorContainer,
-    private casperService: CasperServiceByJsonRPC
+    private eventService: EventService
   ) {}
 
   /** Call whenever the page switches to a new account. */
   @action
-  init(accountPublicKeyHash: ByteArray, pageToken: string | null) {
-    this.accountPublicKeyHash = accountPublicKeyHash;
-    this.pageToken = pageToken;
-    this.deployInfosList = null;
+  init(deployHash: string) {
+    this.deployHash = deployHash;
+    this.deployInfosList = {
+      data: [],
+      pageCount: 0,
+      itemCount: 0,
+      pages: []
+    };
   }
 
   @action
-  async fetchPage(pageToken: string | null) {
-    this.pageToken = pageToken;
+  async fetchPage(deployHash: string) {
+    this.deployHash = deployHash;
     this.fetchData();
   }
 
   @action
   async fetchData() {
-    if (this.accountPublicKeyHash === null) return;
-    if (this.pageToken === '') return; // no more data
+    if (this.deployHash.length < 0) return;
     // fixme
-    // await this.errors.capture(
-    //   this.casperService
-    //     .getDeployInfos(
-    //       this.accountPublicKeyHash,
-    //       this.pageSize,
-    //       BlockInfo.View.BASIC,
-    //       this.pageToken || ''
-    //     )
-    //     .then(listDeployInfosResponse => {
-    //       this.deployInfosList = listDeployInfosResponse.getDeployInfosList();
-    //       this.nextPageToken = listDeployInfosResponse.getNextPageToken();
-    //       this.prevPageToken = listDeployInfosResponse.getPrevPageToken();
-    //     })
-    // );
+    await this.errors.capture(
+      this.eventService
+        .getAccountDeploys(this.deployHash, this.pageNumber, this.pageSize)
+        .then(response => {
+          this.deployInfosList = response;
+        })
+    );
   }
 }

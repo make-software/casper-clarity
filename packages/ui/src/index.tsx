@@ -63,8 +63,13 @@ const faucet = new FaucetContainer(
 );
 const dag = new DagContainer(errors, casperService, eventService);
 const block = new BlockContainer(errors, balanceService, eventService);
-const deploy = new DeployContainer(errors, casperService, balanceService);
-const deployInfoList = new DeployInfoListContainer(errors, casperService);
+const deploy = new DeployContainer(
+  errors,
+  casperService,
+  balanceService,
+  eventService
+);
+const deployInfoList = new DeployInfoListContainer(errors, eventService);
 const search = new SearchContainer(errors, casperService);
 const accountSelectorContainer = new AccountSelectorContainer();
 const connectedPeersContainer = new ConnectedPeersContainer(

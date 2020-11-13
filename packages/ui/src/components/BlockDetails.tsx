@@ -157,13 +157,12 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
 ) => {
   const id = block.blockHash;
   return [
-    ['Block Hash', id],
-    ['ParentHash', block.parentHash],
-    ['Timestamp', block.timestamp],
+    ['Height', block.height],
     ['Era ID', block.eraId],
-    ['Proposer', block.proposer],
     ['State', block.state],
-    ['Parent Hash', <BlockLink blockHashBase16={block.parentHash} />]
+    ['Block Hash', id],
+    ['Timestamp', block.timestamp],
+    ['Proposer', block.proposer]
   ];
 };
 
