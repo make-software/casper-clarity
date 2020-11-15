@@ -10,7 +10,6 @@ class ConnectButton extends RefreshableComponent<{ auth: AuthContainer }, {}> {
   constructor(props: any) {
     super(props);
     this.refreshIntervalMillis = 1000;
-    var signerError: boolean;
   }
 
   async refresh() {
