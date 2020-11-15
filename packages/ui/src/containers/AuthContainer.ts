@@ -10,7 +10,8 @@ import {
   encodeBase64,
   Keys,
   CasperServiceByJsonRPC,
-  BalanceServiceByJsonRPC
+  BalanceServiceByJsonRPC,
+  Signer
 } from 'casperlabs-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
@@ -58,6 +59,8 @@ export class AuthContainer {
   // How often to query balances. Lots of state queries to get one.
   balanceTtl = 5 * 60 * 1000;
 
+  @observable connectedToSigner: boolean;
+
   constructor(
     private errors: ErrorContainer,
     private authService: AuthService,
@@ -78,6 +81,8 @@ export class AuthContainer {
     }
 
     this.fetchUser();
+
+    this.connectedToSigner = !!(await Signer.isConnected());
   }
 
   async login() {
