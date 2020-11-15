@@ -378,7 +378,10 @@ class _Navigation extends RefreshableComponent<
                 </a>
               )}
             </li>
-            <li className="nav-item">
+            <li
+              className="nav-item"
+              style={{ paddingLeft: '1rem', paddingTop: '.3rem' }}
+            >
               <ConnectButton auth={this.props.auth} />
             </li>
           </ul>

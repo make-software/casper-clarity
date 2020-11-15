@@ -82,7 +82,11 @@ export class AuthContainer {
 
     this.fetchUser();
 
-    this.connectedToSigner = !!(await Signer.isConnected());
+    try {
+      this.connectedToSigner = !!(await Signer?.isConnected());
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async login() {

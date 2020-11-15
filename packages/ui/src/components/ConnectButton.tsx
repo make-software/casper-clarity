@@ -1,23 +1,40 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 
-import { Button } from './Utils';
+import { Button, RefreshableComponent } from './Utils';
 import { Signer } from 'casperlabs-sdk';
 import AuthContainer from '../containers/AuthContainer';
 
 @observer
-class ConnectButton extends React.Component<{ auth: AuthContainer }, {}> {
+class ConnectButton extends RefreshableComponent<{ auth: AuthContainer }, {}> {
   constructor(props: any) {
     super(props);
+    this.refreshIntervalMillis = 1000;
+    var signerError: boolean;
+  }
+
+  async refresh() {
+    try {
+      this.props.auth.connectedToSigner = !!(await Signer?.isConnected());
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   renderDisconnected() {
     return (
       <Button
         onClick={() => {
-          Signer.sendConnectionRequest();
+          try {
+            Signer.sendConnectionRequest();
+          } catch (err) {
+            alert(
+              'Please install the CasperLabs Signer from the Chrome Store:\nhttps://chrome.google.com/webstore/detail/casperlabs-signer/djhndpllfiibmcdbnmaaahkhchcoijce'
+            );
+            console.error(err);
+          }
         }}
-        title={'Not Connected'}
+        title={'Connect to Signer'}
         disabled={false}
         type={'primary'}
         size={'sm'}
@@ -31,7 +48,7 @@ class ConnectButton extends React.Component<{ auth: AuthContainer }, {}> {
         onClick={() => {
           alert('Already connected to Signer');
         }}
-        title={'Connected'}
+        title={'Connected to Signer'}
         disabled={true}
         type={'primary'}
         size={'sm'}
