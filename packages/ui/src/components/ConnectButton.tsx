@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 
 import { Button, RefreshableComponent } from './Utils';
-import { Signer } from 'casperlabs-sdk';
+import { Signer } from 'casper-client-sdk';
 import AuthContainer from '../containers/AuthContainer';
 
 @observer
