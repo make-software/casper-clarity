@@ -294,8 +294,13 @@ export class DeployContractsContainer {
   }
 
   async checkConnectionToSigner() {
-    let connected = await Signer.isConnected();
-    return connected;
+    try {
+      let connected = await Signer.isConnected();
+      return connected;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   }
 
   @action.bound
