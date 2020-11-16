@@ -9,7 +9,7 @@ describe('CasperServiceByJsonRPC', () => {
     // const status = await casperService.getLatestBlockInfo();
     const re = await casperService.getLatestBlockInfo();
     console.log(re.block!.header.system_transactions);
-    const balanceUref = await casperService.getAccountBalanceUref(
+    const balanceUref = await casperService.getAccountBalanceUrefByPublicKey(
       re.block!.hash,
       Ed25519.new().publicKey
     );

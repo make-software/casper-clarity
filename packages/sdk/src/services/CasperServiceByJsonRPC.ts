@@ -144,13 +144,29 @@ export class CasperServiceByJsonRPC {
   /**
    * Get the reference to the balance so we can cache it.
    */
-  async getAccountBalanceUref(stateRootHash: string, publicKey: PublicKey) {
+  async getAccountBalanceUrefByPublicKeyHash(
+    stateRootHash: string,
+    accountHash: string
+  ) {
     const account = await this.getBlockState(
       stateRootHash,
-      'account-hash-' + encodeBase16(publicKey.toAccountHash()),
+      'account-hash-' + accountHash,
       []
     ).then(res => res.stored_value.Account);
     return account.main_purse;
+  }
+
+  /**
+   * Get the reference to the balance so we can cache it.
+   */
+  async getAccountBalanceUrefByPublicKey(
+    stateRootHash: string,
+    publicKey: PublicKey
+  ) {
+    return this.getAccountBalanceUrefByPublicKeyHash(
+      stateRootHash,
+      encodeBase16(publicKey.toAccountHash())
+    );
   }
 
   async getAccountBalance(

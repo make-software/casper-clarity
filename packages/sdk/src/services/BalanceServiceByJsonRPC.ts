@@ -29,7 +29,7 @@ export class BalanceServiceByJsonRPC {
 
       // Find the balance Uref and cache it if we don't have it.
       if (!balanceUref) {
-        balanceUref = await this.casperService.getAccountBalanceUref(
+        balanceUref = await this.casperService.getAccountBalanceUrefByPublicKey(
           stateRootHash,
           publicKey
         );
