@@ -193,7 +193,7 @@ export class Ed25519 extends AsymmetricKey {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0] );
     const encoded = encodeBase64(
-      Buffer.concat([derPrefix, Buffer.from(this.publicKey)])
+      Buffer.concat([derPrefix, Buffer.from(this.publicKey.rawPublicKey)])
     );
     return (
       '-----BEGIN PUBLIC KEY-----\n' + encoded + '\n-----END PUBLIC KEY-----\n'

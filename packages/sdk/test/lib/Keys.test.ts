@@ -16,10 +16,12 @@ describe('Ed25519', () => {
     // use lower case for node-rs
     const name = Buffer.from('ED25519'.toLowerCase());
     const sep = decodeBase16('00');
-    const bytes = Buffer.concat([name, sep, signKeyPair.publicKey]);
+    const bytes = Buffer.concat([name, sep, signKeyPair.publicKey.toBytes()]);
     const hash = byteHash(bytes);
 
-    expect(Ed25519.accountHash(signKeyPair.publicKey)).deep.equal(hash);
+    expect(Ed25519.accountHash(signKeyPair.publicKey.toBytes())).deep.equal(
+      hash
+    );
   });
 
   it('should generate PEM file for Ed25519 correct', () => {
@@ -36,8 +38,8 @@ describe('Ed25519', () => {
     );
 
     // expect nacl could import the generated PEM
-    expect(encodeBase64(naclKeyPair.publicKey)).to.equal(
-      encodeBase64(signKeyPair2.publicKey)
+    expect(encodeBase64(naclKeyPair.publicKey.rawPublicKey)).to.equal(
+      encodeBase64(signKeyPair2.publicKey.rawPublicKey)
     );
     expect(encodeBase64(naclKeyPair.privateKey)).to.equal(
       encodeBase64(signKeyPair2.privateKey)
@@ -73,7 +75,11 @@ describe('Ed25519', () => {
     expect(Crypto.verify(null, message, pubKeyImported, signatureByNode)).to
       .true;
     expect(
-      nacl.sign_detached_verify(message, signatureByNacl, naclKeyPair.publicKey)
+      nacl.sign_detached_verify(
+        message,
+        signatureByNacl,
+        naclKeyPair.publicKey.rawPublicKey
+      )
     ).to.true;
   });
 });
