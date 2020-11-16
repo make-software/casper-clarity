@@ -2,7 +2,7 @@ import { CasperServiceByJsonRPC, EventService } from '../services';
 import { Keys, PublicKey } from './index';
 import * as nctl from 'tweetnacl-ts';
 import { SignLength } from 'tweetnacl-ts';
-import { encodeBase16 } from '../../dist';
+import { encodeBase16 } from './Conversions';
 
 type ByteArray = Uint8Array;
 
