@@ -46,6 +46,7 @@ import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
 import FaucetAsterix from '../img/faucet-asterix.svg';
 import { Signer } from 'casper-client-sdk';
+import ConnectButton from './ConnectButton';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 
@@ -384,18 +385,11 @@ class _Navigation extends RefreshableComponent<
                 </a>
               )}
             </li>
-            {/* George: Styling and spacing needs improving here */}
-            <li className="nav-item">
-              <Button
-                onClick={() => {
-                  Signer.sendConnectionRequest();
-                }}
-                title={'Connect to Signer'}
-                // Make button state/appearance conditional on connected or not
-                disabled={false}
-                type={'primary'}
-                size={'sm'}
-              />
+            <li
+              className="nav-item"
+              style={{ paddingLeft: '1rem', paddingTop: '.3rem' }}
+            >
+              <ConnectButton auth={this.props.auth} />
             </li>
           </ul>
         </div>

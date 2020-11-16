@@ -7,7 +7,8 @@ import {
   Icon,
   ListInline,
   Spinner,
-  SuccessIcon
+  SuccessIcon,
+  RefreshableComponent
 } from './Utils';
 import React from 'react';
 import {
@@ -33,7 +34,22 @@ interface Props {
 }
 
 @observer
-export class DeployContractsForm extends React.Component<Props, {}> {
+export class DeployContractsForm extends RefreshableComponent<Props, {}> {
+  constructor(props: Props) {
+    super(props);
+    this.refreshIntervalMillis = 1000;
+  }
+
+  connectedToSigner: boolean;
+
+  async refresh() {
+    try {
+      this.connectedToSigner = !!(await Signer?.isConnected());
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   private interval: number | null;
 
   componentDidMount(): void {
@@ -53,9 +69,10 @@ export class DeployContractsForm extends React.Component<Props, {}> {
   }
 
   render() {
+    // For some reason refresh() wasn't being called automatically
+    this.refresh();
     const { deployContractsContainer } = this.props;
-    // George-Note: This always succeeds as it doesn't handle the promise result
-    let hint = this.props.deployContractsContainer.checkConnectionToSigner() ? (
+    let hint = this.connectedToSigner ? (
       <p>
         <SuccessIcon /> We will use CasperLabs Signer extension to sign the
         deploy
@@ -63,7 +80,14 @@ export class DeployContractsForm extends React.Component<Props, {}> {
     ) : (
       <p>
         <FailIcon />
-        Please install or connect the CasperLabs Signer extension
+        Please connect to the Signer first. If you don't have it installed you
+        can get it&nbsp;
+        <a
+          href="https://chrome.google.com/webstore/detail/casperlabs-signer/djhndpllfiibmcdbnmaaahkhchcoijce"
+          target="_blank"
+        >
+          here.
+        </a>
       </p>
     );
     let modalAccountForm = (
