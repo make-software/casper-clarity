@@ -117,7 +117,6 @@ const DeploysTable = observer(
           'Account',
           'Gas Price',
           'State',
-          'Remaining Balance',
           'Status',
           'Error Message'
         ]}
@@ -136,9 +135,6 @@ const DeploysTable = observer(
               </td>
               <td className="text-right">
                 <span>{deploy.state}</span>
-              </td>
-              <td className="text-right">
-                <Balance balance={props.balances.get(accountId)} />
               </td>
               <td className="text-center">
                 {deploy.errorMessage ? <FailIcon /> : <SuccessIcon />}
@@ -160,7 +156,7 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
     ['Height', block.height],
     ['Era ID', block.eraId],
     ['State', block.state],
-    ['Block Hash', id],
+    ['Block Hash', <Link to={id}>{id}</Link>],
     ['Timestamp', block.timestamp],
     ['Proposer', block.proposer]
   ];
