@@ -1,4 +1,4 @@
-import { CasperServiceByJsonRPC, Keys } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC, Keys } from 'casper-client-sdk';
 import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'express-jwt';

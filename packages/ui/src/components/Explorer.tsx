@@ -9,7 +9,7 @@ import Pages from './Pages';
 import { BondedValidatorsTable } from './BondedValidatorsTable';
 import { ToggleButton } from './ToggleButton';
 import { FinalityIcon } from './BlockDetails';
-import { JsonBlock } from 'casperlabs-sdk';
+import { JsonBlock } from 'casper-client-sdk';
 
 /** Show the tips of the DAG. */
 @observer

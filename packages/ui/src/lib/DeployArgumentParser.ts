@@ -12,7 +12,7 @@ import {
   NamedArg,
   MapEntry,
   CLTypedAndToBytesHelper
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import { FormState } from 'formstate';
 import {
   DeployArgument,

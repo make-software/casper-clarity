@@ -1,4 +1,5 @@
 import { CasperServiceByJsonRPC } from './CasperServiceByJsonRPC';
+import { Ed25519 } from '../lib/Keys';
 
 describe('CasperServiceByJsonRPC', () => {
   it('should validate bool value and create bool Argument', async () => {
@@ -10,7 +11,7 @@ describe('CasperServiceByJsonRPC', () => {
     console.log(re.block!.header.system_transactions);
     const balanceUref = await casperService.getAccountBalanceUref(
       re.block!.hash,
-      '0000000000000000000000000000000000000000000000000000000000000000'
+      Ed25519.new().publicKey
     );
     const balance = await casperService.getAccountBalance(
       re.block!.hash,

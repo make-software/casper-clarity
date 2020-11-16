@@ -10,7 +10,7 @@ import Pages from './Pages';
 import Timestamp from './TimeStamp';
 import { BlockType } from './BlockDetails';
 import * as H from 'history';
-import { BlocksResult, BlockResult } from 'casperlabs-sdk';
+import { BlocksResult, BlockResult } from 'casper-client-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;

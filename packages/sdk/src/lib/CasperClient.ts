@@ -2,7 +2,6 @@ import { CasperServiceByJsonRPC, EventService } from '../services';
 import { Keys, PublicKey } from './index';
 import * as nctl from 'tweetnacl-ts';
 import { SignLength } from 'tweetnacl-ts';
-import { encodeBase16 } from './Conversions';
 
 type ByteArray = Uint8Array;
 
@@ -53,13 +52,6 @@ export class CasperClient {
    * Get the balance of public key
    */
   public async balanceOfByPublicKey(publicKey: PublicKey) {
-    return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
-  }
-
-  /**
-   * Get the balance by account hash
-   */
-  public async balanceOfByAccountHash(accountHashStr: string) {
     try {
       const stateRootHash = await this.nodeClient
         .getLatestBlockInfo()
@@ -70,7 +62,7 @@ export class CasperClient {
       }
       const balanceUref = await this.nodeClient.getAccountBalanceUref(
         stateRootHash,
-        accountHashStr
+        publicKey
       );
 
       if (!balanceUref) {
@@ -85,6 +77,13 @@ export class CasperClient {
       return 0;
     }
   }
+
+  /**
+   * Get the balance by account hash
+   */
+  // public async balanceOfByAccountHash(accountHashStr: string) {
+  //
+  // }
 
   /**
    * Get deploys for specified account

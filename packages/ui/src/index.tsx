@@ -19,7 +19,7 @@ import {
   DiagnosticsService,
   BalanceServiceByJsonRPC,
   EventService
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import { Auth0Service, MockAuthService } from './services/AuthService';
 import DagContainer from './containers/DagContainer';
 import BlockContainer from './containers/BlockContainer';

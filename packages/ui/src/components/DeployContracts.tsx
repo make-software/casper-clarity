@@ -26,7 +26,7 @@ import {
 } from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import Pages from './Pages';
 import { Link } from 'react-router-dom';
-import { DeployUtil, Signer } from 'casperlabs-sdk';
+import { DeployUtil, Signer } from 'casper-client-sdk';
 
 interface Props {
   deployContractsContainer: DeployContractsContainer;

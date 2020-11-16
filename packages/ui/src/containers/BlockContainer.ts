@@ -9,8 +9,9 @@ import {
   BalanceServiceByJsonRPC,
   EventService,
   BlockResult,
-  DeployResult
-} from 'casperlabs-sdk';
+  DeployResult,
+  PublicKey
+} from 'casper-client-sdk';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
 import { DeployRequest } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 
@@ -71,16 +72,16 @@ export class BlockContainer {
     if (this.deploys == null || this.blockHashBase16 == null) {
       return;
     }
-    for (let deploy of this.deploys) {
-      const accountKey = deploy.account;
-      const balance = await this.balanceService.getAccountBalance(
-        this.blockHashBase16,
-        accountKey
-      );
-      if (balance !== undefined) {
-        this.balances.set(accountKey, balance);
-      }
-    }
+    //   for (let deploy of this.deploys) {
+    //     const accountKey = deploy.account;
+    //     const balance = await this.balanceService.getAccountBalance(
+    //       this.blockHashBase16,
+    //       accountKey
+    //     );
+    //     if (balance !== undefined) {
+    //       this.balances.set(accountKey, balance);
+    //     }
+    //   }
   }
 }
 

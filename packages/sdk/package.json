@@ -1,5 +1,5 @@
 {
-  "name": "casper-js-sdk",
+  "name": "casper-client-sdk",
   "version": "1.0.0",
   "description": "SDK to interact with the Casper blockchain",
   "main": "dist/index.js",

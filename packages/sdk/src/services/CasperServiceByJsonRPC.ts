@@ -1,5 +1,5 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
-import { DeployUtil } from '..';
+import { DeployUtil, encodeBase16, PublicKey } from '..';
 import { deployToJson } from '../lib/DeployUtil';
 
 interface RpcResult {
@@ -144,13 +144,10 @@ export class CasperServiceByJsonRPC {
   /**
    * Get the reference to the balance so we can cache it.
    */
-  async getAccountBalanceUref(
-    stateRootHash: string,
-    accountPublicKeyHashBase16: string
-  ) {
+  async getAccountBalanceUref(stateRootHash: string, publicKey: PublicKey) {
     const account = await this.getBlockState(
       stateRootHash,
-      'account-hash-' + accountPublicKeyHashBase16,
+      'account-hash-' + encodeBase16(publicKey.toAccountHash()),
       []
     ).then(res => res.stored_value.Account);
     return account.main_purse;

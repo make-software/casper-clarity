@@ -8,7 +8,7 @@ import {
   JsonExecutionResult,
   BalanceServiceByJsonRPC,
   DeployResult
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 
 export class DeployContainer {
   @observable deployHashBase16: string | null = null;

@@ -45,7 +45,7 @@ import Validators from './Validators';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { NetworkInfoContainer } from '../containers/NetworkInfoContainer';
 import FaucetAsterix from '../img/faucet-asterix.svg';
-import { Signer } from 'casperlabs-sdk';
+import { Signer } from 'casper-client-sdk';
 
 // https://medium.com/@pshrmn/a-simple-react-router-v4-tutorial-7f23ff27adf
 

@@ -2,10 +2,10 @@ import React from 'react';
 import { observer } from 'mobx-react';
 
 import AuthContainer, {
-  publicKeyHashForEd25519,
+  accountHashForEd25519,
   ImportAccountFormData,
   NewAccountFormData,
-  getPublicKeyHash
+  getAccountHash
 } from '../containers/AuthContainer';
 import {
   Button,
@@ -17,10 +17,10 @@ import {
 import Modal from './Modal';
 
 import { FileSelect, Form, SelectField, TextField, TextArea } from './Forms';
-import { encodeBase16, encodeBase64 } from 'casperlabs-sdk';
+import { encodeBase16, encodeBase64 } from 'casper-client-sdk';
 import { ObservableValue } from '../lib/ObservableValueMap';
 import DataTable from './DataTable';
-import { Ed25519 } from 'casperlabs-sdk/dist/lib/Keys';
+import { Ed25519 } from 'casper-client-sdk/dist/lib/Keys';
 
 interface Props {
   auth: AuthContainer;
@@ -61,8 +61,8 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <TextField
               id="id-account-hash-base16"
               label="Account Hash"
-              fieldState={encodeBase16(
-                publicKeyHashForEd25519(newAccountForm.publicKeyBase64.value)
+              fieldState={accountHashForEd25519(
+                newAccountForm.publicKeyBase64.value
               )}
               readonly={true}
             />
@@ -112,8 +112,8 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <TextField
               id="id-account-hash-base16"
               label="Account Hash"
-              fieldState={encodeBase16(
-                publicKeyHashForEd25519(importAccountForm.publicKeyBase64.value)
+              fieldState={accountHashForEd25519(
+                importAccountForm.publicKeyBase64.value
               )}
               readonly={true}
             />
@@ -135,14 +135,12 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
           rows={this.props.auth.accounts}
           headers={['Name', 'Account Hash', 'Balance', '']}
           renderRow={(account: UserAccount) => {
-            let publicKeyHash = getPublicKeyHash(account);
-            const balance = this.props.auth.balances.get(
-              encodeBase64(publicKeyHash)
-            );
+            let accountHash = getAccountHash(account);
+            const balance = this.props.auth.balances.get(accountHash);
             return (
               <tr key={account.name}>
                 <td>{account.name}</td>
-                <td>{encodeBase16(publicKeyHash)}</td>
+                <td>{accountHash}</td>
                 <td>
                   <Balance balance={balance} />
                 </td>

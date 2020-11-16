@@ -1,10 +1,10 @@
 import { action, computed, observable } from 'mobx';
-import { decodeBase16 } from 'casperlabs-sdk';
+import { decodeBase16 } from 'casper-client-sdk';
 import { StateChangeOptions } from 'downshift';
 import matchSorter from 'match-sorter';
 import Pages from '../components/Pages';
 import * as H from 'history';
-import { getPublicKeyHashBase16 } from './AuthContainer';
+import { getAccountHash } from './AuthContainer';
 
 interface AccountKeyWithAlias {
   key: string;
@@ -20,7 +20,7 @@ export default class AccountSelectorContainer {
   @action
   init(accounts: UserAccount[], history: H.History) {
     (accounts || []).forEach(x => {
-      let publicKeyHashBase16 = getPublicKeyHashBase16(x);
+      let publicKeyHashBase16 = getAccountHash(x);
       this.accountNameToKeys.set(
         `${x.name} (${publicKeyHashBase16})`,
         publicKeyHashBase16

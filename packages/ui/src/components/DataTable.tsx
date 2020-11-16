@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Loading, RefreshButton } from './Utils';
 import { ToggleButton, ToggleStore } from './ToggleButton';
 import { observer } from 'mobx-react';
-import { BlockResult } from 'casperlabs-sdk';
+import { BlockResult } from 'casper-client-sdk';
 
 export interface Props<T> {
   title: string;

@@ -1,5 +1,5 @@
 import ErrorContainer from '../../../containers/ErrorContainer';
-import { CasperService } from 'casperlabs-sdk';
+import { CasperService } from 'casper-client-sdk';
 import { StateQuery } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 import { computed, observable } from 'mobx';
 import moment from 'moment';
@@ -143,22 +143,13 @@ export class VestingContainer {
       let clType = v.getClValue()!.getClType()!;
       if (this.isTypeOfU8FixedList(clType)) {
         // parse publicKey
-        value = v
-          .getClValue()!
-          .getValue()!
-          .getBytesValue_asU8();
+        value = v.getClValue()!.getValue()!.getBytesValue_asU8();
       } else if (this.isSimpleTypeOf(clType, CLType.Simple.BOOL)) {
         // parse Boolean
-        value = v
-          .getClValue()!
-          .getValue()!
-          .getBoolValue();
+        value = v.getClValue()!.getValue()!.getBoolValue();
       } else if (this.isSimpleTypeOf(clType, CLType.Simple.U512)) {
         // parse U512
-        let u512 = v
-          .getClValue()!
-          .getValue()!
-          .getU512()!;
+        let u512 = v.getClValue()!.getValue()!.getU512()!;
         value = Number(u512.getValue());
       }
       return value;
