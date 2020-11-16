@@ -93,7 +93,7 @@ export class Ed25519 extends AsymmetricKey {
     });
   }
 
-  public static publicKeyHash(publicKey: ByteArray): ByteArray {
+  public static accountHash(publicKey: ByteArray): ByteArray {
     return publicKeyHashHelper(SignatureAlgorithm.Ed25519, publicKey);
   }
 

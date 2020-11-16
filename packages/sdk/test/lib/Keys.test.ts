@@ -12,23 +12,20 @@ import * as os from 'os';
 
 describe('Ed25519', () => {
   it('calculates the account hash', () => {
-    const signKeyPair = Ed25519.newKeyPair();
-    const name = Buffer.from('ED25519');
+    const signKeyPair = Ed25519.new();
+    // use lower case for node-rs
+    const name = Buffer.from('ED25519'.toLowerCase());
     const sep = decodeBase16('00');
     const bytes = Buffer.concat([name, sep, signKeyPair.publicKey]);
     const hash = byteHash(bytes);
 
-    expect(Ed25519.publicKeyHash(signKeyPair.publicKey)).deep.equal(hash);
+    expect(Ed25519.accountHash(signKeyPair.publicKey)).deep.equal(hash);
   });
 
   it('should generate PEM file for Ed25519 correct', () => {
-    const naclKeyPair = Ed25519.newKeyPair();
-    const publicKeyInPem = Ed25519.exportPublicKeyEncodeInPem(
-      naclKeyPair.publicKey
-    );
-    const privateKeyInPem = Ed25519.exportPrivateKeyEncodeInPem(
-      naclKeyPair.secretKey
-    );
+    const naclKeyPair = Ed25519.new();
+    const publicKeyInPem = naclKeyPair.exportPublicKeyInPem();
+    const privateKeyInPem = naclKeyPair.exportPrivateKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
@@ -42,8 +39,8 @@ describe('Ed25519', () => {
     expect(encodeBase64(naclKeyPair.publicKey)).to.equal(
       encodeBase64(signKeyPair2.publicKey)
     );
-    expect(encodeBase64(naclKeyPair.secretKey)).to.equal(
-      encodeBase64(signKeyPair2.secretKey)
+    expect(encodeBase64(naclKeyPair.privateKey)).to.equal(
+      encodeBase64(signKeyPair2.privateKey)
     );
 
     // import pem file to nodejs std library
@@ -68,7 +65,7 @@ describe('Ed25519', () => {
     const signatureByNode = Crypto.sign(null, message, priKeyImported);
     const signatureByNacl = nacl.sign_detached(
       Buffer.from(message),
-      naclKeyPair.secretKey
+      naclKeyPair.privateKey
     );
     expect(encodeBase64(signatureByNode)).to.eq(encodeBase64(signatureByNacl));
 

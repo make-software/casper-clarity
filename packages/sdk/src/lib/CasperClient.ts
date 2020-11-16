@@ -3,6 +3,8 @@ import { Keys, PublicKey } from './index';
 import * as nctl from 'tweetnacl-ts';
 import { SignLength } from 'tweetnacl-ts';
 
+type ByteArray = Uint8Array;
+
 export class CasperClient {
   private nodeClient: CasperServiceByJsonRPC;
   private eventStoreClient: EventService;
@@ -26,10 +28,18 @@ export class CasperClient {
     return Keys.Ed25519.parsePrivateKeyFile(path);
   }
 
+  /**
+   * Load Ed25519 private key
+   * @param path
+   */
   public loadEdPublicKeyFromFile(path: string) {
     return Keys.Ed25519.parsePublicKeyFile(path);
   }
 
+  /**
+   * Compute Ed25519 public key from private Key.
+   * @param privateKey
+   */
   public privateToPublicKey(privateKey: ByteArray) {
     if (privateKey.length === SignLength.SecretKey) {
       return nctl.sign_keyPair_fromSecretKey(privateKey).publicKey;
@@ -38,7 +48,17 @@ export class CasperClient {
     }
   }
 
-  public async balanceOf(publicKey: PublicKey) {
+  /**
+   * Get the balance of public key
+   */
+  public async balanceOfByPublicKey(publicKey: PublicKey) {
+    return this.balanceOfByAccountHash(publicKey.toAccountHash());
+  }
+
+  /**
+   * Get the balance by account hash
+   */
+  public async balanceOfByAccountHash(accountHashStr: string) {
     const stateRootHash = await this.nodeClient
       .getLatestBlockInfo()
       .then(it => it.block?.header.state_root_hash);
@@ -48,7 +68,7 @@ export class CasperClient {
     }
     const balanceUref = await this.nodeClient.getAccountBalanceUref(
       stateRootHash,
-      publicKey.toAccountHash()
+      accountHashStr
     );
 
     if (!balanceUref) {
@@ -58,6 +78,12 @@ export class CasperClient {
     return await this.nodeClient.getAccountBalance(stateRootHash, balanceUref);
   }
 
+  /**
+   * Get deploys for specified account
+   * @param accountHash
+   * @param page
+   * @param limit
+   */
   public async getAccountsDeploys(
     accountHash: string,
     page: number,
@@ -70,6 +96,10 @@ export class CasperClient {
     );
   }
 
+  /**
+   * Get deploy by hash
+   * @param deployHash
+   */
   public async getDeployByHash(deployHash: string) {
     return await this.eventStoreClient.getDeployByHash(deployHash);
   }
