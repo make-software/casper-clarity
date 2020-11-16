@@ -363,7 +363,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
 export const deployToJson = (deploy: Deploy) => {
   const header = deploy.header;
   const headerJson = {
-    account: header.account.toAccountHash(),
+    account: header.account.toAccountHex(),
     timestamp: new Date(header.timestamp).toISOString(),
     ttl: '1h',
     gas_price: header.gasPrice,

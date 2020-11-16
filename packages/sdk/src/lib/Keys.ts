@@ -1,23 +1,20 @@
 import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
-import { ByteArray, encodeBase16, encodeBase64 } from '../index';
+import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
 import { SignKeyPair } from 'tweetnacl-ts';
 
-enum SignatureAlgorithm {
+export enum SignatureAlgorithm {
   Ed25519 = 'ed25519'
 }
 
-function publicKeyHashHelper(
+function accountHashHelper(
   signatureAlgorithm: SignatureAlgorithm,
   publicKey: ByteArray
 ) {
   const separator = Buffer.from([0]);
-  const prefix = Buffer.concat([
-    Buffer.from(signatureAlgorithm.toLowerCase()),
-    separator
-  ]);
+  const prefix = Buffer.concat([Buffer.from(signatureAlgorithm), separator]);
 
   if (publicKey.length === 0) {
     return Buffer.from([]);
@@ -27,20 +24,25 @@ function publicKeyHashHelper(
 }
 
 export abstract class AsymmetricKey {
-  public readonly publicKey: ByteArray;
+  public readonly publicKey: PublicKey;
   public readonly privateKey: ByteArray;
-  protected readonly signatureAlgorithm: SignatureAlgorithm;
+  public readonly signatureAlgorithm: SignatureAlgorithm;
 
-  constructor(publicKey: ByteArray, privateKey: ByteArray) {
-    this.publicKey = publicKey;
+  constructor(
+    publicKey: ByteArray,
+    privateKey: ByteArray,
+    signatureAlgorithm: SignatureAlgorithm
+  ) {
+    this.publicKey = PublicKey.from(publicKey, signatureAlgorithm);
     this.privateKey = privateKey;
+    this.signatureAlgorithm = signatureAlgorithm;
   }
 
   /**
    * Compute a unique hash from the algorithm name(Ed25519 here) and a public key, used for accounts.
    */
-  public publicKeyHash(): ByteArray {
-    return publicKeyHashHelper(this.signatureAlgorithm, this.publicKey);
+  public accountHash(): ByteArray {
+    return this.publicKey.toAccountHash();
   }
 
   /**
@@ -55,10 +57,8 @@ export abstract class AsymmetricKey {
 
 // Based on SignatureAlgorithm.scala
 export class Ed25519 extends AsymmetricKey {
-  signatureAlgorithm = SignatureAlgorithm.Ed25519;
-
   constructor(keyPair: SignKeyPair) {
-    super(keyPair.publicKey, keyPair.secretKey);
+    super(keyPair.publicKey, keyPair.secretKey, SignatureAlgorithm.Ed25519);
   }
   /**
    * Generating a new key pair
@@ -68,7 +68,7 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   public accountHex(): string {
-    return Ed25519.accountHex(this.publicKey);
+    return this.publicKey.toAccountHex();
   }
 
   static accountHex(publicKey: ByteArray): string {
@@ -94,7 +94,7 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   public static accountHash(publicKey: ByteArray): ByteArray {
-    return publicKeyHashHelper(SignatureAlgorithm.Ed25519, publicKey);
+    return accountHashHelper(SignatureAlgorithm.Ed25519, publicKey);
   }
 
   public static parseKeyPair(

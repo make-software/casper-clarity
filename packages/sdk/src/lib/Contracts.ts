@@ -105,7 +105,7 @@ export class BoundContract {
     return this.contract.deploy(
       args,
       paymentAmount,
-      PublicKey.fromEd25519(this.contractKeyPair.publicKey),
+      this.contractKeyPair.publicKey,
       this.contractKeyPair,
       chainName
     );

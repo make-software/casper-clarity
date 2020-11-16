@@ -80,12 +80,12 @@ export class EventService {
   }
 
   async getAccountDeploys(
-    accountHash: string,
+    accountHex: string,
     page: number,
     limit: number
   ): Promise<AccountDeploysResult> {
     const response = await axios.get(
-      this.url + `/accountDeploys/${accountHash}?page=${page}&limit=${limit}`
+      this.url + `/accountDeploys/${accountHex}?page=${page}&limit=${limit}`
     );
     return response.data;
   }

@@ -2,6 +2,7 @@ import { CasperServiceByJsonRPC, EventService } from '../services';
 import { Keys, PublicKey } from './index';
 import * as nctl from 'tweetnacl-ts';
 import { SignLength } from 'tweetnacl-ts';
+import { encodeBase16 } from './Conversions';
 
 type ByteArray = Uint8Array;
 
@@ -52,48 +53,56 @@ export class CasperClient {
    * Get the balance of public key
    */
   public async balanceOfByPublicKey(publicKey: PublicKey) {
-    return this.balanceOfByAccountHash(publicKey.toAccountHash());
+    return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
   }
 
   /**
    * Get the balance by account hash
    */
   public async balanceOfByAccountHash(accountHashStr: string) {
-    const stateRootHash = await this.nodeClient
-      .getLatestBlockInfo()
-      .then(it => it.block?.header.state_root_hash);
-    // Find the balance Uref and cache it if we don't have it.
-    if (!stateRootHash) {
-      return undefined;
-    }
-    const balanceUref = await this.nodeClient.getAccountBalanceUref(
-      stateRootHash,
-      accountHashStr
-    );
+    try {
+      const stateRootHash = await this.nodeClient
+        .getLatestBlockInfo()
+        .then(it => it.block?.header.state_root_hash);
+      // Find the balance Uref and cache it if we don't have it.
+      if (!stateRootHash) {
+        return 0;
+      }
+      const balanceUref = await this.nodeClient.getAccountBalanceUref(
+        stateRootHash,
+        accountHashStr
+      );
 
-    if (!balanceUref) {
-      return undefined;
-    }
+      if (!balanceUref) {
+        return 0;
+      }
 
-    return await this.nodeClient.getAccountBalance(stateRootHash, balanceUref);
+      return await this.nodeClient.getAccountBalance(
+        stateRootHash,
+        balanceUref
+      );
+    } catch (e) {
+      return 0;
+    }
   }
 
   /**
    * Get deploys for specified account
-   * @param accountHash
+   * @param publicKey
    * @param page
    * @param limit
    */
   public async getAccountsDeploys(
-    accountHash: string,
-    page: number,
-    limit: number
+    publicKey: PublicKey,
+    page: number = 0,
+    limit: number = 20
   ) {
-    return await this.eventStoreClient.getAccountDeploys(
-      accountHash,
+    const data = await this.eventStoreClient.getAccountDeploys(
+      publicKey.toAccountHex(),
       page,
       limit
     );
+    return data.data;
   }
 
   /**
