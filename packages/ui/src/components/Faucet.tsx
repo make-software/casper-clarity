@@ -36,7 +36,7 @@ class Faucet extends RefreshableComponent<Props, {}> {
           requests={faucet.faucetRequests}
           onRefresh={() => faucet.refreshFaucetRequestStatus()}
         />
-        <CliHint requests={faucet.faucetRequests} />
+        {/* <CliHint requests={faucet.faucetRequests} /> */}
       </div>
     );
   }
