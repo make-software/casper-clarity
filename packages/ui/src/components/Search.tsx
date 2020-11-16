@@ -5,7 +5,7 @@ import { Card, Button } from './Utils';
 import { Form, TextField, ErrorMessage, RadioField } from './Forms';
 import { Redirect } from 'react-router';
 import Pages from './Pages';
-import { GetBlockResult, GetDeployResult } from 'casperlabs-sdk';
+import { GetBlockResult, GetDeployResult } from 'casper-client-sdk';
 
 interface Props {
   search: SearchContainer;

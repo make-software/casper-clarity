@@ -16,7 +16,7 @@ import {
   DeployResult,
   GetDeployResult,
   JsonBlock
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 

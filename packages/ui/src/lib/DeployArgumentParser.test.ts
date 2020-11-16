@@ -9,7 +9,7 @@ import {
   encodeBase16,
   MapEntry,
   SimpleType
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import {
   BytesTypeStr,
   DeployContractsContainer
@@ -27,7 +27,7 @@ describe('DeployArgumentParser', () => {
     );
   });
 
-  it('should validate number value correctly', function() {
+  it('should validate number value correctly', function () {
     expect(DeployArgumentParser.validateBigInt(3, SimpleType.U8)).to.be.false;
     expect(DeployArgumentParser.validateBigInt(256, SimpleType.U8)).to.include(
       'is not a valid U8, which should be in [0, 255]'
@@ -50,7 +50,7 @@ describe('DeployArgumentParser', () => {
     );
   });
 
-  it('should validate string', function() {
+  it('should validate string', function () {
     expect(DeployArgumentParser.validateString('test')).to.be.false;
     expect(DeployArgumentParser.validateString('')).to.be.false;
     expect(DeployArgumentParser.validateString(1)).to.include(
@@ -223,7 +223,7 @@ describe('DeployArgumentParser', () => {
     );
   });
 
-  it('should create list Argument', async function() {
+  it('should create list Argument', async function () {
     const listDeployArg = DeployContractsContainer.newDeployArgument(
       true,
       'list',
@@ -250,7 +250,7 @@ describe('DeployArgumentParser', () => {
     expect(() => DeployArgumentParser.buildArgument(listDeployArg)).to.throws();
   });
 
-  it('should create fixed length list Argument', function() {
+  it('should create fixed length list Argument', function () {
     const listDeployArg = DeployContractsContainer.newDeployArgument(
       true,
       'fixedList',

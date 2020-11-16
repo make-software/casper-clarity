@@ -3,7 +3,7 @@ import {
   encodeBase16,
   CasperServiceByJsonRPC,
   JsonBlock
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import { action, computed, observable } from 'mobx';
 import {
   BlockInfo,

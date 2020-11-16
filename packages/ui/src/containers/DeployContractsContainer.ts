@@ -9,7 +9,7 @@ import {
   RuntimeArgs,
   PublicKey,
   decodeBase16
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import { FieldState, FormState } from 'formstate';
 import {
   numberGreaterThan,
@@ -19,7 +19,7 @@ import {
 } from '../lib/FormsValidator';
 import { DeployArgumentParser } from '../lib/DeployArgumentParser';
 import AuthService from '../services/AuthService';
-import { SimpleType, AccessRights } from 'casperlabs-sdk';
+import { SimpleType, AccessRights } from 'casper-client-sdk';
 import { decodeBase64 } from 'tweetnacl-ts';
 import MetricsService from '../services/MetricsService';
 import JSBI from 'jsbi';

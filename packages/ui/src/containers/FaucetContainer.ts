@@ -4,7 +4,7 @@ import ErrorContainer from './ErrorContainer';
 import StorageCell from '../lib/StorageCell';
 import FaucetService from '../services/FaucetService';
 import { getPublicKeyHashBase64 } from './AuthContainer';
-import { CasperServiceByJsonRPC, GetDeployResult } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC, GetDeployResult } from 'casper-client-sdk';
 
 export class FaucetContainer {
   private _faucetRequests = new StorageCell<FaucetRequest[]>(

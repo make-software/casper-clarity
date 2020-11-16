@@ -1,5 +1,5 @@
 import ErrorContainer from './ErrorContainer';
-import { CasperServiceByJsonRPC } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC } from 'casper-client-sdk';
 import { observable } from 'mobx';
 
 export class NetworkInfoContainer {

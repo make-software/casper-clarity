@@ -1,9 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { Form, SelectField, TextField } from './Forms';
-import AuthContainer, {
-  getPublicKeyHashBase16
-} from '../containers/AuthContainer';
+import AuthContainer, { getAccountHash } from '../containers/AuthContainer';
 import { FaucetContainer, FaucetRequest } from '../containers/FaucetContainer';
 import {
   RefreshableComponent,
@@ -74,8 +72,7 @@ const FaucetForm = observer(
             id="id-account-hash"
             label="Account Hash"
             fieldState={
-              (auth.selectedAccount &&
-                getPublicKeyHashBase16(auth.selectedAccount)) ||
+              (auth.selectedAccount && getAccountHash(auth.selectedAccount)) ||
               ''
             }
             readonly={true}

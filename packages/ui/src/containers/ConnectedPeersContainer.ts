@@ -1,6 +1,6 @@
 import ErrorContainer from './ErrorContainer';
 import { observable } from 'mobx';
-import { CasperServiceByJsonRPC } from 'casperlabs-sdk';
+import { CasperServiceByJsonRPC } from 'casper-client-sdk';
 
 export class ConnectedPeersContainer {
   @observable peers: Array<{ nodeId: string; address: string }> | null = null;

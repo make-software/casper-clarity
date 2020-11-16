@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { decodeBase16 } from './Conversions';
-import { CLValue, PublicKey, KeyValue } from './CLValue';
+import { decodeBase16 } from '../../src';
+import { CLValue, PublicKey, KeyValue } from '../../src/lib';
 import {
   toBytesDeployHash,
   toBytesI32,
@@ -10,8 +10,8 @@ import {
   toBytesU64,
   toBytesU8,
   toBytesVecT
-} from './byterepr';
-import { AccessRights, URef } from './uref';
+} from '../../src/lib/byterepr';
+import { AccessRights, URef } from '../../src/lib';
 
 describe(`numbers' toBytes`, () => {
   it('should be able to encode u8', () => {
@@ -39,9 +39,9 @@ describe(`numbers' toBytes`, () => {
     bytesI32 = toBytesI32(100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
     bytesI32 = toBytesI32(0);
-    expect(bytesI32).to.deep.eq(Uint8Array.from([]));
+    expect(bytesI32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
     bytesI32 = toBytesI32(-1);
-    expect(bytesI32).to.deep.eq(Uint8Array.from([]));
+    expect(bytesI32).to.deep.eq(Uint8Array.from([255, 255, 255, 255]));
   });
 
   it('should be able to encode u64', () => {

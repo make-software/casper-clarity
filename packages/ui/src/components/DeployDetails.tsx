@@ -13,7 +13,11 @@ import {
 } from './Utils';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { Balance } from './BlockDetails';
-import { DeployResult, JsonDeploy, JsonExecutionResult } from 'casperlabs-sdk';
+import {
+  DeployResult,
+  JsonDeploy,
+  JsonExecutionResult
+} from 'casper-client-sdk';
 
 // URL parameter
 type Params = {

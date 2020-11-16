@@ -1,8 +1,7 @@
 import { expect } from 'chai';
-import { CLValue } from './CLValue';
-import { RuntimeArgs } from './RuntimeArgs';
-import { decodeBase16 } from './Conversions';
-import { toBytesU32 } from './byterepr';
+import { CLValue, RuntimeArgs } from '../../src/lib';
+import { decodeBase16 } from '../../src';
+import { toBytesU32 } from '../../src/lib/byterepr';
 
 describe(`RuntimeArgs`, () => {
   it('should serialize RuntimeArgs correctly', () => {

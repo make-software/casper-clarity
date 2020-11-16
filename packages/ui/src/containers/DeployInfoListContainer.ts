@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { AccountDeploysResult, EventService } from 'casperlabs-sdk';
+import { AccountDeploysResult, EventService } from 'casper-client-sdk';
 
 export class DeployInfoListContainer {
   @observable deployInfosList: AccountDeploysResult;

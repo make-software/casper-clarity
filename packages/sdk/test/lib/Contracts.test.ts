@@ -33,7 +33,7 @@ describe('sign', () => {
     const privateKey = decodeBase64(privateKeyBase64);
     const keyPair = Ed25519.parseKeyPair(publicKey, privateKey);
 
-    const signature = nacl.sign_detached(input, keyPair.secretKey);
+    const signature = nacl.sign_detached(input, keyPair.privateKey);
 
     const signatureHex = Buffer.from(signature).toString('hex');
     const expectedHex =

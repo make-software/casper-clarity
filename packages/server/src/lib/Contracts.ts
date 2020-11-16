@@ -1,4 +1,4 @@
-import { RuntimeArgs, CLValue } from 'casperlabs-sdk';
+import { RuntimeArgs, CLValue } from 'casper-client-sdk';
 
 export class CallFaucet {
   public static args(accountHash: Uint8Array, amount: bigint): RuntimeArgs {

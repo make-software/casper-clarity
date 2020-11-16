@@ -15,7 +15,7 @@ import VestingChart from './VestingChart';
 import moment from 'moment';
 import { VestingContainer, VestingDetail } from '../container/VestingContainer';
 import Modal from '../../../components/Modal';
-import { encodeBase16 } from 'casperlabs-sdk';
+import { encodeBase16 } from 'casper-client-sdk';
 
 interface Props {
   auth: AuthContainer;

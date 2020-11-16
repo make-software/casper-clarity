@@ -1,5 +1,5 @@
 import validator from 'validator';
-import { decodeBase16 } from 'casperlabs-sdk';
+import { decodeBase16 } from 'casper-client-sdk';
 
 // These methods implement validators which can be used in formState library.
 // When there is a error, returns a message, otherwise returns false.

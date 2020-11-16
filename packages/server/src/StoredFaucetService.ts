@@ -1,13 +1,12 @@
 import {
   DeployHash,
   encodeBase16,
-  Keys,
-  PublicKey,
   CasperServiceByJsonRPC,
   DeployUtil
-} from 'casperlabs-sdk';
-import { ByteArray, SignKeyPair } from 'tweetnacl-ts';
+} from 'casper-client-sdk';
+import { ByteArray } from 'tweetnacl-ts';
 import { CallFaucet } from './lib/Contracts';
+import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
 
 // based on execution-engine/contracts/explorer/faucet-stored/src/main.rs
 const CONTRACT_NAME = 'faucet';
@@ -15,7 +14,7 @@ const ENTRY_POINT_NAME = 'call_faucet';
 
 export class StoredFaucetService {
   constructor(
-    private contractKeys: SignKeyPair,
+    private contractKeys: AsymmetricKey,
     private paymentAmount: bigint,
     private transferAmount: bigint,
     private casperService: CasperServiceByJsonRPC,
@@ -39,7 +38,7 @@ export class StoredFaucetService {
       const deployByName = DeployUtil.makeDeploy(
         session,
         payment,
-        PublicKey.fromEd25519(this.contractKeys.publicKey),
+        this.contractKeys.publicKey,
         this.chainName
       );
       const signedDeploy = DeployUtil.signDeploy(
@@ -67,9 +66,7 @@ export class StoredFaucetService {
       }
       const globalStateHash = LFB.header!.state_root_hash!;
 
-      const accountHash = Keys.Ed25519.publicKeyHash(
-        this.contractKeys.publicKey
-      );
+      const accountHash = this.contractKeys.accountHash();
       const state = await this.casperService.getBlockState(
         globalStateHash,
         'account-hash-' + encodeBase16(accountHash),

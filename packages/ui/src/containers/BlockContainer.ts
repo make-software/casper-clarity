@@ -9,8 +9,10 @@ import {
   BalanceServiceByJsonRPC,
   EventService,
   BlockResult,
-  DeployResult
-} from 'casperlabs-sdk';
+  DeployResult,
+  PublicKey,
+  decodeBase16
+} from 'casper-client-sdk';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
 import { DeployRequest } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 
@@ -47,7 +49,7 @@ export class BlockContainer {
   async loadBlock() {
     if (this.blockHashBase16 == null) return;
     await this.errors.capture(
-      this.eventService.getBlockHash(this.blockHashBase16).then(res => {
+      this.eventService.getBlockByHash(this.blockHashBase16).then(res => {
         this.block = res;
       })
     );
@@ -59,7 +61,7 @@ export class BlockContainer {
       this.deploys = [];
     } else {
       this.block.deploys.map(deploy => {
-        this.eventService.getDeployHash(deploy).then(res => {
+        this.eventService.getDeployByHash(deploy).then(res => {
           this.deploys?.push(res);
         });
       });
@@ -75,7 +77,7 @@ export class BlockContainer {
       const accountKey = deploy.account;
       const balance = await this.balanceService.getAccountBalance(
         this.blockHashBase16,
-        accountKey
+        PublicKey.fromEd25519(decodeBase16(accountKey.slice(2)))
       );
       if (balance !== undefined) {
         this.balances.set(accountKey, balance);
