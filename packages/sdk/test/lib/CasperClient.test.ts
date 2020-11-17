@@ -3,6 +3,7 @@ import { CasperClient } from '../../src/lib/CasperClient';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { Keys } from '../../src/lib';
 
 let casperClient: CasperClient;
 describe('CasperClient', () => {
@@ -12,7 +13,7 @@ describe('CasperClient', () => {
 
   it('should generate new Ed25519 key pair, and compute public key from private key', () => {
     const edKeyPair = casperClient.newEdKeyPair();
-    const publicKey = edKeyPair.publicKey;
+    const publicKey = edKeyPair.publicKey.rawPublicKey;
     const privateKey = edKeyPair.privateKey;
     const convertFromPrivateKey = casperClient.privateToPublicKey(privateKey);
     expect(convertFromPrivateKey).to.deep.equal(publicKey);
@@ -33,7 +34,14 @@ describe('CasperClient', () => {
       tempDir + '/private.pem'
     );
 
-    expect(publicKeyFromFIle).to.deep.equal(edKeyPair.publicKey);
-    expect(privateKeyFromFile).to.deep.equal(edKeyPair.privateKey);
+    const keyPairFromFile = Keys.Ed25519.parseKeyPair(
+      publicKeyFromFIle,
+      privateKeyFromFile
+    );
+
+    expect(keyPairFromFile.publicKey.rawPublicKey).to.deep.equal(
+      edKeyPair.publicKey.rawPublicKey
+    );
+    expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
   });
 });
