@@ -16,10 +16,14 @@ describe('Ed25519', () => {
     // use lower case for node-rs
     const name = Buffer.from('ED25519'.toLowerCase());
     const sep = decodeBase16('00');
-    const bytes = Buffer.concat([name, sep, signKeyPair.publicKey.toBytes()]);
+    const bytes = Buffer.concat([
+      name,
+      sep,
+      signKeyPair.publicKey.rawPublicKey
+    ]);
     const hash = byteHash(bytes);
 
-    expect(Ed25519.accountHash(signKeyPair.publicKey.toBytes())).deep.equal(
+    expect(Ed25519.accountHash(signKeyPair.publicKey.rawPublicKey)).deep.equal(
       hash
     );
   });
