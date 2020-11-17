@@ -40,10 +40,6 @@ export class ValidatorsContainer {
     private casperService: CasperServiceByJsonRPC
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
-      {
-        blockAdded: true,
-        blockFinalized: true
-      },
       this.casperService,
       e => {
         this.subscriberHandler(e);

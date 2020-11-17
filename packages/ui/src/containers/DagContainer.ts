@@ -94,10 +94,6 @@ export class DagContainer {
     private eventService: EventService
   ) {
     this.toggleableSubscriber = new ToggleableSubscriber(
-      {
-        blockAdded: true,
-        blockFinalized: true
-      },
       this.casperService,
       e => this.subscriberHandler(e),
       () => this.isLatestDag,

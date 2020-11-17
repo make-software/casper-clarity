@@ -2,7 +2,7 @@ import { action, observable, reaction } from 'mobx';
 import { ToggleStore } from '../components/ToggleButton';
 import { Subscription } from 'rxjs';
 import { Event } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { SubscribeTopics, CasperServiceByJsonRPC } from 'casper-client-sdk';
+import { CasperServiceByJsonRPC } from 'casper-client-sdk';
 
 enum SubscribeState {
   UN_INIT,
@@ -22,7 +22,6 @@ export class ToggleableSubscriber {
    * @param forceRefresh: a force refresh when toggle button switch from OFF to ON, so that it is deal with the latest state
    */
   constructor(
-    private subscribeTopics: SubscribeTopics,
     private casperService: CasperServiceByJsonRPC,
     private eventHandler: (event: Event) => void,
     private additionalEnable: () => boolean,
