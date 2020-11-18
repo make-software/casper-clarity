@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { decodeBase16 } from '../../src';
+import { decodeBase16, decodeBase64 } from '../../src';
 import { Ed25519 } from '../../src/lib/Keys';
 import { byteHash } from '../../src/lib/Contracts';
 import { encodeBase64 } from 'tweetnacl-ts';
@@ -85,5 +85,23 @@ describe('Ed25519', () => {
         naclKeyPair.publicKey.rawPublicKey
       )
     ).to.true;
+  });
+
+  it('should deal with different line-endings', () => {
+    const keyWithoutPem =
+      'MCowBQYDK2VwAyEA4PFXL2NuakBv3l7yrDg65HaYQtxKR+SCRTDI+lXBoM8=';
+    const key1 = decodeBase64(keyWithoutPem);
+    const keyWithLF =
+      '-----BEGIN PUBLIC KEY-----\n' +
+      'MCowBQYDK2VwAyEA4PFXL2NuakBv3l7yrDg65HaYQtxKR+SCRTDI+lXBoM8=\n' +
+      '-----END PUBLIC KEY-----\n';
+    const key2 = Ed25519.readBase64WithPEM(keyWithLF);
+    expect(key2).to.deep.eq(key1);
+    const keyWithCRLF =
+      '-----BEGIN PUBLIC KEY-----\r\n' +
+      'MCowBQYDK2VwAyEA4PFXL2NuakBv3l7yrDg65HaYQtxKR+SCRTDI+lXBoM8=\r\n' +
+      '-----END PUBLIC KEY-----\r\n';
+    const key3 = Ed25519.readBase64WithPEM(keyWithCRLF);
+    expect(key3).to.deep.eq(key1);
   });
 });
