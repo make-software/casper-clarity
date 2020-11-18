@@ -31,8 +31,7 @@ const Home = observer((props: Props) => {
             {props.auth.accounts &&
               props.auth.accounts.length > 0 && [
                 <FaucetCard key="faucet" />,
-                <ExploreCard key="explore" />,
-                <GraphQLCard key="graphql" />
+                <ExploreCard key="explore" />
               ]}
           </div>
         </div>
@@ -151,14 +150,6 @@ const ExploreCard = (_: {}) => {
   return (
     <Card background="info" icon="project-diagram" to={Pages.Explorer}>
       <CardMessage message="Explore the blockchain" />
-    </Card>
-  );
-};
-
-const GraphQLCard = (_: {}) => {
-  return (
-    <Card background="info" icon="flask" to={window.config.graphql.url}>
-      <CardMessage message="Try the GraphQL console!" />
     </Card>
   );
 };
