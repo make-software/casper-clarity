@@ -42,7 +42,10 @@ class _BlockList extends React.Component<Props, {}> {
     ) {
       return;
     }
-    this.props.dag.refreshWithPageNumberAndCount(nextProps.page, '1');
+    this.props.dag.refreshWithPageNumberAndCount(
+      nextProps.page,
+      nextProps.limit
+    );
   }
 
   render() {
@@ -104,7 +107,10 @@ class _BlockList extends React.Component<Props, {}> {
               pageRangeDisplayed={5}
               onPageChange={props =>
                 this.props.history.push(
-                  Pages.blocksWithPageAndLimit(props.selected + 1, 1)
+                  Pages.blocksWithPageAndLimit(
+                    props.selected + 1,
+                    dag.step.limit
+                  )
                 )
               }
               containerClassName={'pagination'}
