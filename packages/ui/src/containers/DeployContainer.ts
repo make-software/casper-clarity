@@ -37,7 +37,7 @@ export class DeployContainer {
   async loadDeploy() {
     if (this.deployHashBase16 == null) return;
     this.eventService
-      .getDeployHash(this.deployHashBase16)
+      .getDeployByHash(this.deployHashBase16)
       .then((deploy: any) => {
         this.deploy = deploy;
       })
