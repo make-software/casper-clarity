@@ -1,4 +1,3 @@
-import * as Args from './Args';
 import * as Contracts from './Contracts';
 import * as DeployUtil from './DeployUtil';
 import * as Keys from './Keys';
@@ -9,4 +8,4 @@ export * from './RuntimeArgs';
 export * from './uref';
 export * from './CasperClient';
 
-export { Args, Contracts, Keys, Serialization, DeployUtil, Signer };
+export { Contracts, Keys, Serialization, DeployUtil, Signer };

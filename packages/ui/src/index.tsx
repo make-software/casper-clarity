@@ -16,7 +16,6 @@ import ErrorContainer from './containers/ErrorContainer';
 import FaucetService from './services/FaucetService';
 import {
   CasperServiceByJsonRPC,
-  DiagnosticsService,
   BalanceServiceByJsonRPC,
   EventService
 } from 'casper-client-sdk';
@@ -45,7 +44,6 @@ const casperService = new CasperServiceByJsonRPC(
 );
 const eventService = new EventService(window.config.eventStoreUrl);
 const balanceService = new BalanceServiceByJsonRPC(casperService);
-new DiagnosticsService(window.config.grpc.url || window.origin);
 // State containers.
 const errors = new ErrorContainer();
 const auth = new AuthContainer(

@@ -1,6 +1,5 @@
 import blake from 'blakejs';
 import * as fs from 'fs';
-import { Message } from 'google-protobuf';
 import { ByteArray, PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
@@ -17,18 +16,6 @@ import { AsymmetricKey } from './Keys';
  */
 export function byteHash(x: ByteArray): ByteArray {
   return blake.blake2b(x, null, 32);
-}
-
-/**
- * Compute hash of protobuf object
- *
- * we use this method to compute
- * deployHash and blockHash
- *
- * @param x protobuf Message
- */
-export function protoHash<T extends Message>(x: T): ByteArray {
-  return byteHash(x.serializeBinary());
 }
 
 export class Contract {

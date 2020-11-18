@@ -1,6 +1,7 @@
 {
   "name": "casper-client-sdk",
-  "version": "1.0.0",
+  "version": "1.0.3",
+  "license": "Apache 2.0",
   "description": "SDK to interact with the Casper blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -48,14 +49,15 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@improbable-eng/grpc-web": "^0.9.6",
-    "@types/google-protobuf": "^3.7.1",
     "axios": "^0.21.0",
     "blakejs": "^1.1.0",
-    "google-protobuf": "^3.8.0-rc.1",
     "jsbi": "^3.1.2",
     "rxjs": "^6.5.3",
     "tweetnacl-ts": "^1.0.3",
+    "rpc-client-js": "^1.0.2",
+    "@ethersproject/bytes": "^5.0.5",
+    "@ethersproject/bignumber":"^5.0.8",
+    "@ethersproject/constants": "^5.0.5",
     "tweetnacl-util": "^0.15.0"
   }
 }
