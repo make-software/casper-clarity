@@ -104,7 +104,10 @@ class _BlockList extends React.Component<Props, {}> {
               pageRangeDisplayed={5}
               onPageChange={props =>
                 this.props.history.push(
-                  Pages.blocksWithPageAndLimit(props.selected, dag.step.limit)
+                  Pages.blocksWithPageAndLimit(
+                    props.selected,
+                    this.props.limit ? parseInt(this.props.limit) : 10
+                  )
                 )
               }
               containerClassName={'pagination'}
