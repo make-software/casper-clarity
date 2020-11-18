@@ -164,9 +164,6 @@ if (process.env.JSON_RPC_PROXY === 'true') {
 app.get('/config.js', (_, res) => {
   const conf = {
     auth0: config.auth0,
-    graphql: {
-      url: process.env.UI_GRAPHQL_URL
-    },
     auth: {
       mock: {
         enabled: isMock

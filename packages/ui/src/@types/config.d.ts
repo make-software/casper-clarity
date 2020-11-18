@@ -7,9 +7,6 @@ interface Window {
 
 interface Config {
   auth0: Auth0Config;
-  graphql: {
-    url?: string;
-  };
   network: {
     name?: string;
     chainName?: string;
