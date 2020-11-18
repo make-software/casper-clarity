@@ -148,7 +148,7 @@ const FaucetCard = (_: {}) => {
 const ExploreCard = (_: {}) => {
   // TODO: Display latest block timestamp.
   return (
-    <Card background="info" icon="project-diagram" to={Pages.Explorer}>
+    <Card background="info" icon="project-diagram" to={Pages.Blocks}>
       <CardMessage message="Explore the blockchain" />
     </Card>
   );
