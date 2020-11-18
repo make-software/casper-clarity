@@ -22,7 +22,7 @@ export interface Props extends RouteComponentProps<{}> {
 class _BlockList extends React.Component<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.dag.refreshWithPageNumberAndCount(props.page, props.limit);
+    this.props.dag.refreshWithPageNumberAndCount(props.page, '1');
   }
 
   async refresh() {
@@ -42,10 +42,7 @@ class _BlockList extends React.Component<Props, {}> {
     ) {
       return;
     }
-    this.props.dag.refreshWithPageNumberAndCount(
-      nextProps.page,
-      nextProps.limit
-    );
+    this.props.dag.refreshWithPageNumberAndCount(nextProps.page, '1');
   }
 
   render() {
@@ -107,10 +104,7 @@ class _BlockList extends React.Component<Props, {}> {
               pageRangeDisplayed={5}
               onPageChange={props =>
                 this.props.history.push(
-                  Pages.blocksWithPageAndLimit(
-                    props.selected + 1,
-                    dag.step.limit
-                  )
+                  Pages.blocksWithPageAndLimit(props.selected + 1, 1)
                 )
               }
               containerClassName={'pagination'}
