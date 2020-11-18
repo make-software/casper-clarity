@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import { DeployContainer } from '../containers/DeployContainer';
 import DataTable from './DataTable';
@@ -72,7 +72,19 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
 export const DeployDetails = withRouter(_DeployDetails);
 
 const DeployTable = observer(
-  (props: { deployHashBase16: string; deploy: DeployResult | null }) => {
+  (props: {
+    deployHashBase16: string;
+    deploy: DeployResult | null | string;
+  }) => {
+    if (typeof props.deploy === 'string') {
+      return (
+        <div className="container">
+          <div className="d-flex justify-content-center mt-5">
+            {props.deploy}
+          </div>
+        </div>
+      );
+    }
     const attrs = props.deploy && deployAttrs(props.deploy);
     return (
       <DataTable

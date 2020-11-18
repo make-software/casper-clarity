@@ -10,7 +10,8 @@ import {
   Keys,
   CasperServiceByJsonRPC,
   BalanceServiceByJsonRPC,
-  PublicKey,Signer
+  PublicKey,
+  Signer
 } from 'casper-client-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
