@@ -34,7 +34,6 @@ class Faucet extends RefreshableComponent<Props, {}> {
           requests={faucet.faucetRequests}
           onRefresh={() => faucet.refreshFaucetRequestStatus()}
         />
-        <CliHint requests={faucet.faucetRequests} />
       </div>
     );
   }
@@ -86,29 +85,6 @@ const FaucetForm = observer(
       </Card>
     );
   }
-);
-
-const CliHint = observer((props: { requests: FaucetRequest[] }) =>
-  props.requests.length > 0 ? (
-    <CommandLineHint>
-      <p>
-        You can also monitor the outcome of the deploys using the{' '}
-        <a
-          href="https://github.com/CasperLabs/CasperLabs/blob/dev/README.md#cli-client-tool-1"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          casperlabs-client
-        </a>
-        :
-      </p>
-      <pre>
-        {
-          'casperlabs-client --host deploy.casperlabs.io --port 40401 show-deploy <deploy-hash>'
-        }
-      </pre>
-    </CommandLineHint>
-  ) : null
 );
 
 const StatusTable = observer(
