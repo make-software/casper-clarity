@@ -42,7 +42,10 @@ class _BlockList extends React.Component<Props, {}> {
     ) {
       return;
     }
-    this.props.dag.refreshWithPageNumberAndCount(nextProps.page, '1');
+    this.props.dag.refreshWithPageNumberAndCount(
+      nextProps.page,
+      nextProps.limit
+    );
   }
 
   render() {
@@ -105,8 +108,8 @@ class _BlockList extends React.Component<Props, {}> {
               onPageChange={props =>
                 this.props.history.push(
                   Pages.blocksWithPageAndLimit(
-                    props.selected,
-                    this.props.limit ? parseInt(this.props.limit) : 10
+                    props.selected + 1,
+                    dag.step.limit
                   )
                 )
               }
