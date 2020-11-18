@@ -12,7 +12,7 @@ import {
 
 export class DeployContainer {
   @observable deployHashBase16: string | null = null;
-  @observable deploy: DeployResult | null = null;
+  @observable deploy: DeployResult | null | string = null;
   @observable jsonExecutionResults: JsonExecutionResult[] | null = null;
   @observable balances: ObservableValueMap<
     string,
@@ -36,11 +36,23 @@ export class DeployContainer {
 
   async loadDeploy() {
     if (this.deployHashBase16 == null) return;
-    await this.errors.capture(
-      this.eventService.getDeployHash(this.deployHashBase16).then(deploy => {
+    this.eventService
+      .getDeployHash(this.deployHashBase16)
+      .then(deploy => {
         this.deploy = deploy;
       })
-    );
+      .catch((err: any) => {
+        const { response } = err;
+        if (response.status === 404) {
+          this.deploy = 'Deploy not found!';
+          return;
+        }
+        return this.errors.capture(
+          new Promise((resolve, reject) => {
+            throw err;
+          })
+        );
+      });
   }
 
   /** Load the balances of the account at each block where the deploy was executed. */

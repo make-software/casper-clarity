@@ -59,7 +59,19 @@ class _DeployDetails extends RefreshableComponent<Props, {}> {
 export const DeployDetails = withRouter(_DeployDetails);
 
 const DeployTable = observer(
-  (props: { deployHashBase16: string; deploy: DeployResult | null }) => {
+  (props: {
+    deployHashBase16: string;
+    deploy: DeployResult | null | string;
+  }) => {
+    if (typeof props.deploy === 'string') {
+      return (
+        <div className="container">
+          <div className="d-flex justify-content-center mt-5">
+            {props.deploy}
+          </div>
+        </div>
+      );
+    }
     const attrs = props.deploy && deployAttrs(props.deploy);
     return (
       <DataTable
