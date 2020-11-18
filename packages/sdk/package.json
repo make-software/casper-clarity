@@ -1,6 +1,6 @@
 {
   "name": "casper-client-sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "Apache 2.0",
   "description": "SDK to interact with the Casper blockchain",
   "main": "dist/index.js",
@@ -54,6 +54,10 @@
     "jsbi": "^3.1.2",
     "rxjs": "^6.5.3",
     "tweetnacl-ts": "^1.0.3",
+    "rpc-client-js": "^1.0.2",
+    "@ethersproject/bytes": "^5.0.5",
+    "@ethersproject/bignumber":"^5.0.8",
+    "@ethersproject/constants": "^5.0.5",
     "tweetnacl-util": "^0.15.0"
   }
 }
