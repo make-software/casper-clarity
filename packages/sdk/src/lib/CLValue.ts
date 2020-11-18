@@ -12,6 +12,8 @@ import {
 import { BigNumberish } from '@ethersproject/bignumber';
 import { URef } from './uref';
 import { encodeBase16 } from './Conversions';
+import { byteHash } from './Contracts';
+import { SignatureAlgorithm } from './Keys';
 
 type ByteArray = Uint8Array;
 
@@ -274,7 +276,7 @@ class Tuple3 extends CLTypedAndToBytes {
 }
 
 export class PublicKey extends CLTypedAndToBytes {
-  private constructor(private publicKey: ByteArray, private tag: number) {
+  private constructor(public rawPublicKey: ByteArray, private tag: number) {
     super();
   }
   clType(): CLType {
@@ -284,15 +286,15 @@ export class PublicKey extends CLTypedAndToBytes {
   toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
-      toBytesArrayU8(this.publicKey)
+      toBytesArrayU8(this.rawPublicKey)
     ]);
   }
 
-  toAccountHash(): string {
+  toAccountHex(): string {
     let accountHash: string;
     switch (this.tag) {
       case 1:
-        accountHash = '01' + encodeBase16(this.publicKey);
+        accountHash = '01' + encodeBase16(this.rawPublicKey);
         break;
       default:
         throw new Error('Unsupported type of public key');
@@ -300,8 +302,47 @@ export class PublicKey extends CLTypedAndToBytes {
     return accountHash;
   }
 
+  toAccountHash(): ByteArray {
+    switch (this.tag) {
+      case 1:
+        const separator = Buffer.from([0]);
+        const prefix = Buffer.concat([
+          Buffer.from('ed25519'.toLowerCase()),
+          separator
+        ]);
+
+        if (this.rawPublicKey.length === 0) {
+          return Buffer.from([]);
+        } else {
+          return byteHash(
+            Buffer.concat([prefix, Buffer.from(this.rawPublicKey)])
+          );
+        }
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+  }
+
   static fromEd25519(publicKey: ByteArray) {
     return new PublicKey(publicKey, 1);
+  }
+
+  static from(publicKey: ByteArray, signatureAlgorithm: SignatureAlgorithm) {
+    switch (signatureAlgorithm) {
+      case SignatureAlgorithm.Ed25519:
+        return PublicKey.fromEd25519(publicKey);
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+  }
+
+  signatureAlgorithm() {
+    switch (this.tag) {
+      case 1:
+        return SignatureAlgorithm.Ed25519;
+      default:
+        throw new Error('Unsupported type of public key');
+    }
   }
 }
 

@@ -18,10 +18,13 @@
     "target": "es6",
     "skipLibCheck": true,
     "typeRoots": [
-      "src/@types",
+      "./src/@types",
       "../../node_modules/@types"
     ]
   },
-  "include": ["./src/**/*"],
+  "include": [
+	  "./src/**/*",
+	  "../ui/src/@types/models.d.ts"
+  ],
   "exclude": ["./test/**/*"]
 }

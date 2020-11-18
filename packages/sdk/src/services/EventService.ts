@@ -69,23 +69,23 @@ export class EventService {
     return response.data;
   }
 
-  async getDeployHash(deployHash: string): Promise<DeployResult> {
+  async getDeployByHash(deployHash: string): Promise<DeployResult> {
     const response = await axios.get(this.url + `/deploy/${deployHash}`);
     return response.data;
   }
 
-  async getBlockHash(blockHash: string): Promise<BlockResult> {
+  async getBlockByHash(blockHash: string): Promise<BlockResult> {
     const response = await axios.get(this.url + `/block/${blockHash}`);
     return response.data;
   }
 
   async getAccountDeploys(
-    deployHash: string,
+    accountHex: string,
     page: number,
     limit: number
   ): Promise<AccountDeploysResult> {
     const response = await axios.get(
-      this.url + `/accountDeploys/${deployHash}?page=${page}&limit=${limit}`
+      this.url + `/accountDeploys/${accountHex}?page=${page}&limit=${limit}`
     );
     return response.data;
   }

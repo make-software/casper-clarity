@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import DataTable from './DataTable';
 import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { encodeBase16, JsonBlock } from 'casperlabs-sdk';
+import { encodeBase16, JsonBlock } from 'casper-client-sdk';
 import { Icon } from './Utils';
 import { Bond } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 

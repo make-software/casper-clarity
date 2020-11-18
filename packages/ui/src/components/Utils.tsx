@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import AuthContainer from '../containers/AuthContainer';
-import { encodeBase16 } from 'casperlabs-sdk';
+import { encodeBase16 } from 'casper-client-sdk';
 import { Helmet } from 'react-helmet';
 
 export const Spinner = (msg: String) => (
@@ -63,8 +63,9 @@ export const Button = (props: {
   <button
     type="button"
     onClick={_ => props.onClick()}
-    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${props.type ||
-      'primary'}`}
+    className={`btn ${props.size ? `btn-${props.size}` : ''} btn-${
+      props.type || 'primary'
+    }`}
     disabled={props.disabled || false}
   >
     {props.title}

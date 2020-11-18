@@ -1,7 +1,7 @@
 {
-  "name": "casperlabs-sdk",
-  "version": "0.9.1",
-  "description": "SDK to interact with the CasperLabs blockchain using gRPC",
+  "name": "casper-client-sdk",
+  "version": "1.0.0",
+  "description": "SDK to interact with the Casper blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -14,19 +14,15 @@
     "docs": " typedoc --out docs src"
   },
   "keywords": [
-    "CasperLabs"
+    "Casper",
+    "BlockChain",
+    "sdk"
   ],
-  "author": "",
+  "author": "AbnerZheng <abner@casper.io>",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx,json,md}": [
-      "prettier --config .prettierrc --write",
-      "git add"
-    ]
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

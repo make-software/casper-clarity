@@ -13,7 +13,7 @@ import {
   EventService,
   JsonBlock,
   BlocksResult
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 
 const DEFAULT_DEPTH = 100;
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
-import { AccountDeploy } from 'casperlabs-sdk';
+import { AccountDeploy } from 'casper-client-sdk';
 import ReactPaginate from 'react-paginate';
 import { RefreshableComponent } from './Utils';
 import DataTable from './DataTable';

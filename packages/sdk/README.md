@@ -4,5 +4,5 @@
 
 ```bash
 # Basic Node.JS installation
-npm install casperlabs-sdk --save
+npm install casper-client-sdk --save
 ```

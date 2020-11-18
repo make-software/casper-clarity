@@ -7,7 +7,7 @@ import {
   CasperServiceByJsonRPC,
   GetBlockResult,
   GetDeployResult
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import { CleanableFormData } from './FormData';
 import { grpc } from '@improbable-eng/grpc-web';
 import { FieldState } from 'formstate';

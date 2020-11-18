@@ -8,7 +8,7 @@ import {
   JsonExecutionResult,
   BalanceServiceByJsonRPC,
   DeployResult
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 
 export class DeployContainer {
   @observable deployHashBase16: string | null = null;
@@ -38,7 +38,7 @@ export class DeployContainer {
     if (this.deployHashBase16 == null) return;
     this.eventService
       .getDeployHash(this.deployHashBase16)
-      .then(deploy => {
+      .then((deploy: any) => {
         this.deploy = deploy;
       })
       .catch((err: any) => {

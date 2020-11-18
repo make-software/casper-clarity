@@ -1,5 +1,4 @@
 import { computed, observable } from 'mobx';
-import * as nacl from 'tweetnacl-ts';
 import { saveAs } from 'file-saver';
 import ErrorContainer from './ErrorContainer';
 import { CleanableFormData } from './FormData';
@@ -11,34 +10,43 @@ import {
   Keys,
   CasperServiceByJsonRPC,
   BalanceServiceByJsonRPC,
+  PublicKey,
   Signer
-} from 'casperlabs-sdk';
+} from 'casper-client-sdk';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { FieldState } from 'formstate';
-import { SignKeyPair } from 'tweetnacl-ts';
+import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
 
 // https://www.npmjs.com/package/tweetnacl-ts#signatures
 // https://tweetnacl.js.org/#/sign
 
 type AccountB64 = string;
 
-export const publicKeyHashForEd25519 = (publicKeyBase64: string) => {
-  return Keys.Ed25519.publicKeyHash(decodeBase64(publicKeyBase64));
+export const accountHashForEd25519 = (publicKeyBase64: string) => {
+  return Keys.Ed25519.accountHex(decodeBase64(publicKeyBase64));
 };
 
-export const getPublicKeyHash = (account: UserAccount) => {
+export const getPublicKeyHashBase64 = (account: UserAccount) => {
   if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
-    return publicKeyHashForEd25519(account.publicKeyBase64);
+    return encodeBase64(
+      Keys.Ed25519.accountHash(decodeBase64(account.publicKeyBase64))
+    );
   }
   throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
 };
 
-export const getPublicKeyHashBase16 = (account: UserAccount) => {
-  return encodeBase16(getPublicKeyHash(account));
+export const getAccountHash = (account: UserAccount) => {
+  if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
+    return accountHashForEd25519(account.publicKeyBase64);
+  }
+  throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
 };
 
-export const getPublicKeyHashBase64 = (account: UserAccount) => {
-  return encodeBase64(getPublicKeyHash(account));
+export const getPublicKeyFromAccount = (account: UserAccount) => {
+  if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
+    return PublicKey.fromEd25519(decodeBase64(account.publicKeyBase64));
+  }
+  throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
 };
 
 export class AuthContainer {
@@ -127,8 +135,8 @@ export class AuthContainer {
     let latestBlockHash: string | null = null;
 
     for (let account of this.accounts || []) {
-      const publicKeyHashBase64 = getPublicKeyHashBase64(account);
-      const balance = this.balances.get(publicKeyHashBase64);
+      const accountHash = getAccountHash(account);
+      const balance = this.balances.get(accountHash);
 
       const needsUpdate =
         force ||
@@ -146,10 +154,10 @@ export class AuthContainer {
         if (latestBlockHash !== null) {
           const latestAccountBalance = await this.balanceService.getAccountBalance(
             latestBlockHash,
-            encodeBase16(getPublicKeyHash(account))
+            getPublicKeyFromAccount(account)
           );
 
-          this.balances.set(publicKeyHashBase64, {
+          this.balances.set(accountHash, {
             checkedAt: now,
             blockHashBase16: latestBlockHash,
             balance: latestAccountBalance
@@ -174,13 +182,11 @@ export class AuthContainer {
     if (form instanceof NewAccountFormData && form.clean()) {
       // Save the private and public keys to disk.
       saveToFile(
-        Keys.Ed25519.privateKeyEncodeInPem(decodeBase64(form.privateKeyBase64)),
+        form.getKeys.exportPrivateKeyInPem(),
         `${form.name.$}_secret_key.pem`
       );
       saveToFile(
-        Keys.Ed25519.publicKeyEncodeInPem(
-          decodeBase64(form.publicKeyBase64.$!)
-        ),
+        form.getKeys.exportPublicKeyInPem(),
         `${form.name.$}_public_key.pem`
       );
       const publicKeyBase16 = encodeBase16(
@@ -288,16 +294,16 @@ class AccountFormData extends CleanableFormData {
 
 export class NewAccountFormData extends AccountFormData {
   @observable privateKeyBase64: string = '';
-  private keys: SignKeyPair;
+  private keys: AsymmetricKey;
 
   constructor(accounts: UserAccount[]) {
     super(accounts);
     // Generate key pair and assign to public and private keys.
-    this.keys = nacl.sign_keyPair();
+    this.keys = Keys.Ed25519.new();
     this.publicKeyBase64 = new FieldState<string>(
-      encodeBase64(this.keys.publicKey)
+      encodeBase64(this.keys.publicKey.rawPublicKey)
     );
-    this.privateKeyBase64 = encodeBase64(this.keys.secretKey);
+    this.privateKeyBase64 = encodeBase64(this.keys.privateKey);
   }
 
   get getKeys() {
