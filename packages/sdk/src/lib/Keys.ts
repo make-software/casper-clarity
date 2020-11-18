@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
+import { SignKeyPair } from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
 import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
-import { SignKeyPair } from 'tweetnacl-ts';
 
 export enum SignatureAlgorithm {
   Ed25519 = 'ed25519'
@@ -133,20 +133,23 @@ export class Ed25519 extends AsymmetricKey {
    * Example PEM:
    *
    * ```
-   * -----BEGIN PUBLIC KEY-----
-   * MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEj1fgdbpNbt06EY/8C+wbBXq6VvG+vCVD
-   * Nl74LvVAmXfpdzCWFKbdrnIlX3EFDxkd9qpk35F/kLcqV3rDn/u3dg==
-   * -----END PUBLIC KEY-----
+   * -----BEGIN PUBLIC KEY-----\r\n
+   * MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEj1fgdbpNbt06EY/8C+wbBXq6VvG+vCVD\r\n
+   * Nl74LvVAmXfpdzCWFKbdrnIlX3EFDxkd9qpk35F/kLcqV3rDn/u3dg==\r\n
+   * -----END PUBLIC KEY-----\r\n
    * ```
    *
    */
   public static readBase64WithPEM(content: string): ByteArray {
     const base64 = content
-      .split('\n')
+      // there are two kinks of line-endings, CRLF(\r\n) and LF(\n)
+      // we need handle both
+      .split(/\r?\n/)
       .filter(x => !x.startsWith('---'))
-      .join('');
-    const bytes = decodeBase64(base64);
-    return bytes;
+      .join('')
+      // remove the line-endings in the end of content
+      .trim();
+    return decodeBase64(base64);
   }
 
   /**
