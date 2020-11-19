@@ -371,7 +371,11 @@ const TypeSelectCol = observer(
             }}
           >
             {Object.keys(SimpleType)
-              .filter(opt => (SimpleType as any)[opt] !== SimpleType.Unit)
+              .filter(
+                opt =>
+                  (SimpleType as any)[opt] !== SimpleType.Unit &&
+                  isNaN(Number(opt))
+              )
               .map(opt => (
                 <option key={opt} value={(SimpleType as any)[opt]}>
                   {opt}
