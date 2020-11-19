@@ -22,7 +22,7 @@ export interface Props extends RouteComponentProps<{}> {
 class _BlockList extends React.Component<Props, {}> {
   constructor(props: Props) {
     super(props);
-    this.props.dag.refreshWithPageNumberAndCount(props.page, '1');
+    this.props.dag.refreshWithPageNumberAndCount(props.page, '10');
   }
 
   async refresh() {
