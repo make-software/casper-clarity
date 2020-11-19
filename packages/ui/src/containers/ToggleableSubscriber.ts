@@ -1,7 +1,6 @@
 import { action, observable, reaction } from 'mobx';
 import { ToggleStore } from '../components/ToggleButton';
 import { Subscription } from 'rxjs';
-import { Event } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { CasperServiceByJsonRPC } from 'casper-client-sdk';
 
 enum SubscribeState {

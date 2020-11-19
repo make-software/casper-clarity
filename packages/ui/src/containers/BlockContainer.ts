@@ -1,27 +1,24 @@
 import { action, observable } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import ObservableValueMap from '../lib/ObservableValueMap';
 import { ToggleStore } from '../components/ToggleButton';
 import {
-  GetDeployResult,
   BalanceServiceByJsonRPC,
   EventService,
   BlockResult,
   DeployResult,
   PublicKey,
-  decodeBase16
+  decodeBase16,
+  JsonBlock
 } from 'casper-client-sdk';
-import { ToggleableSubscriber } from './ToggleableSubscriber';
-import { DeployRequest } from 'casperlabs-grpc/io/casperlabs/node/api/casper_pb';
 
 type AccountB16 = string;
 
 export class BlockContainer {
   @observable blockHashBase16: string | null = null;
   @observable block: BlockResult | null = null;
-  @observable neighborhood: BlockInfo[] | null = null;
+  @observable neighborhood: JsonBlock[] | null = null;
   // How much of the DAG to load around the block.
   @observable depth = 10;
   @observable hideBallotsToggleStore: ToggleStore = new ToggleStore(false);

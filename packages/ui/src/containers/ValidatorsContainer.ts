@@ -1,33 +1,20 @@
 import ErrorContainer from './ErrorContainer';
-import {
-  encodeBase16,
-  CasperServiceByJsonRPC,
-  JsonBlock
-} from 'casper-client-sdk';
+import { CasperServiceByJsonRPC, JsonBlock } from 'casper-client-sdk';
 import { action, computed, observable } from 'mobx';
-import {
-  BlockInfo,
-  Event
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
-import { Block } from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
 
 // Last N ranks to construct latest messages of validators
-const computeN = (validatorSize: number) => {
-  return 2 * validatorSize;
-};
-
 type ValidatorIdBase64 = string;
 
 export interface ValidatorInfo {
   id: ValidatorIdBase64;
-  latestBlockHash: ByteArray;
-  rank: number;
+  latestBlockHash: string;
+  height: number;
   timestamp: number;
 }
 
 export class ValidatorsContainer {
-  @observable latestFinalizedBlock: BlockInfo | null = null;
+  @observable latestFinalizedBlock: JsonBlock | null = null;
   // collect ValidatorInfo for each bonded validator
   @observable validatorInfoMaps: Map<
     ValidatorIdBase64,
@@ -71,30 +58,24 @@ export class ValidatorsContainer {
     if (!this.latestFinalizedBlock) {
       return new Set<ValidatorIdBase64>();
     } else {
-      return new Set(
-        this.latestFinalizedBlock
-          .getSummary()!
-          .getHeader()!
-          .getState()!
-          .getBondsList()!
-          .map(b => b.getValidatorPublicKeyHash_asB64())
-      );
+      // fixme, provide bonded validators information
+      return new Set();
     }
   }
 
   // insert or update accMap when giving a list of blockInfo
   @action.bound
-  private async upsert(blockInfos: BlockInfo[]) {
+  private async upsert(blockInfos: JsonBlock[]) {
     blockInfos.forEach(b => {
-      const header = b.getSummary()!.getHeader()!;
-      let validatorId = header.getValidatorPublicKeyHash_asB64();
+      const header = b.header;
+      let validatorId = header.proposer;
       let item = this.validatorInfoMaps.get(validatorId);
-      if (!item || item.rank < header.getJRank()) {
+      if (!item || item.height < header.height) {
         this.validatorInfoMaps.set(validatorId, {
           id: validatorId,
-          latestBlockHash: b.getSummary()!.getBlockHash_asU8()!,
-          rank: header.getJRank(),
-          timestamp: header.getTimestamp()
+          latestBlockHash: b.hash,
+          height: header.height,
+          timestamp: header.timestamp
         });
       }
     });
@@ -107,7 +88,7 @@ export class ValidatorsContainer {
     //   computeN(this.bondedValidators.size),
     //   0
     // );
-    let latestRankNMsgs: BlockInfo[] = [];
+    let latestRankNMsgs: JsonBlock[] = [];
 
     this.upsert(latestRankNMsgs);
 
@@ -120,27 +101,6 @@ export class ValidatorsContainer {
    * one for each era up to the key block), use the latest by rank
    */
   private async getValidationInfoByJustifications() {
-    let bondedValidators = this.bondedValidators;
-
-    let justifications: Array<Block.Justification> =
-      this.latestFinalizedBlock
-        ?.getSummary()
-        ?.getHeader()
-        ?.getJustificationsList() ?? new Array<Block.Justification>();
-    let promises = justifications
-      .filter(j => {
-        // only request BlockInfo for those validators who has bonded but still don't have any info
-        let vId = j.getValidatorPublicKeyHash_asB64();
-        return bondedValidators.has(vId) && !this.validatorInfoMaps.has(vId);
-      })
-      .map(j => {
-        return this.casperService
-          .getBlockInfo(encodeBase16(j.getLatestBlockHash() as ByteArray))
-          .then(d => d.block!);
-      });
-
-    let blockInfos: JsonBlock[] = await Promise.all(promises);
-
     // fixme
     this.upsert([]);
   }

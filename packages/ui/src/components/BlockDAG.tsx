@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { BlockInfo } from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ListInline, Loading, RefreshButton, shortHash } from './Utils';
 import * as d3 from 'd3';
 import { encodeBase16, JsonBlock } from 'casper-client-sdk';
@@ -592,9 +591,6 @@ const isFinalized = (block: JsonBlock) => true;
 const isOrphaned = (block: JsonBlock) => false;
 // isBlock(block) &&
 // block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
-
-const validatorHash = (block: BlockInfo) =>
-  encodeBase16(block.getSummary()!.getHeader()!.getValidatorPublicKey_asU8());
 
 /** Shorten lines by a fixed amount so that the line doesn't stick out from under the arrows tip. */
 const shorten = (d: any, by: number) => {

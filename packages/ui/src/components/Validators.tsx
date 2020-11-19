@@ -37,7 +37,7 @@ class Validators extends RefreshableComponent<Props, {}> {
         }
         refresh={() => this.refresh()}
         renderRow={(validatorInfo: ValidatorInfo, idx) => {
-          const blockHashBase16 = encodeBase16(validatorInfo.latestBlockHash);
+          const blockHashBase16 = validatorInfo.latestBlockHash;
           return (
             <tr key={validatorInfo.id}>
               <td>{base64to16(validatorInfo.id)}</td>
@@ -46,7 +46,7 @@ class Validators extends RefreshableComponent<Props, {}> {
                   {shortHash(blockHashBase16)}
                 </Link>
               </td>
-              <td>{validatorInfo.rank}</td>
+              <td>{validatorInfo.height}</td>
               <td>
                 <Timestamp timestamp={validatorInfo.timestamp} />
               </td>
