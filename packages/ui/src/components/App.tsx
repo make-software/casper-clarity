@@ -12,7 +12,7 @@ import Accounts from './Accounts';
 import Faucet from './Faucet';
 import Explorer from './Explorer';
 import BlockList from './BlockList';
-import { PrivateRoute, RefreshableComponent, Title, Button } from './Utils';
+import { PrivateRoute, RefreshableComponent, Title } from './Utils';
 import AuthContainer from '../containers/AuthContainer';
 import FaucetContainer from '../containers/FaucetContainer';
 import ErrorContainer from '../containers/ErrorContainer';

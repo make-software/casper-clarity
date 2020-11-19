@@ -17,10 +17,8 @@ import {
 import Modal from './Modal';
 
 import { FileSelect, Form, SelectField, TextField, TextArea } from './Forms';
-import { encodeBase16, encodeBase64 } from 'casper-client-sdk';
 import { ObservableValue } from '../lib/ObservableValueMap';
 import DataTable from './DataTable';
-import { Ed25519 } from 'casper-client-sdk/dist/lib/Keys';
 
 interface Props {
   auth: AuthContainer;

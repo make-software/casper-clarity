@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ListInline, Loading, RefreshButton, shortHash } from './Utils';
 import * as d3 from 'd3';
-import { encodeBase16, JsonBlock } from 'casper-client-sdk';
+import { JsonBlock } from 'casper-client-sdk';
 import { ToggleButton, ToggleStore } from './ToggleButton';
 import { autorun } from 'mobx';
 import * as d3xyzoom from 'd3-xyzoom';

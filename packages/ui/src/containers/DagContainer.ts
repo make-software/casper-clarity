@@ -4,7 +4,6 @@ import ErrorContainer from './ErrorContainer';
 import { ToggleStore } from '../components/ToggleButton';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
 import {
-  BlockResult,
   CasperServiceByJsonRPC,
   EventService,
   JsonBlock,

@@ -86,6 +86,7 @@ export class DeployContractsForm extends RefreshableComponent<Props, {}> {
         <a
           href="https://chrome.google.com/webstore/detail/casperlabs-signer/djhndpllfiibmcdbnmaaahkhchcoijce"
           target="_blank"
+          rel={'noopener noreferrer'}
         >
           here.
         </a>

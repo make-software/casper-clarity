@@ -57,7 +57,7 @@ export class BlockContainer {
     if (!this.block || this.block.deploys.length <= 0) {
       this.deploys = [];
     } else {
-      this.block.deploys.map(deploy => {
+      this.block.deploys.forEach(deploy => {
         this.eventService.getDeployByHash(deploy).then(res => {
           this.deploys?.push(res);
         });

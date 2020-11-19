@@ -3,21 +3,8 @@ import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { observer } from 'mobx-react';
 import { DeployContainer } from '../containers/DeployContainer';
 import DataTable from './DataTable';
-import Pages from './Pages';
-import {
-  RefreshableComponent,
-  shortHash,
-  FailIcon,
-  SuccessIcon,
-  CSPR
-} from './Utils';
-import ObservableValueMap from '../lib/ObservableValueMap';
-import { Balance } from './BlockDetails';
-import {
-  DeployResult,
-  JsonDeploy,
-  JsonExecutionResult
-} from 'casper-client-sdk';
+import { RefreshableComponent, FailIcon, SuccessIcon } from './Utils';
+import { DeployResult } from 'casper-client-sdk';
 
 // URL parameter
 type Params = {

@@ -7,12 +7,7 @@ import Pages from './Pages';
 import { RefreshableComponent, SuccessIcon, FailIcon, CSPR } from './Utils';
 import { shortHash } from './Utils';
 import ObservableValueMap, { ObservableValue } from '../lib/ObservableValueMap';
-import {
-  BlockResult,
-  DeployResult,
-  GetDeployResult,
-  JsonBlock
-} from 'casper-client-sdk';
+import { BlockResult, DeployResult, JsonBlock } from 'casper-client-sdk';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 
