@@ -5,7 +5,7 @@ import DataTable from './DataTable';
 import ValidatorsContainer, {
   ValidatorInfo
 } from '../containers/ValidatorsContainer';
-import { base64to16, encodeBase16 } from 'casper-client-sdk';
+import { base64to16 } from 'casper-client-sdk';
 import { Link } from 'react-router-dom';
 import Pages from './Pages';
 import Timestamp from './TimeStamp';
