@@ -1,0 +1,24 @@
+To do most of the testing we need to be able to login.
+Doing this manually for each test would be tedious and defeat the point of automated testing.
+
+There are a few ways to do this, (Cypress strongly discourages using 3rd party elements when testing):
+    - Create a command that will request a token from the Auth0 client and use that to authenticate
+    - Create a stub that will return a false verification.
+
+I opted for the first option and have created a command in 'cypress/support/commands.js' called 'login'
+There are secrets required for the request which are stored in 'cypress.env.json' which I've added to .gitignore
+so that they won't be pushed to GitHub.
+
+I need some details about our Auth0 setup for Clarity which I guess SRE might have?
+    - Client ID
+    - Client Secret
+
+For the purposes of logging in we should also create a dummy google account (w/o MFA for simplicity)
+and save the username and password in the local env file.
+
+Justification for not using 3rd party auth window: https://docs.cypress.io/guides/references/best-practices.html#Visiting-external-sites
+Tutorial - https://auth0.com/blog/end-to-end-testing-with-cypress-and-auth0/
+GH Recipes:
+    Stubs - https://github.com/cypress-io/cypress-example-recipes/tree/master/examples/stubbing-spying__functions
+    SSO - https://github.com/cypress-io/cypress-example-recipes/tree/master/examples/logging-in__single-sign-on
+    

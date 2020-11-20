@@ -25,3 +25,6 @@ contracts
 *.njsproj
 *.sln
 *.sw*
+
+# Cypress env file
+cypress.env.json
