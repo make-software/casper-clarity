@@ -21,13 +21,14 @@ import {
   KeyType
 } from '../containers/DeployContractsContainer';
 import Modal from './Modal';
-import {
-  CLType,
-  Key
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/state_pb';
 import Pages from './Pages';
 import { Link } from 'react-router-dom';
-import { DeployUtil, Signer } from 'casper-client-sdk';
+import {
+  AccessRights,
+  DeployUtil,
+  Signer,
+  SimpleType
+} from 'casper-client-sdk';
 
 interface Props {
   deployContractsContainer: DeployContractsContainer;
@@ -85,6 +86,7 @@ export class DeployContractsForm extends RefreshableComponent<Props, {}> {
         <a
           href="https://chrome.google.com/webstore/detail/casperlabs-signer/djhndpllfiibmcdbnmaaahkhchcoijce"
           target="_blank"
+          rel={'noopener noreferrer'}
         >
           here.
         </a>
@@ -368,10 +370,14 @@ const TypeSelectCol = observer(
               }
             }}
           >
-            {Object.keys(CLType.Simple)
-              .filter(opt => (CLType.Simple as any)[opt] !== CLType.Simple.UNIT)
+            {Object.keys(SimpleType)
+              .filter(
+                opt =>
+                  (SimpleType as any)[opt] !== SimpleType.Unit &&
+                  isNaN(Number(opt))
+              )
               .map(opt => (
-                <option key={opt} value={(CLType.Simple as any)[opt]}>
+                <option key={opt} value={(SimpleType as any)[opt]}>
                   {opt}
                 </option>
               ))}
@@ -391,7 +397,7 @@ const TypeSelectCol = observer(
               ))}
           </select>
         </div>
-        {firstTypeValue === CLType.Simple.KEY && (
+        {firstTypeValue === SimpleType.Key && (
           <div className="col pl-0 pr-1">
             <select
               className="form-control"
@@ -402,7 +408,7 @@ const TypeSelectCol = observer(
                 );
               }}
             >
-              {firstTypeValue === CLType.Simple.KEY &&
+              {firstTypeValue === SimpleType.Key &&
                 Object.keys(KeyType).map(opt => (
                   <option key={opt} value={(KeyType as any)[opt]}>
                     {(KeyType as any)[opt]}
@@ -411,9 +417,9 @@ const TypeSelectCol = observer(
             </select>
           </div>
         )}
-        {((firstTypeValue === CLType.Simple.KEY &&
+        {((firstTypeValue === SimpleType.Key &&
           secondTypeValue === KeyType.UREF) ||
-          firstTypeValue === CLType.Simple.UREF) && (
+          firstTypeValue === SimpleType.URef) && (
           <div className="col pl-0 pr-0">
             <select
               className="form-control"
@@ -424,8 +430,8 @@ const TypeSelectCol = observer(
                 );
               }}
             >
-              {Object.keys(Key.URef.AccessRights).map(opt => (
-                <option key={opt} value={(Key.URef.AccessRights as any)[opt]}>
+              {Object.keys(AccessRights).map(opt => (
+                <option key={opt} value={(AccessRights as any)[opt]}>
                   {opt}
                 </option>
               ))}

@@ -1,16 +1,13 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { toJS } from 'mobx';
 import ReactPaginate from 'react-paginate';
 import DagContainer, { DagStep } from '../containers/DagContainer';
-import { IconButton, ListInline, shortHash } from './Utils';
+import { IconButton, ListInline } from './Utils';
 import DataTable from './DataTable';
 import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
 import Pages from './Pages';
-import Timestamp from './TimeStamp';
-import { BlockType } from './BlockDetails';
 import * as H from 'history';
-import { BlocksResult, BlockResult } from 'casper-client-sdk';
+import { BlockResult } from 'casper-client-sdk';
 
 export interface Props extends RouteComponentProps<{}> {
   dag: DagContainer;
