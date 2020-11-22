@@ -5,6 +5,7 @@
 context('Basic Functionality', () => {
 
     let sideNavLinks;
+    let contractArgTypes;
 
     beforeEach(() => {
         // cy.visit('https://clarity.casperlabs.io');
@@ -18,6 +19,26 @@ context('Basic Functionality', () => {
             'Deploys'         : '#exampleAccordion > li:nth-child(5) > a',
             'Search'          : '#exampleAccordion > li:nth-child(6) > a',
             'ConnectedPeers' : '#exampleAccordion > li:nth-child(7) > a',
+        }
+        contractArgTypes = {
+            'BOOL'  : '0',
+            'I32'   : '1',
+            'I64'   : '2',
+            'U8'    : '3',
+            'U32'   : '4',
+            'U64'   : '5',
+            'U128'  : '6',
+            'U256'  : '7',
+            'U512'  : '8',
+            'STRING': '10',
+            'KEY'   : '11',
+            'UREF'  : '12',
+            'Bytes' : 'Bytes',
+            'Bytes (Fixed Length)' : 'Bytes (Fixed Length)',
+            'Tuple' : 'Tuple',
+            'Map'   : 'Map',
+            'List'  : 'List',
+            'FixedList' : 'FixedList'
         }
     })
 
@@ -49,6 +70,11 @@ context('Basic Functionality', () => {
     // })
 
     it('Should deploy a contract', () => {
+        // Open Signer
+        cy.get('[style="padding-left: 1rem; padding-top: 0.3rem;"] > .btn')
+            .should('have.text', 'Connect to Signer')
+            .click()
+
         // Go to deploy contract screen
         cy.get(sideNavLinks.DeployContract)
             .click()
@@ -77,32 +103,20 @@ context('Basic Functionality', () => {
                     })
             })
         
-        /**
-         *   Arg Values / Text
-         * 
-         *      0 / BOOL    1 / I32     2 / I64     3 / U8
-         * 
-         *      4 / U32     5 / U64     6 / U128    7 / U256
-         * 
-         *      8 / U512    10 / STRING 11 / KEY    12 / UREF
-         * 
-         *      Bytes / Bytes   Bytes (Fixed Length) / Bytes (Fixed Length)
-         * 
-         *      Tuple / Tuple   Map / Map   List / List
-         */
-        
+        // For type codes inspect the dropdown in the Setting Arguments section
         let transferArguments = [
             {
-                'name': 'amount',
-                'type': '7',
-                'value': '200'
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '290cverdfv09873qh4tfqerdfizudsfhf2'
             },
             {
-                'name': 'target',
-                'type': 'Bytes',
-                'value': 'testBytes1234568'
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
             }
         ]
+        // Enter arguments for contract
         for (let row = 0; row < transferArguments.length; row++) {
             cy.log("ROW :: " + row)
             let argument = transferArguments[row];
@@ -113,6 +127,13 @@ context('Basic Functionality', () => {
                 row
             )
         }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .click()
+
+        // Sign Deploy
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .click()
     })
 })
   

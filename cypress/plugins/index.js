@@ -18,4 +18,10 @@
 module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
+
+  // Load signer build
+  on('before:browser:launch', (browser, launchOptions) => {
+    launchOptions.extensions.push('../../../signer/build')
+    return launchOptions
+  })
 }
