@@ -44,3 +44,28 @@ Cypress.Commands.add('login', (overrides = {}) => {
         };
     cy.request(options);
 })
+
+Cypress.Commands.add('deployContractAddArgument', (argName, argType, argValue, argRow) => {
+    Cypress.log({
+        name: 'Adding arguments for deploy'
+    });
+
+    // Add arguments for transfer
+    cy.get('.mt-3 > .list-inline > .list-inline-item > .btn')
+        .click()
+        .then(() => {
+            cy.log("argROW :: " + argRow)
+            // Name
+            cy.get(`#argument-editing-${argRow}-name`)
+                .type(argName)
+                .should('have.value', argName)
+            // Type
+            cy.get(`:nth-child(${(argRow + 1)}) > :nth-child(2) > .row > .col > .form-control`)
+                .select(argType)
+                .should('have.value', argType)
+            // Value
+            cy.get(`#arguments-table > div > div > table > tbody > tr:nth-child(${(argRow + 1)}) > td:nth-child(3) > div > input`)
+                .type(argValue)
+                .should('have.value', argValue)
+        })
+})
