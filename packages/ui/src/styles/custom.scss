@@ -199,3 +199,16 @@ footer.sticky-footer {
     min-width: 70px;
   }
 }
+
+.validator-tab-nav-list {
+  border-bottom: solid black 1px !important;
+}
+
+.validator-tab-nav-element {
+  border-bottom-right-radius: 0px !important;
+  border-bottom-left-radius: 0px !important;
+}
+
+.validator-tab-nav-element:hover {
+  background-color: lightgrey;
+}
