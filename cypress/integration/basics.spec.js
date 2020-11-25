@@ -1,6 +1,6 @@
 /// <reference types='cypress' />
 
-// import AuthService from '../../packages/ui/src/services/AuthService';
+import { Signer } from 'casper-client-sdk';
 
 context('Basic Functionality', () => {
 
@@ -9,7 +9,11 @@ context('Basic Functionality', () => {
 
     beforeEach(() => {
         // cy.visit('https://clarity.casperlabs.io');
+        cy.intercept('GET', '/block').as('getBlock')
         cy.visit('http://localhost:8000')
+
+        cy.stub(Signer, "isConnected").returns(true)
+
         // Aliases for side nav tabs
         sideNavLinks = {
             'Accounts'        : '#exampleAccordion > li:nth-child(1) > a',
@@ -42,38 +46,40 @@ context('Basic Functionality', () => {
         }
     })
 
-    // it('Should search for block', () => {
-    //     // Go to Search screen
-    //     cy.get(sideNavLinks.Search)
-    //         .click()
+    it('Should search for block', () => {
+        // Go to Search screen
+        cy.get(sideNavLinks.Search)
+            .click()
 
-    //     // Get block hash from network highlight box
-    //     cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
-    //         .then(($span) => {
-    //             // Enter block hash into search box
-    //             cy.get('#id-search-hash-base16')
-    //                 .type($span.get(0).innerText)
-    //                 .wait(200)
-    //                 .then(() => {
-    //                     // Click submit
-    //                     cy.get('#root > div > main > div > div > div > div > div.card-body > button')
-    //                         .click()
-    //                 })
-    //             // Arbitrary time to wait for page to load - there are better ways to handle this
-    //             cy.wait(10000)
-
-    //             cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
-    //                 .should(($a) => {
-    //                     assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
-    //                 })
-    //         })            
-    // })
+        // Get block hash from network highlight box
+        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
+            .should('not.contain.html', 'null')
+            .then(($span) => {
+                // Enter block hash into search box
+                cy.get('#id-search-hash-base16')
+                    .type($span.get(0).innerText)
+                    .should('have.value', $span.get(0).innerText)
+                    .wait(100)
+                    .get('#root > div > main > div > div > div > div > div.card-body > button')
+                    .click()
+                    .wait('@getBlock')
+                    .then(() => {
+                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
+                        .should(($a) => {
+                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
+                        })    
+                    })
+            })            
+    })
 
     it('Should deploy a contract', () => {
-        // Open Signer
+
         cy.get('[style="padding-left: 1rem; padding-top: 0.3rem;"] > .btn')
             .should('have.text', 'Connect to Signer')
             .click()
+            .wait(3000)
+
+        //expect(Signer.isConnected()).to.be.true
 
         // Go to deploy contract screen
         cy.get(sideNavLinks.DeployContract)
@@ -108,7 +114,7 @@ context('Basic Functionality', () => {
             {
                 'name': 'recipient',
                 'type': contractArgTypes.KEY,
-                'value': '290cverdfv09873qh4tfqerdfizudsfhf2'
+                'value': '"0203bcabdaa562ea9468910577c38af78b744d6c42295bc552cabbb8162f08896a94"'
             },
             {
                 'name': 'amount',
@@ -131,8 +137,12 @@ context('Basic Functionality', () => {
         cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
             .click()
 
-        // Sign Deploy
+        // Sign
         cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .click()
+
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
             .click()
     })
 })

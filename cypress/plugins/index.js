@@ -16,12 +16,25 @@
  * @type {Cypress.PluginConfig}
  */
 module.exports = (on, config) => {
-  // `on` is used to hook into various events Cypress emits
-  // `config` is the resolved Cypress config
+  on('before:browser:launch', (browser = {}, launchOptions) => {
+    // `args` is an array of all the arguments that will
+    // be passed to browsers when it launches
+    console.log(launchOptions.args) // print all current args
 
-  // Load signer build
-  on('before:browser:launch', (browser, launchOptions) => {
-    launchOptions.extensions.push('../../../signer/build')
-    return launchOptions
+    if (browser.family === 'chromium' && browser.name !== 'electron') {
+      // auto open devtools
+      //launchOptions.args.push('--auto-open-devtools-for-tabs')
+      launchOptions.extensions.push('~/CasperLabs/signer/build')
+
+      // whatever you return here becomes the launchOptions
+      return launchOptions
+    }
+
+    if (browser.family === 'firefox') {
+      // auto open devtools
+      launchOptions.args.push('-devtools')
+
+      return launchOptions
+    }
   })
 }

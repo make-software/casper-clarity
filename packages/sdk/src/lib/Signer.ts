@@ -15,8 +15,6 @@ export const isConnected: () => Promise<boolean | undefined> = async () => {
 
 /**
  * Attempt connection to Signer
- *
- * @throws Error if already connected.
  */
 export const sendConnectionRequest: () => void = () => {
   return window.casperlabsHelper!.requestConnection();
