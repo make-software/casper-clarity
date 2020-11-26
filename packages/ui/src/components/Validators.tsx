@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { RefreshableComponent, Loading, CSPR } from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
+import { BigNumber } from '@ethersproject/bignumber';
 
 interface Props {
   validatorsContainer: ValidatorsContainer;
@@ -62,40 +63,87 @@ export default class Validators extends RefreshableComponent<Props, {}> {
     let navs = [];
     let tables = [];
 
+    // Prepare bids navigation element.
+    navs.push(
+      navElement(true, 'validators-bids-nav', 'validators-bids-tab', 'Bids')
+    );
+
+    // Prepare bids rows.
+    let rows = Object.keys(data.bids)
+      .map(validatorId => {
+        return {
+          validatorId: validatorId,
+          delegation_rate: data?.bids[validatorId].delegation_rate,
+          stakeStr: data?.bids[validatorId].staked_amount,
+          stakeNum: BigNumber.from(data?.bids[validatorId].staked_amount)
+        };
+      })
+      .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
+
+    // Build bids data table.
+    tables.push(
+      navContent(
+        true,
+        'validators-bids-tab',
+        <DataTable
+          title="Bids"
+          headers={['Validator ID', 'Slot', 'Delegation Rate', 'Stake']}
+          rows={rows}
+          renderRow={(bidInfo, index) => {
+            let key = `bids-${bidInfo.validatorId}`;
+            return (
+              <tr key={key}>
+                <td>{bidInfo.validatorId}</td>
+                <td>{index! + 1}</td>
+                <td>{bidInfo.delegation_rate}</td>
+                <td>
+                  <CSPR motes={bidInfo.stakeStr} />
+                </td>
+              </tr>
+            );
+          }}
+          noHeader={true}
+        />
+      )
+    );
+
     // For each era build navigation element and data table.
     for (const [index, eraId] of Object.keys(data.era_validators).entries()) {
       let eraName = `Era ${eraId} ${index == 0 ? '(current)' : ''}`;
       let tabName = `validator-tab-${eraId}`;
       let navName = `${tabName}-nav`;
-      let isActive = index == 0;
 
       // Build era navigation element.
-      navs.push(navElement(isActive, navName, tabName, eraName));
+      navs.push(navElement(false, navName, tabName, eraName));
 
       // Prepare era rows.
-      let rows = Object.keys(data.era_validators[eraId]).map(validatorId => {
-        return {
-          validatorId: validatorId,
-          stake: data?.era_validators[eraId][validatorId]
-        };
-      });
+      let rows = Object.keys(data.era_validators[eraId])
+        .map(validatorId => {
+          return {
+            validatorId: validatorId,
+            stakeStr: data?.era_validators[eraId][validatorId],
+            stakeNum: BigNumber.from(data?.era_validators[eraId][validatorId])
+          };
+        })
+        .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
 
       // Build era data table.
       tables.push(
         navContent(
-          isActive,
+          false,
           tabName,
           <DataTable
             title={eraName}
-            headers={['Validator ID', 'Stake']}
+            headers={['Validator ID', 'Slot', 'Stake']}
             rows={rows}
-            renderRow={(validatorInfo, idx) => {
+            renderRow={(validatorInfo, index) => {
               let key = `${eraId}-${validatorInfo.validatorId}`;
               return (
                 <tr key={key}>
                   <td>{validatorInfo.validatorId}</td>
+                  <td>{index! + 1}</td>
                   <td>
-                    <CSPR motes={validatorInfo.stake} />
+                    <CSPR motes={validatorInfo.stakeStr} />
                   </td>
                 </tr>
               );
@@ -105,46 +153,6 @@ export default class Validators extends RefreshableComponent<Props, {}> {
         )
       );
     }
-
-    // Prepare bids navigation element.
-    navs.push(
-      navElement(false, 'validators-bids-nav', 'validators-bids-tab', 'Bids')
-    );
-
-    // Prepare bids rows.
-    let rows = Object.keys(data.bids).map(validatorId => {
-      return {
-        validatorId: validatorId,
-        delegation_rate: data?.bids[validatorId].delegation_rate,
-        stake: data?.bids[validatorId].staked_amount
-      };
-    });
-
-    // Build bids data table.
-    tables.push(
-      navContent(
-        false,
-        'validators-bids-tab',
-        <DataTable
-          title="Bids"
-          headers={['Validator ID', 'Delegation Rate', 'Stake']}
-          rows={rows}
-          renderRow={(bidInfo, idx) => {
-            let key = `bids-${bidInfo.validatorId}`;
-            return (
-              <tr key={key}>
-                <td>{bidInfo.validatorId}</td>
-                <td>{bidInfo.delegation_rate}</td>
-                <td>
-                  <CSPR motes={bidInfo.stake} />
-                </td>
-              </tr>
-            );
-          }}
-          noHeader={true}
-        />
-      )
-    );
 
     return (
       <div id="validators-tab">
@@ -167,5 +175,13 @@ export default class Validators extends RefreshableComponent<Props, {}> {
         </div>
       </div>
     );
+  }
+}
+
+function compareBigNumbers(a: BigNumber, b: BigNumber): number {
+  if (a.eq(b)) {
+    return 0;
+  } else {
+    return a.lt(b) ? 1 : -1;
   }
 }
