@@ -272,36 +272,53 @@ export enum ContractType {
   Name = 'Name'
 }
 
+export class DeployParams {
+  /**
+   * Container for `Deploy` construction options.
+   * @param accountPublicKey
+   * @param chainName Name of the chain, to avoid the `Deploy` from being accidentally or maliciously included in a different chain.
+   * @param gasPrice Conversion rate between the cost of Wasm opcodes and the motes sent by the payment code.
+   * @param ttl Time that the `Deploy` will remain valid for, in milliseconds. The default value is 3600000, which is 1 hour
+   * @param dependencies Hex-encoded `Deploy` hashes of deploys which must be executed before this one.
+   * @param timestamp  If `timestamp` is empty, the current time will be used. Note that timestamp is UTC, not local.
+   */
+  constructor(
+    public accountPublicKey: PublicKey,
+    public chainName: string,
+    public gasPrice: number = 10,
+    public ttl: number = 3600000,
+    public dependencies: Uint8Array[] = [],
+    public timestamp?: number
+  ) {
+    this.dependencies = dependencies.filter(
+      d =>
+        dependencies.filter(t => encodeBase16(d) === encodeBase16(t)).length < 2
+    );
+    if (!timestamp) {
+      this.timestamp = Date.now();
+    }
+  }
+}
+
 /**
  * Makes Deploy message
  */
 export function makeDeploy(
+  deployParam: DeployParams,
   session: ExecutableDeployItem,
-  payment: ExecutableDeployItem,
-  accountPublicKey: PublicKey,
-  chainName: string,
-  gasPrice: number = 10,
-  ttl: number = 3600000,
-  dependencies: Uint8Array[] = [],
-  timestamp?: number
+  payment: ExecutableDeployItem
 ): Deploy {
   const serializedBody = serializeBody(payment, session);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
-  const uniqueDependencies = dependencies.filter(
-    d =>
-      dependencies.filter(t => encodeBase16(d) === encodeBase16(t)).length < 2
-  );
-  if (!timestamp) {
-    timestamp = Date.now();
-  }
+
   const header: DeployHeader = {
-    account: accountPublicKey,
+    account: deployParam.accountPublicKey,
     bodyHash,
-    chainName,
-    dependencies: uniqueDependencies,
-    gasPrice,
-    timestamp,
-    ttl
+    chainName: deployParam.chainName,
+    dependencies: deployParam.dependencies,
+    gasPrice: deployParam.gasPrice,
+    timestamp: deployParam.timestamp!,
+    ttl: deployParam.ttl
   };
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
