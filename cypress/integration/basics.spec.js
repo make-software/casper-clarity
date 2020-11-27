@@ -12,7 +12,7 @@ context('Basic Functionality', () => {
         cy.intercept('GET', '/block').as('getBlock')
         cy.visit('http://localhost:8000')
 
-        cy.stub(Signer, "isConnected").returns(true)
+        // cy.stub(Signer, "isConnected").returns(true)
 
         // Aliases for side nav tabs
         sideNavLinks = {
@@ -46,40 +46,15 @@ context('Basic Functionality', () => {
         }
     })
 
-    it('Should search for block', () => {
-        // Go to Search screen
-        cy.get(sideNavLinks.Search)
-            .click()
+    it('Should deploy a contract', async () => {
 
-        // Get block hash from network highlight box
-        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
-            .should('not.contain.html', 'null')
-            .then(($span) => {
-                // Enter block hash into search box
-                cy.get('#id-search-hash-base16')
-                    .type($span.get(0).innerText)
-                    .should('have.value', $span.get(0).innerText)
-                    .wait(100)
-                    .get('#root > div > main > div > div > div > div > div.card-body > button')
-                    .click()
-                    .wait('@getBlock')
-                    .then(() => {
-                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
-                        .should(($a) => {
-                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
-                        })    
-                    })
-            })            
-    })
-
-    it('Should deploy a contract', () => {
-
-        cy.get('[style="padding-left: 1rem; padding-top: 0.3rem;"] > .btn')
-            .should('have.text', 'Connect to Signer')
-            .click()
-            .wait(3000)
-
-        //expect(Signer.isConnected()).to.be.true
+        cy.connectSigner();
+        cy.checkVaultExists()
+            .then((vault) => {
+                if (!vault) {
+                    cy.createTestVault('cypress')
+                }
+            })
 
         // Go to deploy contract screen
         cy.get(sideNavLinks.DeployContract)
@@ -124,7 +99,6 @@ context('Basic Functionality', () => {
         ]
         // Enter arguments for contract
         for (let row = 0; row < transferArguments.length; row++) {
-            cy.log("ROW :: " + row)
             let argument = transferArguments[row];
             cy.deployContractAddArgument(
                 argument.name,
@@ -144,6 +118,39 @@ context('Basic Functionality', () => {
         // Sign & Deploy prompt
         cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
             .click()
+
+        // Clean up error messages and close prompts
+        cy.get('.alert > .close > span')
+            .click()
+        cy.get('.btn').contains('Close')
+            .wait(100)
+            .click()
     })
+
+    // it('Should search for block', () => {
+    //     // Go to Search screen
+    //     cy.get(sideNavLinks.Search)
+    //         .click()
+
+    //     // Get block hash from network highlight box
+    //     cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
+    //         .should('not.contain.html', 'null')
+    //         .then(($span) => {
+    //             // Enter block hash into search box
+    //             cy.get('#id-search-hash-base16')
+    //                 .type($span.get(0).innerText)
+    //                 .should('have.value', $span.get(0).innerText)
+    //                 .wait(100)
+    //                 .get('#root > div > main > div > div > div > div > div.card-body > button')
+    //                 .click()
+    //                 .wait('@getBlock')
+    //                 .then(() => {
+    //                     cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
+    //                     .should(($a) => {
+    //                         assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
+    //                     })    
+    //                 })
+    //         })            
+    // })
 })
   

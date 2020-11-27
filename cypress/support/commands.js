@@ -24,6 +24,8 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
+import { Signer } from "casper-client-sdk";
+
 Cypress.Commands.add('login', (overrides = {}) => {
     Cypress.log({
         name: 'loginViaAuth0',
@@ -51,10 +53,9 @@ Cypress.Commands.add('deployContractAddArgument', (argName, argType, argValue, a
     });
 
     // Add arguments for transfer
-    cy.get('.mt-3 > .list-inline > .list-inline-item > .btn')
+    cy.get('button').contains('Add')
         .click()
         .then(() => {
-            cy.log("argROW :: " + argRow)
             // Name
             cy.get(`#argument-editing-${argRow}-name`)
                 .type(argName)
@@ -68,4 +69,31 @@ Cypress.Commands.add('deployContractAddArgument', (argName, argType, argValue, a
                 .type(argValue)
                 .should('have.value', argValue)
         })
+})
+
+/**
+ * Signer method integrations
+ */
+Cypress.Commands.add('connectSigner', () => {
+    Cypress.log({
+        name: 'Connecting to Signer...'
+    });
+    Signer.forceConnection();
+})
+Cypress.Commands.add('checkVaultExists', () => {
+    Cypress.log({
+        name: 'Checking for existing vault...'
+    });
+    return Signer.hasCreatedVault();
+})
+Cypress.Commands.add('createTestVault', (password) => {
+    Cypress.log({
+        name: 'Creating test vault...',
+        consoleProps: () => {
+            return {
+                'Password': password
+            }
+        }
+    });
+    Signer.createNewVault(password)
 })

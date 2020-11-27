@@ -21,6 +21,13 @@ export const sendConnectionRequest: () => void = () => {
 };
 
 /**
+ * Force connection to the Signer (without requiring confirmation)
+ */
+export const forceConnection: () => void = () => {
+  return window.casperlabsHelper!.forceConnection();
+};
+
+/**
  * Return base64 encoded public key of user current selected account.
  *
  * @throws Error if haven't connected to CasperLabs Signer browser extension.
@@ -47,6 +54,16 @@ export const sign: (
 ) => Promise<string> = (messageBase16: string, publicKeyBase64?: string) => {
   throwIfNotConnected();
   return window.casperlabsHelper!.sign(messageBase16, publicKeyBase64);
+};
+
+export const hasCreatedVault: () => Promise<boolean | undefined> = () => {
+  return window.casperlabsHelper!.hasCreatedVault();
+};
+
+export const createNewVault: (password: string) => Promise<void> = (
+  password: string
+) => {
+  return window.casperlabsHelper!.createNewVault(password);
 };
 
 const throwIfNotConnected = () => {
