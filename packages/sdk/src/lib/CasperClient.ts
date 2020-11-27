@@ -1,8 +1,15 @@
 import { CasperServiceByJsonRPC, EventService } from '../services';
-import { Keys, PublicKey } from './index';
+import { DeployUtil, Keys, PublicKey } from './index';
 import * as nctl from 'tweetnacl-ts';
 import { SignLength } from 'tweetnacl-ts';
 import { encodeBase16 } from './Conversions';
+import {
+  Deploy,
+  DeployParams,
+  ExecutableDeployItem,
+  Transfer
+} from './DeployUtil';
+import { AsymmetricKey } from './Keys';
 
 type ByteArray = Uint8Array;
 
@@ -27,6 +34,34 @@ export class CasperClient {
    */
   public loadEdPrivateKeyFromFile(path: string) {
     return Keys.Ed25519.parsePrivateKeyFile(path);
+  }
+
+  public makeDeploy(
+    deployParams: DeployParams,
+    session: ExecutableDeployItem,
+    payment: ExecutableDeployItem
+  ): Deploy {
+    return DeployUtil.makeDeploy(deployParams, session, payment);
+  }
+
+  public signDeploy(deploy: Deploy, signKeyPair: AsymmetricKey): Deploy {
+    return DeployUtil.signDeploy(deploy, signKeyPair);
+  }
+
+  public putDeploy(signedDeploy: Deploy): Promise<string> {
+    return this.nodeClient.deploy(signedDeploy).then(it => it.deploy_hash);
+  }
+
+  public deployToJson(deploy: Deploy) {
+    return DeployUtil.deployToJson(deploy);
+  }
+
+  public makeTransferDeploy(
+    deployParams: DeployParams,
+    session: Transfer,
+    payment: ExecutableDeployItem
+  ): Deploy {
+    return this.makeDeploy(deployParams, session, payment);
   }
 
   /**
