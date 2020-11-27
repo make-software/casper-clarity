@@ -777,18 +777,27 @@ export enum KeyVariant {
   UREF_ID = 2
 }
 
+/// The length in bytes of a [`AccountHash`].
+const ACCOUNT_HASH_LENGTH: number = 32;
+
 /** A cryptographic public key. */
-export class AccountHash {
+export class AccountHash extends CLTypedAndToBytes {
   /**
    * Constructs a new `AccountHash`.
    *
    * @param bytes The bytes constituting the public key.
    */
-  constructor(public bytes: Uint8Array) {}
+  constructor(public bytes: Uint8Array) {
+    super();
+  }
 
   /** Serializes a `AccountHash` into an array of bytes. */
   toBytes(): Uint8Array {
     return this.bytes;
+  }
+
+  clType(): CLType {
+    return CLTypeHelper.byteArray(ACCOUNT_HASH_LENGTH);
   }
 }
 
