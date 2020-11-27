@@ -396,10 +396,12 @@ export class DeployContractsContainer {
 
       if (sessionExecutionItem != null) {
         return DeployUtil.makeDeploy(
+          new DeployUtil.DeployParams(
+            PublicKey.fromEd25519(publicKey),
+            window.config.network?.chainName || ''
+          ),
           sessionExecutionItem,
-          DeployUtil.standardPayment(paymentAmount),
-          PublicKey.fromEd25519(publicKey),
-          window.config.network?.chainName || ''
+          DeployUtil.standardPayment(paymentAmount)
         );
       }
       return Promise.resolve(null);

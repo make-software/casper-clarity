@@ -452,15 +452,7 @@ export class DeployArgumentParser {
       case 'List':
         clValueInstance = DeployArgumentParser.buildListTypeArg(
           arg.$.listInnerDeployArgs.$,
-          argValueStrInJson,
-          false
-        );
-        break;
-      case 'FixedList':
-        clValueInstance = this.buildListTypeArg(
-          arg.$.listInnerDeployArgs.$,
-          argValueStrInJson,
-          true
+          argValueStrInJson
         );
         break;
       case 0:
@@ -493,8 +485,7 @@ export class DeployArgumentParser {
 
   private static buildListTypeArg(
     listInnerDeployArgs: FormDeployArgument[],
-    argValueInJson: any,
-    isFixedList: boolean
+    argValueInJson: any
   ) {
     const firstType = listInnerDeployArgs[0].$.type.$;
     if (!DeployArgumentParser.isSimpleType(firstType)) {
@@ -511,11 +502,7 @@ export class DeployArgumentParser {
       );
     });
     if (argsList.length > 0) {
-      if (isFixedList) {
-        return CLValue.fromFixedList(argsList);
-      } else {
-        return CLValue.fromList(argsList);
-      }
+      return CLValue.fromList(argsList);
     } else {
       throw new Error("Can't create empty list");
     }
