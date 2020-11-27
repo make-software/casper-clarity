@@ -155,6 +155,55 @@ describe(`numbers' toBytes`, () => {
       ])
     );
   });
+  it('should serialize ByteArray correctly', () => {
+    const byteArray = Uint8Array.from(Array(32).fill(42));
+    const bytes = CLValue.fromBytes(byteArray).toBytes();
+    expect(bytes).to.deep.eq(
+      Uint8Array.from([
+        32,
+        0,
+        0,
+        0,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        15,
+        32,
+        0,
+        0,
+        0
+      ])
+    );
+  });
 
   it('should serialize PublicKey correctly', () => {
     const publicKey = Uint8Array.from(Array(32).fill(42));
@@ -162,10 +211,6 @@ describe(`numbers' toBytes`, () => {
     expect(bytes).to.deep.eq(
       Uint8Array.from([
         1,
-        32,
-        0,
-        0,
-        0,
         42,
         42,
         42,
