@@ -111,6 +111,50 @@ describe(`numbers' toBytes`, () => {
     );
     const bytes = KeyValue.fromURef(uref).toBytes();
     expect(bytes).to.deep.eq(truth);
+
+    const bytes2 = KeyValue.fromURef(
+      URef.fromFormattedStr(
+        'uref-d93dfedfc13180a0ea188841e64e0a1af718a733216e7fae4909dface372d2b0-007'
+      )
+    ).toBytes();
+    expect(bytes2).to.deep.eq(
+      Uint8Array.from([
+        2,
+        217,
+        61,
+        254,
+        223,
+        193,
+        49,
+        128,
+        160,
+        234,
+        24,
+        136,
+        65,
+        230,
+        78,
+        10,
+        26,
+        247,
+        24,
+        167,
+        51,
+        33,
+        110,
+        127,
+        174,
+        73,
+        9,
+        223,
+        172,
+        227,
+        114,
+        210,
+        176,
+        7
+      ])
+    );
   });
 
   it('should serialize DeployHash correctly', () => {

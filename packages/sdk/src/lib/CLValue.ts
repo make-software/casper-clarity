@@ -313,6 +313,24 @@ export class PublicKey extends CLTypedAndToBytes {
     }
   }
 
+  /**
+   * Tries to decode PublicKey from its hex-representation.
+   * The hex format should be as produced by PublicKey.toAccountHex
+   * @param publicKeyHex
+   */
+  static fromHex(publicKeyHex: string) {
+    if (publicKeyHex.length < 2) {
+      throw new Error('asymmetric key error: too short');
+    }
+    const publicKeyHexBytes = decodeBase16(publicKeyHex);
+    switch (publicKeyHexBytes[0]) {
+      case 1:
+        return PublicKey.fromEd25519(publicKeyHexBytes.subarray(1));
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+  }
+
   signatureAlgorithm() {
     switch (this.tag) {
       case 1:
