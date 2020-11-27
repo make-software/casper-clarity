@@ -32,6 +32,33 @@ import { BigNumberish } from '@ethersproject/bignumber';
 
 type ByteArray = Uint8Array;
 
+const shortEnglishHumanizer = humanizeDuration.humanizer({
+  spacer: '',
+  serialComma: false,
+  language: 'shortEn',
+  languages: {
+    // https://docs.rs/humantime/2.0.1/humantime/fn.parse_duration.html
+    shortEn: {
+      y: () => 'y',
+      mo: () => 'M',
+      w: () => 'w',
+      d: () => 'd',
+      h: () => 'h',
+      m: () => 'm',
+      s: () => 's',
+      ms: () => 'ms'
+    }
+  }
+});
+
+/**
+ * Return a humanizer duration
+ * @param ttl in milliseconds
+ */
+export const humanizerTTL = (ttl: number) => {
+  return shortEnglishHumanizer(ttl);
+};
+
 export interface DeployHeader {
   account: PublicKey;
   timestamp: number;
@@ -429,7 +456,7 @@ export const deployToJson = (deploy: Deploy) => {
   const headerJson = {
     account: header.account.toAccountHex(),
     timestamp: new Date(header.timestamp).toISOString(),
-    ttl: '1h',
+    ttl: humanizerTTL(deploy.header.ttl),
     gas_price: header.gasPrice,
     body_hash: encodeBase16(header.bodyHash),
     dependencies: header.dependencies.map(it => encodeBase16(it)),
