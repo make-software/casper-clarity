@@ -7,7 +7,15 @@ import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
 import { Option } from './option';
 import { encodeBase16 } from './Conversions';
-import { CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
+import humanizeDuration from 'humanize-duration';
+import {
+  CLTypedAndToBytesHelper,
+  CLTypeHelper,
+  CLValue,
+  PublicKey,
+  ToBytes,
+  U32
+} from './CLValue';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
@@ -18,8 +26,9 @@ import {
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
 import JSBI from 'jsbi';
-import { Keys } from './index';
+import { Keys, URef } from './index';
 import { AsymmetricKey } from './Keys';
+import { BigNumberish } from '@ethersproject/bignumber';
 
 type ByteArray = Uint8Array;
 
@@ -240,6 +249,44 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
 export class Transfer extends ExecutableDeployItem {
   args: ByteArray;
   tag = 5;
+
+  /**
+   * Constructor for Transfer deploy item.
+   * @param amount The number of motes to transfer
+   * @param target URef of the target purse or the public key of target account. You could generate this public key from accountHex by PublicKey.fromHex
+   * @param sourcePurse URef of the source purse. If this is omitted, the main purse of the account creating this \
+   transfer will be used as the source purse
+   * @param id user-defined transfer id
+   */
+  constructor(
+    amount: BigNumberish,
+    target: URef | PublicKey,
+    sourcePurse?: URef,
+    id: number | null = null
+  ) {
+    super();
+    const runtimeArgs = new RuntimeArgs([]);
+    runtimeArgs.insert('amount', CLValue.fromU512(amount));
+    if (sourcePurse) {
+      runtimeArgs.insert('source', CLValue.fromURef(sourcePurse));
+    }
+    if (target instanceof URef) {
+      runtimeArgs.insert('target', CLValue.fromURef(target));
+    } else if (target instanceof PublicKey) {
+      runtimeArgs.insert('target', CLValue.fromBytes(target.toAccountHash()));
+    } else {
+      throw new Error('Please specify target');
+    }
+    if (!id) {
+      runtimeArgs.insert('id', CLValue.fromOption(null, CLTypeHelper.u64()));
+    } else {
+      runtimeArgs.insert(
+        'id',
+        CLValue.fromOption(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
+      );
+    }
+    this.args = runtimeArgs.toBytes();
+  }
 
   toBytes(): ByteArray {
     return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
