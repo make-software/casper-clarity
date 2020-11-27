@@ -369,6 +369,11 @@ class MapValue extends CLTypedAndToBytes {
   }
 }
 
+class OptionType {
+  tag = 13;
+  constructor(public innerType: CLType) {}
+}
+
 class ListType {
   tag = 14;
   innerType: CLType;
@@ -754,6 +759,10 @@ export class CLValue implements ToBytes {
 
   static fromTuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
     return CLValue.fromT(new Tuple3(t0, t1, t2));
+  }
+
+  static fromOption(t: CLTypedAndToBytes | null, innerType?: CLType) {
+    return CLValue.fromT(new Option(t, innerType));
   }
 
   static fromMap(mapEntries: MapEntry[]) {
