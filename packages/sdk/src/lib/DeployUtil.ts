@@ -282,7 +282,7 @@ export class Transfer extends ExecutableDeployItem {
    * @param amount The number of motes to transfer
    * @param target URef of the target purse or the public key of target account. You could generate this public key from accountHex by PublicKey.fromHex
    * @param sourcePurse URef of the source purse. If this is omitted, the main purse of the account creating this \
-   transfer will be used as the source purse
+   * transfer will be used as the source purse
    * @param id user-defined transfer id
    */
   constructor(
