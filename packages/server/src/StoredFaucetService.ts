@@ -36,10 +36,12 @@ export class StoredFaucetService {
 
       const payment = DeployUtil.standardPayment(this.paymentAmount);
       const deployByName = DeployUtil.makeDeploy(
+        new DeployUtil.DeployParams(
+          this.contractKeys.publicKey,
+          this.chainName
+        ),
         session,
-        payment,
-        this.contractKeys.publicKey,
-        this.chainName
+        payment
       );
       const signedDeploy = DeployUtil.signDeploy(
         deployByName,
@@ -67,9 +69,10 @@ export class StoredFaucetService {
       const globalStateHash = LFB.header!.state_root_hash!;
 
       const accountHash = this.contractKeys.accountHash();
+      const key = 'account-hash-' + encodeBase16(accountHash);
       const state = await this.casperService.getBlockState(
         globalStateHash,
-        'account-hash-' + encodeBase16(accountHash),
+        key,
         [CONTRACT_NAME]
       );
       return state;

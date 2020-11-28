@@ -1,5 +1,8 @@
 import { concat } from '@ethersproject/bytes';
 import { CLType, CLTypedAndToBytes, CLTypeHelper } from './CLValue';
+import { decodeBase16 } from './Conversions';
+
+const FORMATTED_STRING_PREFIX: string = 'uref-';
 
 export enum AccessRights {
   // No permissions
@@ -32,6 +35,24 @@ export class URef extends CLTypedAndToBytes {
     if (this.uRefAddr.byteLength !== 32) {
       throw new Error('The length of URefAddr should be 32');
     }
+  }
+
+  /**
+   * Parses a casper-client supported string formatted argument into a `URef`.
+   */
+  static fromFormattedStr(input: string) {
+    if (!input.startsWith(FORMATTED_STRING_PREFIX)) {
+      throw new Error("prefix is not 'uref-'");
+    }
+    const parts = input.substring(FORMATTED_STRING_PREFIX.length).split('-', 2);
+    if (parts.length !== 2) {
+      throw new Error('no access rights as suffix');
+    }
+
+    const addr = decodeBase16(parts[0]);
+    const accessRight = parseInt(parts[1], 8) as AccessRights;
+
+    return new URef(addr, accessRight);
   }
 
   /**

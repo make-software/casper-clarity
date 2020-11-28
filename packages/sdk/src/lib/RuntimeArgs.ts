@@ -25,6 +25,10 @@ export class RuntimeArgs implements ToBytes {
     return new RuntimeArgs(vec);
   }
 
+  insert(key: string, value: CLValue) {
+    this.args.push(new NamedArg(key, value));
+  }
+
   toBytes() {
     return toBytesVecT(this.args);
   }

@@ -2,7 +2,6 @@ import { concat } from '@ethersproject/bytes';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
-  toBytesFixedVecT,
   toBytesNumber,
   toBytesString,
   toBytesStringList,
@@ -11,7 +10,8 @@ import {
 } from './byterepr';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { URef } from './uref';
-import { encodeBase16 } from './Conversions';
+import { decodeBase16, encodeBase16 } from './Conversions';
+import { Option } from './option';
 import { byteHash } from './Contracts';
 import { SignatureAlgorithm } from './Keys';
 
@@ -202,29 +202,6 @@ class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   }
 }
 
-class FixedList<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
-  private readonly size: number;
-  private readonly vec: T[];
-  // todo(abner) implements EmptyFixedList
-  constructor(size: number, vec: T[]) {
-    super();
-    if (size !== vec.length) {
-      throw new Error('The size is not equal to the length of vec');
-    }
-    this.size = size;
-    this.vec = vec;
-  }
-
-  toBytes(): ByteArray {
-    // the serialization method for FixedList is the same as List
-    return toBytesFixedVecT(this.vec);
-  }
-
-  clType(): CLType {
-    return CLTypeHelper.fixedList(this.vec[0].clType(), this.size);
-  }
-}
-
 class Tuple1 extends CLTypedAndToBytes {
   constructor(private v0: CLTypedAndToBytes) {
     super();
@@ -286,7 +263,7 @@ export class PublicKey extends CLTypedAndToBytes {
   toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
-      toBytesArrayU8(this.rawPublicKey)
+      toBytesBytesArray(this.rawPublicKey)
     ]);
   }
 
@@ -336,6 +313,24 @@ export class PublicKey extends CLTypedAndToBytes {
     }
   }
 
+  /**
+   * Tries to decode PublicKey from its hex-representation.
+   * The hex format should be as produced by PublicKey.toAccountHex
+   * @param publicKeyHex
+   */
+  static fromHex(publicKeyHex: string) {
+    if (publicKeyHex.length < 2) {
+      throw new Error('asymmetric key error: too short');
+    }
+    const publicKeyHexBytes = decodeBase16(publicKeyHex);
+    switch (publicKeyHexBytes[0]) {
+      case 1:
+        return PublicKey.fromEd25519(publicKeyHexBytes.subarray(1));
+      default:
+        throw new Error('Unsupported type of public key');
+    }
+  }
+
   signatureAlgorithm() {
     switch (this.tag) {
       case 1:
@@ -369,6 +364,11 @@ class MapValue extends CLTypedAndToBytes {
   }
 }
 
+class OptionType {
+  tag = 13;
+  constructor(public innerType: CLType) {}
+}
+
 class ListType {
   tag = 14;
   innerType: CLType;
@@ -377,14 +377,9 @@ class ListType {
   }
 }
 
-class FixedListType {
+class ByteArrayType {
   tag = 15;
-  constructor(public innerType: CLType, public size: number) {}
-}
-
-class OptionType {
-  tag = 16;
-  constructor(public innerType: CLType) {}
+  constructor(public size: number) {}
 }
 
 class MapType {
@@ -410,7 +405,7 @@ class Tuple3Type {
 export type CLType =
   | SimpleType
   | ListType
-  | FixedListType
+  | ByteArrayType
   | MapType
   | OptionType
   | Tuple1Type
@@ -478,12 +473,12 @@ export class CLTypeHelper {
     return new OptionType(innerType);
   }
 
-  static fixedList(innerType: CLType, size: number) {
-    return new FixedListType(innerType, size);
-  }
-
   static list(innerType: CLType) {
     return new ListType(innerType);
+  }
+
+  static byteArray(len: number) {
+    return new ByteArrayType(len);
   }
 
   static map(keyType: CLType, valueType: CLType) {
@@ -526,12 +521,8 @@ export class CLTypeHelper {
         CLTypeHelper.toBytesHelper(type.t1),
         CLTypeHelper.toBytesHelper(type.t2)
       ]);
-    } else if (type instanceof FixedListType) {
-      return concat([
-        Uint8Array.from([type.tag]),
-        CLTypeHelper.toBytesHelper(type.innerType),
-        toBytesU32(type.size)
-      ]);
+    } else if (type instanceof ByteArrayType) {
+      return concat([Uint8Array.from([type.tag]), toBytesU32(type.size)]);
     } else if (type instanceof MapType) {
       return concat([
         Uint8Array.from([type.tag]),
@@ -564,6 +555,20 @@ export class CLTypeHelper {
           throw new Error('Wrong type');
       }
     }
+  }
+}
+
+class ByteArrayValue extends CLTypedAndToBytes {
+  constructor(private bytes: ByteArray) {
+    super();
+  }
+
+  clType(): CLType {
+    return CLTypeHelper.byteArray(this.bytes.length);
+  }
+
+  toBytes(): ByteArray {
+    return toBytesBytesArray(this.bytes);
   }
 }
 
@@ -621,10 +626,6 @@ export class CLTypedAndToBytesHelper {
     return new Tuple1(t0);
   }
 
-  static fixedList<T extends CLTypedAndToBytes>(vec: T[]) {
-    return new FixedList(vec.length, vec);
-  }
-
   static tuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
     return new Tuple2(t0, t1);
   }
@@ -642,12 +643,7 @@ export class CLTypedAndToBytesHelper {
   }
 
   static bytes(bytes: ByteArray) {
-    return new FixedList(
-      bytes.length,
-      Array.from(bytes).map(u => {
-        return new U8(u);
-      })
-    );
+    return new ByteArrayValue(bytes);
   }
 }
 
@@ -744,16 +740,16 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new Tuple1(t0));
   }
 
-  static fromFixedList<T extends CLTypedAndToBytes>(vec: T[]) {
-    return CLValue.fromT(new FixedList(vec.length, vec));
-  }
-
   static fromTuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
     return CLValue.fromT(new Tuple2(t0, t1));
   }
 
   static fromTuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
     return CLValue.fromT(new Tuple3(t0, t1, t2));
+  }
+
+  static fromOption(t: CLTypedAndToBytes | null, innerType?: CLType) {
+    return CLValue.fromT(new Option(t, innerType));
   }
 
   static fromMap(mapEntries: MapEntry[]) {
@@ -767,7 +763,7 @@ export class CLValue implements ToBytes {
   static fromBytes(bytes: ByteArray) {
     return new CLValue(
       toBytesBytesArray(bytes),
-      CLTypeHelper.fixedList(CLTypeHelper.u8(), bytes.byteLength)
+      CLTypeHelper.byteArray(bytes.byteLength)
     );
   }
 }
@@ -781,18 +777,27 @@ export enum KeyVariant {
   UREF_ID = 2
 }
 
+/// The length in bytes of a [`AccountHash`].
+const ACCOUNT_HASH_LENGTH: number = 32;
+
 /** A cryptographic public key. */
-export class AccountHash {
+export class AccountHash extends CLTypedAndToBytes {
   /**
    * Constructs a new `AccountHash`.
    *
    * @param bytes The bytes constituting the public key.
    */
-  constructor(public bytes: Uint8Array) {}
+  constructor(public bytes: Uint8Array) {
+    super();
+  }
 
   /** Serializes a `AccountHash` into an array of bytes. */
   toBytes(): Uint8Array {
     return this.bytes;
+  }
+
+  clType(): CLType {
+    return CLTypeHelper.byteArray(ACCOUNT_HASH_LENGTH);
   }
 }
 

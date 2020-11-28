@@ -3,12 +3,17 @@ import { CasperClient } from '../../src/lib/CasperClient';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { Keys } from '../../src/lib';
+import { DeployUtil, Keys, PublicKey } from '../../src/lib';
+import { Ed25519 } from '../../src/lib/Keys';
+import JSBI from 'jsbi';
 
 let casperClient: CasperClient;
 describe('CasperClient', () => {
   before(() => {
-    casperClient = new CasperClient('http://mock1:6666', 'http://mock2:7777');
+    casperClient = new CasperClient(
+      'http://192.168.2.166:40101/rpc',
+      'http://mock2:7777'
+    );
   });
 
   it('should generate new Ed25519 key pair, and compute public key from private key', () => {
@@ -43,5 +48,26 @@ describe('CasperClient', () => {
       edKeyPair.publicKey.rawPublicKey
     );
     expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
+  });
+
+  it('transfer', async () => {
+    const transfer = new DeployUtil.Transfer(
+      100000000000000,
+      PublicKey.fromHex(
+        '01a72eb5ba13e243d40e56b0547536e3ad1584eee5a386c7be5d5a1f94c09a6592'
+      )
+    );
+    const keyPair = Ed25519.parseKeyFiles(
+      '../server/test.public.key',
+      '../server/test.private.key'
+    );
+    const deploy = casperClient.makeTransferDeploy(
+      new DeployUtil.DeployParams(keyPair.publicKey, 'casper-net-1'),
+      transfer,
+      DeployUtil.standardPayment(JSBI.BigInt(100000000000000))
+    );
+    const signedDeploy = casperClient.signDeploy(deploy, keyPair);
+    const deployHash = await casperClient.putDeploy(signedDeploy);
+    console.log(deployHash);
   });
 });

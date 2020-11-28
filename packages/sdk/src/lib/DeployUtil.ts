@@ -7,7 +7,15 @@ import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
 import { Option } from './option';
 import { encodeBase16 } from './Conversions';
-import { CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
+import humanizeDuration from 'humanize-duration';
+import {
+  CLTypedAndToBytesHelper,
+  CLTypeHelper,
+  CLValue,
+  PublicKey,
+  ToBytes,
+  U32
+} from './CLValue';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
@@ -18,10 +26,38 @@ import {
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
 import JSBI from 'jsbi';
-import { Keys } from './index';
+import { Keys, URef } from './index';
 import { AsymmetricKey } from './Keys';
+import { BigNumberish } from '@ethersproject/bignumber';
 
 type ByteArray = Uint8Array;
+
+const shortEnglishHumanizer = humanizeDuration.humanizer({
+  spacer: '',
+  serialComma: false,
+  language: 'shortEn',
+  languages: {
+    // https://docs.rs/humantime/2.0.1/humantime/fn.parse_duration.html
+    shortEn: {
+      y: () => 'y',
+      mo: () => 'M',
+      w: () => 'w',
+      d: () => 'd',
+      h: () => 'h',
+      m: () => 'm',
+      s: () => 's',
+      ms: () => 'ms'
+    }
+  }
+});
+
+/**
+ * Return a humanizer duration
+ * @param ttl in milliseconds
+ */
+export const humanizerTTL = (ttl: number) => {
+  return shortEnglishHumanizer(ttl);
+};
 
 export interface DeployHeader {
   account: PublicKey;
@@ -241,6 +277,44 @@ export class Transfer extends ExecutableDeployItem {
   args: ByteArray;
   tag = 5;
 
+  /**
+   * Constructor for Transfer deploy item.
+   * @param amount The number of motes to transfer
+   * @param target URef of the target purse or the public key of target account. You could generate this public key from accountHex by PublicKey.fromHex
+   * @param sourcePurse URef of the source purse. If this is omitted, the main purse of the account creating this \
+   * transfer will be used as the source purse
+   * @param id user-defined transfer id
+   */
+  constructor(
+    amount: BigNumberish,
+    target: URef | PublicKey,
+    sourcePurse?: URef,
+    id: number | null = null
+  ) {
+    super();
+    const runtimeArgs = new RuntimeArgs([]);
+    runtimeArgs.insert('amount', CLValue.fromU512(amount));
+    if (sourcePurse) {
+      runtimeArgs.insert('source', CLValue.fromURef(sourcePurse));
+    }
+    if (target instanceof URef) {
+      runtimeArgs.insert('target', CLValue.fromURef(target));
+    } else if (target instanceof PublicKey) {
+      runtimeArgs.insert('target', CLValue.fromBytes(target.toAccountHash()));
+    } else {
+      throw new Error('Please specify target');
+    }
+    if (!id) {
+      runtimeArgs.insert('id', CLValue.fromOption(null, CLTypeHelper.u64()));
+    } else {
+      runtimeArgs.insert(
+        'id',
+        CLValue.fromOption(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
+      );
+    }
+    this.args = runtimeArgs.toBytes();
+  }
+
   toBytes(): ByteArray {
     return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
   }
@@ -272,36 +346,53 @@ export enum ContractType {
   Name = 'Name'
 }
 
+export class DeployParams {
+  /**
+   * Container for `Deploy` construction options.
+   * @param accountPublicKey
+   * @param chainName Name of the chain, to avoid the `Deploy` from being accidentally or maliciously included in a different chain.
+   * @param gasPrice Conversion rate between the cost of Wasm opcodes and the motes sent by the payment code.
+   * @param ttl Time that the `Deploy` will remain valid for, in milliseconds. The default value is 3600000, which is 1 hour
+   * @param dependencies Hex-encoded `Deploy` hashes of deploys which must be executed before this one.
+   * @param timestamp  If `timestamp` is empty, the current time will be used. Note that timestamp is UTC, not local.
+   */
+  constructor(
+    public accountPublicKey: PublicKey,
+    public chainName: string,
+    public gasPrice: number = 10,
+    public ttl: number = 3600000,
+    public dependencies: Uint8Array[] = [],
+    public timestamp?: number
+  ) {
+    this.dependencies = dependencies.filter(
+      d =>
+        dependencies.filter(t => encodeBase16(d) === encodeBase16(t)).length < 2
+    );
+    if (!timestamp) {
+      this.timestamp = Date.now();
+    }
+  }
+}
+
 /**
  * Makes Deploy message
  */
 export function makeDeploy(
+  deployParam: DeployParams,
   session: ExecutableDeployItem,
-  payment: ExecutableDeployItem,
-  accountPublicKey: PublicKey,
-  chainName: string,
-  gasPrice: number = 10,
-  ttl: number = 3600000,
-  dependencies: Uint8Array[] = [],
-  timestamp?: number
+  payment: ExecutableDeployItem
 ): Deploy {
   const serializedBody = serializeBody(payment, session);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
-  const uniqueDependencies = dependencies.filter(
-    d =>
-      dependencies.filter(t => encodeBase16(d) === encodeBase16(t)).length < 2
-  );
-  if (!timestamp) {
-    timestamp = Date.now();
-  }
+
   const header: DeployHeader = {
-    account: accountPublicKey,
+    account: deployParam.accountPublicKey,
     bodyHash,
-    chainName,
-    dependencies: uniqueDependencies,
-    gasPrice,
-    timestamp,
-    ttl
+    chainName: deployParam.chainName,
+    dependencies: deployParam.dependencies,
+    gasPrice: deployParam.gasPrice,
+    timestamp: deployParam.timestamp!,
+    ttl: deployParam.ttl
   };
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
@@ -365,7 +456,7 @@ export const deployToJson = (deploy: Deploy) => {
   const headerJson = {
     account: header.account.toAccountHex(),
     timestamp: new Date(header.timestamp).toISOString(),
-    ttl: '1h',
+    ttl: humanizerTTL(deploy.header.ttl),
     gas_price: header.gasPrice,
     body_hash: encodeBase16(header.bodyHash),
     dependencies: header.dependencies.map(it => encodeBase16(it)),
