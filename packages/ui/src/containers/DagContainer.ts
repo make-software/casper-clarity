@@ -1,14 +1,9 @@
-import { action, IObservableArray, observable, reaction, toJS } from 'mobx';
+import { action, IObservableArray, observable, reaction } from 'mobx';
 
 import ErrorContainer from './ErrorContainer';
-import {
-  BlockInfo,
-  Event
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/info_pb';
 import { ToggleStore } from '../components/ToggleButton';
 import { ToggleableSubscriber } from './ToggleableSubscriber';
 import {
-  BlockResult,
   CasperServiceByJsonRPC,
   EventService,
   JsonBlock,
@@ -83,7 +78,7 @@ export class DagContainer {
   @observable page: number = 0;
   @observable count: number = 10;
   @observable validatorsListToggleStore: ToggleStore = new ToggleStore(false);
-  @observable lastFinalizedBlock: BlockInfo | undefined = undefined;
+  @observable lastFinalizedBlock: JsonBlock | undefined = undefined;
   @observable hideBallotsToggleStore: ToggleStore = new ToggleStore(false);
   @observable hideBlockHashToggleStore: ToggleStore = new ToggleStore(false);
   toggleableSubscriber: ToggleableSubscriber;

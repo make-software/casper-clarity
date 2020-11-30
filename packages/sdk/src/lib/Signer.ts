@@ -60,10 +60,31 @@ export const hasCreatedVault: () => Promise<boolean | undefined> = () => {
   return window.casperlabsHelper!.hasCreatedVault();
 };
 
+export const resetExistingVault: () => Promise<void> = () => {
+  return window.casperlabsHelper!.resetExistingVault();
+};
+
 export const createNewVault: (password: string) => Promise<void> = (
   password: string
 ) => {
   return window.casperlabsHelper!.createNewVault(password);
+};
+
+export const createTestAccount: (
+  name: string,
+  privateKey: string
+) => Promise<void> = (name: string, privateKey: string) => {
+  return window.casperlabsHelper!.createTestAccount(name, privateKey);
+};
+
+export const getToSignMessageID: () => Promise<number | null> = () => {
+  return window.casperlabsHelper!.getToSignMessageID();
+};
+
+export const signTestDeploy: (msgId: number) => Promise<void> = (
+  msgId: number
+) => {
+  return window.casperlabsHelper!.signTestDeploy(msgId);
 };
 
 const throwIfNotConnected = () => {

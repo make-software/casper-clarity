@@ -5,18 +5,9 @@ import { BlockContainer } from '../containers/BlockContainer';
 import DataTable from './DataTable';
 import Pages from './Pages';
 import { RefreshableComponent, SuccessIcon, FailIcon, CSPR } from './Utils';
-import {
-  Block,
-  Deploy
-} from 'casperlabs-grpc/io/casperlabs/casper/consensus/consensus_pb';
 import { shortHash } from './Utils';
 import ObservableValueMap, { ObservableValue } from '../lib/ObservableValueMap';
-import {
-  BlockResult,
-  DeployResult,
-  GetDeployResult,
-  JsonBlock
-} from 'casper-client-sdk';
+import { BlockResult, DeployResult, JsonBlock } from 'casper-client-sdk';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 
@@ -189,20 +180,6 @@ export const BlockType = (props: { block: JsonBlock }) => {
   let lbl = 'Block';
   return <span>{lbl}</span>;
 };
-
-export const BlockRole = (props: { header: Block.Header }) => {
-  let role = props.header.getMessageRole();
-  let lbl =
-    role === Block.MessageRole.PROPOSAL
-      ? 'Proposal'
-      : role === Block.MessageRole.CONFIRMATION
-      ? 'Confirmation'
-      : role === Block.MessageRole.WITNESS
-      ? 'Witness'
-      : 'n/a';
-  return <span>{lbl}</span>;
-};
-
 // fixme
 export const FinalityIcon = (props: { block: JsonBlock }) => {
   return <SuccessIcon />;

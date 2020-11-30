@@ -25,6 +25,8 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import { Signer } from "casper-client-sdk";
+import * as nacl from 'tweetnacl-ts';
+import { encodeBase64, signKeyPair } from 'tweetnacl-util';
 
 Cypress.Commands.add('login', (overrides = {}) => {
     Cypress.log({
@@ -64,6 +66,14 @@ Cypress.Commands.add('deployContractAddArgument', (argName, argType, argValue, a
             cy.get(`:nth-child(${(argRow + 1)}) > :nth-child(2) > .row > .col > .form-control`)
                 .select(argType)
                 .should('have.value', argType)
+                .then(() => {
+                    if (argType === '11') {
+                        // Selected KEY set sub-type to Hash
+                        cy.get('.row > :nth-child(2) > .form-control')
+                            .select('Hash')
+                            .should('have.value', 'Hash')
+                    }
+                })
             // Value
             cy.get(`#arguments-table > div > div > table > tbody > tr:nth-child(${(argRow + 1)}) > td:nth-child(3) > div > input`)
                 .type(argValue)
@@ -86,6 +96,12 @@ Cypress.Commands.add('checkVaultExists', () => {
     });
     return Signer.hasCreatedVault();
 })
+Cypress.Commands.add('resetExistingVault', () => {
+    Cypress.log({
+        name: 'Resetting existing vault...'
+    });
+    return Signer.resetExistingVault();
+})
 Cypress.Commands.add('createTestVault', (password) => {
     Cypress.log({
         name: 'Creating test vault...',
@@ -95,5 +111,40 @@ Cypress.Commands.add('createTestVault', (password) => {
             }
         }
     });
-    Signer.createNewVault(password)
+    Signer.createNewVault(password);
+})
+Cypress.Commands.add('createTestAccount', (name, privateKey) => {
+    Cypress.log({
+        name: 'Creating test account...',
+        consoleProps: () => {
+            return {
+                'Name': name,
+                'Private Key': privateKey
+            }
+        }
+    });
+    Signer.createTestAccount(name, privateKey)
+})
+Cypress.Commands.add('getMessageID', () => {
+    let msgID = Signer.getToSignMessageID();
+    Cypress.log({
+        name: 'Retrieving message ID...',
+        consoleProps: () => {
+            return {
+                'MessageID': msgID
+            }
+        }
+    });
+    return msgID;
+})
+Cypress.Commands.add('signTestDeploy', (msgId) => {
+    Cypress.log({
+        name: 'Signing test deploy...',
+        consoleProps: () => {
+            return {
+                'MessageID': msgId
+            }
+        }
+    });
+    Signer.signTestDeploy(msgId);
 })

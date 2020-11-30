@@ -5,6 +5,7 @@ import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';
 import { AsymmetricKey } from './Keys';
+import { DeployParams } from './DeployUtil';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -66,10 +67,9 @@ export class Contract {
     );
 
     const deploy = DeployUtil.makeDeploy(
+      new DeployParams(accountPublicKey, chainName),
       session,
-      payment,
-      accountPublicKey,
-      chainName
+      payment
     );
     return DeployUtil.signDeploy(deploy, signingKeyPair);
   }

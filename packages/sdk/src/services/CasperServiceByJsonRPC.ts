@@ -213,7 +213,6 @@ export class CasperServiceByJsonRPC {
   }
 
   async deploy(signedDeploy: DeployUtil.Deploy) {
-    console.log(JSON.stringify(deployToJson(signedDeploy)));
     return await this.client.request({
       method: 'account_put_deploy',
       params: deployToJson(signedDeploy)

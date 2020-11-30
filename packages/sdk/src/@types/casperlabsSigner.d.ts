@@ -19,7 +19,7 @@ interface CasperLabsHelper {
 
   // TESTING METHODS
   /*
-   * Force connection to Signer for testing purposes
+   * Force connection to Signer (for testing)
    */
   forceConnection: () => void;
   /**
@@ -27,9 +27,26 @@ interface CasperLabsHelper {
    */
   hasCreatedVault: () => Promise<boolean | undefined>;
   /**
-   * Create an account for testing purposes
+   * Reset existing vault (for testing) prevents complications
+   * and unlocks in preparation for creating an account
+   */
+  resetExistingVault: () => Promise<void>;
+  /**
+   * Create a vault (for testing)
    */
   createNewVault: (password: string) => Promise<void>;
+  /**
+   * Create an account (for testing)
+   */
+  createTestAccount: (name: string, privateKey: string) => Promise<void>;
+  /**
+   * Return message ID so we can sign deploy programatically
+   */
+  getToSignMessageID: () => Promise<number | null>;
+  /**
+   * Sign deploy with given id (provided by above method)
+   */
+  signTestDeploy: (msgId: number) => Promise<void>;
 }
 
 interface Window {

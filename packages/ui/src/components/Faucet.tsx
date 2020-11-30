@@ -3,14 +3,7 @@ import { observer } from 'mobx-react';
 import { Form, SelectField, TextField } from './Forms';
 import AuthContainer, { getAccountHash } from '../containers/AuthContainer';
 import { FaucetContainer, FaucetRequest } from '../containers/FaucetContainer';
-import {
-  RefreshableComponent,
-  Button,
-  CommandLineHint,
-  Icon,
-  Card,
-  FailIcon
-} from './Utils';
+import { RefreshableComponent, Button, Icon, Card, FailIcon } from './Utils';
 import DataTable from './DataTable';
 
 interface Props {

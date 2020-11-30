@@ -1,18 +1,14 @@
 /// <reference types='cypress' />
 
-import { Signer } from 'casper-client-sdk';
-
 context('Basic Functionality', () => {
 
     let sideNavLinks;
     let contractArgTypes;
 
     beforeEach(() => {
-        // cy.visit('https://clarity.casperlabs.io');
+        // Alias block request to allow wait command to target the response
         cy.intercept('GET', '/block').as('getBlock')
         cy.visit('http://localhost:8000')
-
-        // cy.stub(Signer, "isConnected").returns(true)
 
         // Aliases for side nav tabs
         sideNavLinks = {
@@ -48,11 +44,36 @@ context('Basic Functionality', () => {
 
     it('Should deploy a contract', async () => {
 
-        cy.connectSigner();
+        // in future may be worth resetting the vault and starting fresh for each test
         cy.checkVaultExists()
             .then((vault) => {
                 if (!vault) {
                     cy.createTestVault('cypress')
+                        .then(() => {
+                            cy.wait(1000);
+                            cy.connectSigner();
+                            // This pause is required to allow the vault creation to complete prior to the account creation attempt
+                            cy.wait(1000);
+                            cy.createTestAccount(
+                                'Cypress',
+                                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+                            );
+                        })
+                } else {
+                    cy.resetExistingVault()
+                        .then(() => {
+                            cy.createTestVault('cypress')
+                                .then(() => {
+                                    cy.wait(1000);
+                                    cy.connectSigner();
+                                    // This pause is required to allow the vault creation to complete prior to the account creation attempt
+                                    cy.wait(1000)
+                                    cy.createTestAccount(
+                                        'Cypress',
+                                        'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+                                    );
+                                })
+                        })
                 }
             })
 
@@ -89,7 +110,7 @@ context('Basic Functionality', () => {
             {
                 'name': 'recipient',
                 'type': contractArgTypes.KEY,
-                'value': '"0203bcabdaa562ea9468910577c38af78b744d6c42295bc552cabbb8162f08896a94"'
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
             },
             {
                 'name': 'amount',
@@ -109,22 +130,31 @@ context('Basic Functionality', () => {
         }
         // Save arguments
         cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
             .click()
 
         // Sign
         cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
             .click()
 
         // Sign & Deploy prompt
         cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
             .click()
 
+        cy.getMessageID()
+            .then((msgId) => {
+                cy.wait(2000)
+                cy.signTestDeploy(msgId);
+            })
+
         // Clean up error messages and close prompts
-        cy.get('.alert > .close > span')
-            .click()
-        cy.get('.btn').contains('Close')
-            .wait(100)
-            .click()
+        // cy.get('.alert > .close > span')
+        //     .click()
+        // cy.get('.btn').contains('Close')
+        //     .wait(100)
+        //     .click()
     })
 
     // it('Should search for block', () => {

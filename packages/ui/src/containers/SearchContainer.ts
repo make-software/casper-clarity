@@ -3,13 +3,11 @@ import { observable } from 'mobx';
 import ErrorContainer from './ErrorContainer';
 import {
   decodeBase16,
-  GrpcError,
   CasperServiceByJsonRPC,
   GetBlockResult,
   GetDeployResult
 } from 'casper-client-sdk';
 import { CleanableFormData } from './FormData';
-import { grpc } from '@improbable-eng/grpc-web';
 import { FieldState } from 'formstate';
 
 export enum Target {
@@ -93,12 +91,6 @@ export class SearchContainer {
     try {
       this.result = await fetch;
     } catch (err) {
-      if (err instanceof GrpcError) {
-        if (err.code === grpc.Code.NotFound) {
-          this.result = `${what} could not be found.`;
-          return;
-        }
-      }
       this.errors.lastError = err.toString();
     }
   }
