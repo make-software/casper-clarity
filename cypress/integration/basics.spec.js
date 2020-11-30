@@ -12,13 +12,13 @@ context('Basic Functionality', () => {
 
         // Aliases for side nav tabs
         sideNavLinks = {
-            'Accounts'        : '#exampleAccordion > li:nth-child(1) > a',
-            'Faucet'          : '#exampleAccordion > li:nth-child(2) > a', 
-            'DeployContract' : '#exampleAccordion > li:nth-child(3) > a',
-            'Blocks'          : '#exampleAccordion > li:nth-child(4) > a',
-            'Deploys'         : '#exampleAccordion > li:nth-child(5) > a',
-            'Search'          : '#exampleAccordion > li:nth-child(6) > a',
-            'ConnectedPeers' : '#exampleAccordion > li:nth-child(7) > a',
+            'Accounts'        : '#sideMenu > li:nth-child(1) > a',
+            'Faucet'          : '#sideMenu > li:nth-child(2) > a', 
+            'DeployContract' : '#sideMenu > li:nth-child(3) > a',
+            'Blocks'          : '#sideMenu > li:nth-child(4) > a',
+            'Deploys'         : '#sideMenu > li:nth-child(5) > a',
+            'Search'          : '#sideMenu > li:nth-child(6) > a',
+            'ConnectedPeers' : '#sideMenu > li:nth-child(7) > a',
         }
         contractArgTypes = {
             'BOOL'  : '0',
@@ -147,7 +147,7 @@ context('Basic Functionality', () => {
             .then((msgId) => {
                 cy.wait(2000)
                 cy.signTestDeploy(msgId);
-            })
+            });
 
         // Clean up error messages and close prompts
         // cy.get('.alert > .close > span')

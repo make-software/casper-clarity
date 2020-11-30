@@ -25,8 +25,6 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import { Signer } from "casper-client-sdk";
-import * as nacl from 'tweetnacl-ts';
-import { encodeBase64, signKeyPair } from 'tweetnacl-util';
 
 Cypress.Commands.add('login', (overrides = {}) => {
     Cypress.log({
