@@ -1,0 +1,21 @@
+{
+    "development": {
+        "EH_STREAM_PROTOCOL": "http",
+        "EH_STREAM_DOMAIN": "localhost",
+        "EH_STREAM_PORT": 50101,
+        "EH_STREAM_PATH": "events"
+    },
+    "test": {
+        "EH_STREAM_PROTOCOL": "http",
+        "EH_STREAM_DOMAIN": "localhost",
+        "EH_STREAM_PORT": 50101,
+        "EH_STREAM_PATH": "events"
+    },
+    "production": {
+        "EH_STREAM_PROTOCOL": "http",
+        "EH_STREAM_DOMAIN": "localhost",
+        "EH_STREAM_PORT": 50101,
+        "EH_STREAM_PATH": "events"
+    }
+  }
+  

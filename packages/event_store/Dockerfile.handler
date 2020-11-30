@@ -1,0 +1,12 @@
+FROM node:12.5.0-stretch-slim
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY src /app/src
+COPY package.json /app/package.json
+
+RUN npm install
+
+ENTRYPOINT npm run start-event-handler
