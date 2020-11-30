@@ -34,7 +34,8 @@ import {
   FaMapMarkedAlt,
   FaSearch,
   FaNetworkWired,
-  FaListUl
+  FaListUl,
+  FaUsers
 } from 'react-icons/fa';
 import { FiLogOut, FiGrid } from 'react-icons/fi';
 import { DeployContractsForm } from './DeployContracts';
@@ -141,11 +142,11 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
     'Search',
     <FaSearch fontSize={SideMenuIconSize} />
   ),
-  // new MenuItem(
-  //   Pages.Validators,
-  //   'Validators',
-  //   <MdGroup fontSize={SideMenuIconSize} />
-  // ),
+  new MenuItem(
+    Pages.Validators,
+    'Validators',
+    <FaUsers fontSize={SideMenuIconSize} />
+  ),
   new MenuItem(
     Pages.ConnectedPeers,
     'Connected Peers',
@@ -346,7 +347,7 @@ class _Navigation extends RefreshableComponent<
 
         <div className="collapse navbar-collapse" id="navbarResponsive">
           {/* Side Bar */}
-          <ul className="navbar-nav navbar-sidenav" id="exampleAccordion">
+          <ul className="navbar-nav navbar-sidenav" id="sideMenu">
             {SideMenuItems.map(x => x.toRoute())}
           </ul>
 

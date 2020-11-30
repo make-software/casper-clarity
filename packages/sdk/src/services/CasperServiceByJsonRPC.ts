@@ -91,6 +91,18 @@ export interface JsonBlock {
   proofs: string[];
 }
 
+export interface BidInfo {
+  bonding_purse: string;
+  staked_amount: string;
+  delegation_rate: number;
+  funds_locked: null | string;
+}
+
+export interface ValidatorsInfoResult extends RpcResult {
+  era_validators: Record<string, Record<string, string>>;
+  bids: Record<string, BidInfo>;
+}
+
 export class CasperServiceByJsonRPC {
   private client: Client;
 
@@ -138,6 +150,12 @@ export class CasperServiceByJsonRPC {
   async getStatus(): Promise<GetStatusResult> {
     return await this.client.request({
       method: 'info_get_status'
+    });
+  }
+
+  async getValidatorsInfo(): Promise<ValidatorsInfoResult> {
+    return await this.client.request({
+      method: 'state_get_auction_info'
     });
   }
 
