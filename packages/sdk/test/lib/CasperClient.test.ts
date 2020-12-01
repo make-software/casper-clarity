@@ -50,7 +50,8 @@ describe('CasperClient', () => {
     expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
   });
 
-  it('transfer', async () => {
+  // todo move it to example once we publish transfer feature
+  describe.skip('transfer', async () => {
     const transfer = new DeployUtil.Transfer(
       100000000000000,
       PublicKey.fromHex(
