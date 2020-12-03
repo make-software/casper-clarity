@@ -25,6 +25,9 @@ export interface ToBytes {
   toBytes: () => ByteArray;
 }
 
+const ED25519_TAG = 1;
+const SECP256K1_TAG = 2;
+
 export abstract class CLTypedAndToBytes implements ToBytes, CLTyped {
   abstract clType(): CLType;
 
@@ -56,9 +59,11 @@ class Bool extends CLTypedAndToBytes {
   constructor(private b: boolean) {
     super();
   }
+
   toBytes(): ByteArray {
     return new Uint8Array([this.b ? 1 : 0]);
   }
+
   clType(): CLType {
     return SimpleType.Bool;
   }
@@ -89,6 +94,7 @@ class U8 extends NumberCoder {
   constructor(u8: number) {
     super(8, false, u8);
   }
+
   clType(): CLType {
     return SimpleType.U8;
   }
@@ -98,6 +104,7 @@ export class U32 extends NumberCoder {
   constructor(n: number) {
     super(32, false, n);
   }
+
   clType(): CLType {
     return SimpleType.U32;
   }
@@ -107,6 +114,7 @@ class I32 extends NumberCoder {
   constructor(n: number) {
     super(32, true, n);
   }
+
   clType(): CLType {
     return SimpleType.I32;
   }
@@ -176,6 +184,7 @@ class StringValue extends CLTypedAndToBytes {
   constructor(private str: string) {
     super();
   }
+
   toBytes = () => {
     return toBytesString(this.str);
   };
@@ -256,6 +265,7 @@ export class PublicKey extends CLTypedAndToBytes {
   private constructor(public rawPublicKey: ByteArray, private tag: number) {
     super();
   }
+
   clType(): CLType {
     return SimpleType.PublicKey;
   }
@@ -270,8 +280,11 @@ export class PublicKey extends CLTypedAndToBytes {
   toAccountHex(): string {
     let accountHash: string;
     switch (this.tag) {
-      case 1:
+      case ED25519_TAG:
         accountHash = '01' + encodeBase16(this.rawPublicKey);
+        break;
+      case SECP256K1_TAG:
+        accountHash = '10' + encodeBase16(this.rawPublicKey);
         break;
       default:
         throw new Error('Unsupported type of public key');
@@ -280,28 +293,22 @@ export class PublicKey extends CLTypedAndToBytes {
   }
 
   toAccountHash(): ByteArray {
-    switch (this.tag) {
-      case 1:
-        const separator = Buffer.from([0]);
-        const prefix = Buffer.concat([
-          Buffer.from('ed25519'.toLowerCase()),
-          separator
-        ]);
+    let algorithmIdentifier = this.signatureAlgorithm();
+    const separator = Buffer.from([0]);
+    const prefix = Buffer.concat([
+      Buffer.from(algorithmIdentifier.toLowerCase()),
+      separator
+    ]);
 
-        if (this.rawPublicKey.length === 0) {
-          return Buffer.from([]);
-        } else {
-          return byteHash(
-            Buffer.concat([prefix, Buffer.from(this.rawPublicKey)])
-          );
-        }
-      default:
-        throw new Error('Unsupported type of public key');
+    if (this.rawPublicKey.length === 0) {
+      return Buffer.from([]);
+    } else {
+      return byteHash(Buffer.concat([prefix, Buffer.from(this.rawPublicKey)]));
     }
   }
 
   static fromEd25519(publicKey: ByteArray) {
-    return new PublicKey(publicKey, 1);
+    return new PublicKey(publicKey, ED25519_TAG);
   }
 
   static from(publicKey: ByteArray, signatureAlgorithm: SignatureAlgorithm) {
@@ -333,8 +340,10 @@ export class PublicKey extends CLTypedAndToBytes {
 
   signatureAlgorithm() {
     switch (this.tag) {
-      case 1:
+      case ED25519_TAG:
         return SignatureAlgorithm.Ed25519;
+      case SECP256K1_TAG:
+        return SignatureAlgorithm.Secp256K1;
       default:
         throw new Error('Unsupported type of public key');
     }
@@ -366,12 +375,14 @@ class MapValue extends CLTypedAndToBytes {
 
 class OptionType {
   tag = 13;
+
   constructor(public innerType: CLType) {}
 }
 
 class ListType {
   tag = 14;
   innerType: CLType;
+
   constructor(innerType: CLType) {
     this.innerType = innerType;
   }
@@ -379,26 +390,31 @@ class ListType {
 
 class ByteArrayType {
   tag = 15;
+
   constructor(public size: number) {}
 }
 
 class MapType {
   tag = 17;
+
   constructor(public keyType: CLType, public valueType: CLType) {}
 }
 
 class Tuple1Type {
   tag = 18;
+
   constructor(public t0: CLType) {}
 }
 
 class Tuple2Type {
   tag = 19;
+
   constructor(public t0: CLType, public t1: CLType) {}
 }
 
 class Tuple3Type {
   tag = 20;
+
   constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
 }
 

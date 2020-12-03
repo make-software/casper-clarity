@@ -6,7 +6,8 @@ import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
 
 export enum SignatureAlgorithm {
-  Ed25519 = 'ed25519'
+  Ed25519 = 'ed25519',
+  Secp256K1 = 'secp256k1'
 }
 
 function accountHashHelper(
@@ -51,7 +52,9 @@ export abstract class AsymmetricKey {
   public abstract accountHex(): string;
 
   public abstract exportPublicKeyInPem(): string;
+
   public abstract exportPrivateKeyInPem(): string;
+
   public abstract sign(msg: ByteArray): ByteArray;
 }
 
@@ -60,6 +63,7 @@ export class Ed25519 extends AsymmetricKey {
   constructor(keyPair: SignKeyPair) {
     super(keyPair.publicKey, keyPair.secretKey, SignatureAlgorithm.Ed25519);
   }
+
   /**
    * Generating a new key pair
    */
@@ -194,7 +198,7 @@ export class Ed25519 extends AsymmetricKey {
 
   public exportPublicKeyInPem() {
     // prettier-ignore
-    const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0] );
+    const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0]);
     const encoded = encodeBase64(
       Buffer.concat([derPrefix, Buffer.from(this.publicKey.rawPublicKey)])
     );
