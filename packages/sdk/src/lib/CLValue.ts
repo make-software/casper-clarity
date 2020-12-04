@@ -293,7 +293,7 @@ export class PublicKey extends CLTypedAndToBytes {
   }
 
   toAccountHash(): ByteArray {
-    let algorithmIdentifier = this.signatureAlgorithm();
+    const algorithmIdentifier = this.signatureAlgorithm();
     const separator = Buffer.from([0]);
     const prefix = Buffer.concat([
       Buffer.from(algorithmIdentifier.toLowerCase()),

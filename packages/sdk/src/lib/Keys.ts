@@ -4,6 +4,13 @@ import { SignKeyPair } from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
 import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
+import * as secp256k1 from 'ethereum-cryptography/secp256k1';
+import KeyEncoder from 'key-encoder';
+
+const keyEncoder = new KeyEncoder('secp256k1');
+
+const ED25519_PEM_SECRET_KEY_TAG = 'PRIVATE KEY';
+const ED25519_PEM_PUBLIC_KEY_TAG = 'PUBLIC KEY';
 
 export enum SignatureAlgorithm {
   Ed25519 = 'ed25519',
@@ -49,7 +56,16 @@ export abstract class AsymmetricKey {
   /**
    * Get the account hex
    */
-  public abstract accountHex(): string;
+  public accountHex(): string {
+    return this.publicKey.toAccountHex();
+  }
+
+  protected toPem(tag: string, content: string) {
+    // prettier-ignore
+    return `-----BEGIN ${tag}-----\n` +
+      `${content}\n` +
+      `-----END ${tag}-----\n`;
+  }
 
   public abstract exportPublicKeyInPem(): string;
 
@@ -69,10 +85,6 @@ export class Ed25519 extends AsymmetricKey {
    */
   public static new() {
     return new Ed25519(nacl.sign_keyPair());
-  }
-
-  public accountHex(): string {
-    return this.publicKey.toAccountHex();
   }
 
   static accountHex(publicKey: ByteArray): string {
@@ -189,11 +201,7 @@ export class Ed25519 extends AsymmetricKey {
         Buffer.from(Ed25519.parsePrivateKey(this.privateKey))
       ])
     );
-    return (
-      '-----BEGIN PRIVATE KEY-----\n' +
-      encoded +
-      '\n-----END PRIVATE KEY-----\n'
-    );
+    return this.toPem(ED25519_PEM_SECRET_KEY_TAG, encoded);
   }
 
   public exportPublicKeyInPem() {
@@ -202,12 +210,43 @@ export class Ed25519 extends AsymmetricKey {
     const encoded = encodeBase64(
       Buffer.concat([derPrefix, Buffer.from(this.publicKey.rawPublicKey)])
     );
-    return (
-      '-----BEGIN PUBLIC KEY-----\n' + encoded + '\n-----END PUBLIC KEY-----\n'
-    );
+    return this.toPem(ED25519_PEM_PUBLIC_KEY_TAG, encoded);
   }
 
   sign(msg: ByteArray): ByteArray {
     return nacl.sign_detached(msg, this.privateKey);
+  }
+}
+
+export class Secp256K1 extends AsymmetricKey {
+  constructor(publicKey: ByteArray, privateKey: ByteArray) {
+    super(publicKey, privateKey, SignatureAlgorithm.Secp256K1);
+  }
+
+  static async new() {
+    const privateKey = await secp256k1.createPrivateKey();
+    const publicKey = await secp256k1.publicKeyCreate(privateKey);
+    return new Secp256K1(publicKey, privateKey);
+  }
+
+  exportPrivateKeyInPem(): string {
+    return keyEncoder.encodePrivate(
+      Buffer.from(this.privateKey.buffer),
+      'raw',
+      'pem'
+    );
+  }
+
+  exportPublicKeyInPem(): string {
+    return keyEncoder.encodePublic(
+      Buffer.from(this.publicKey.rawPublicKey),
+      'raw',
+      'pem'
+    );
+  }
+
+  sign(msg: ByteArray): ByteArray {
+    const res = secp256k1.ecdsaSign(msg, this.privateKey);
+    return res.signature;
   }
 }
