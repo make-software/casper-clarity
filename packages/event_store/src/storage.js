@@ -1,3 +1,5 @@
+const { Op } = require("sequelize");
+
 class Storage {
     constructor(models, pubsub = null) {
         this.models = models;
@@ -38,10 +40,37 @@ class Storage {
             console.warn("\tThis might be due to a problem in the corresponding blockFinalized event\n");
             return;
         }
+
         deploy.account = event.account;
-        deploy.cost = event.execution_result.cost;
-        deploy.errorMessage = event.execution_result.error_message;
         deploy.state = 'processed';
+
+        if (event.execution_result.Success) {
+            let result = event.execution_result.Success;
+            deploy.cost = result.cost;
+            deploy.errorMessage = null;
+            result.transfers.forEach(transferHash => {
+                result.effect.transforms.forEach(async transform => {
+                    if(transform.key != transferHash) {
+                        return;
+                    }
+                    let transferEvent = transform.transform.WriteTransfer;
+                    await this.models.Transfer.create({
+                        transferHash: transferHash,
+                        deployHash: deploy.deployHash,
+                        fromAccount: transferEvent.from.substring(13),
+                        sourcePurse: transferEvent.source.substring(5),
+                        targetPurse: transferEvent.target.substring(5),
+                        amount: transferEvent.amount,
+                        id: transferEvent.id
+                    });
+                });
+            });
+        } else {
+            let result = event.execution_result.Failure;
+            deploy.errorMessage = result.error_message;
+            deploy.cost = result.cost;
+        }
+
         await deploy.save();
 
         if(this.pubsub !== null) {
@@ -114,6 +143,22 @@ class Storage {
             }
         });
     }
+
+    async findTransfers(purseUref) {
+        return this.models.Transfer.findAll({
+            where: {
+                [Op.or]: [
+                    {
+                        sourcePurse: purseUref
+                    },{
+                        targetPurse: purseUref
+                    }
+                ]
+            }
+        });
+    }
+    
+
 }
 
 module.exports = Storage

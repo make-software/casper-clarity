@@ -27,7 +27,7 @@ let httpServer = (models) => {
         if (deploy === null) {
             res.status(404).send("Deploy not found.");
         } else {
-            res.send(await deploy.toJSON());
+            res.send(await deploy.toJSON(skipTransfers = false));
         }
     });
 
@@ -54,13 +54,22 @@ let httpServer = (models) => {
         const pageCount = Math.ceil(deploys.count / req.query.limit);
         let result = {
             data: await Promise.all(deploys.rows.map(deploy => {
-                return deploy.toJSON();
+                return deploy.toJSON(skipTransfers = true);
             })),
             pageCount: pageCount,
             itemCount: itemCount,
             pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
         }
         res.send(result);
+    });
+
+    app.get('/transfers/:purseUref', async (req, res, next) => {
+        let transfers = await storage.findTransfers(req.params.purseUref);
+        if (transfers.length == 0) {
+            res.status(404).send("Transferts not found.");
+        } else {
+            res.send(transfers.map(t => t.toJSON()));
+        }
     });
 
     app.use(function (req,res,next){

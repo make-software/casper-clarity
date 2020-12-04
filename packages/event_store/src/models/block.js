@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         async toJSON(skipDeploys = false) {
-            var tag = '/blocks block ' + this.blockHash;
-            console.time(tag);
+            // var tag = '/blocks block ' + this.blockHash;
+            // console.time(tag);
             let result = {
                 "blockHash": this.blockHash,
                 "parentHash": this.parentHash,
@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
                     return deploy.deployHash;
                 });
             }
-            console.timeEnd(tag);
+            // console.timeEnd(tag);
             return result; 
         }
     };
