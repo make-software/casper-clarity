@@ -31,6 +31,32 @@ function accountHashHelper(
   }
 }
 
+/**
+ * Get rid of PEM frames, skips header `-----BEGIN PUBLIC KEY-----`
+ * and footer `-----END PUBLIC KEY-----`
+ *
+ * Example PEM:
+ *
+ * ```
+ * -----BEGIN PUBLIC KEY-----\r\n
+ * MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEj1fgdbpNbt06EY/8C+wbBXq6VvG+vCVD\r\n
+ * Nl74LvVAmXfpdzCWFKbdrnIlX3EFDxkd9qpk35F/kLcqV3rDn/u3dg==\r\n
+ * -----END PUBLIC KEY-----\r\n
+ * ```
+ *
+ */
+export function readBase64WithPEM(content: string): ByteArray {
+  const base64 = content
+    // there are two kinks of line-endings, CRLF(\r\n) and LF(\n)
+    // we need handle both
+    .split(/\r?\n/)
+    .filter(x => !x.startsWith('---'))
+    .join('')
+    // remove the line-endings in the end of content
+    .trim();
+  return decodeBase64(base64);
+}
+
 export abstract class AsymmetricKey {
   public readonly publicKey: PublicKey;
   public readonly privateKey: ByteArray;
@@ -142,30 +168,8 @@ export class Ed25519 extends AsymmetricKey {
     return Ed25519.parseKey(bytes, 32, 64);
   }
 
-  /**
-   * Get rid of PEM frames, skips header `-----BEGIN PUBLIC KEY-----`
-   * and footer `-----END PUBLIC KEY-----`
-   *
-   * Example PEM:
-   *
-   * ```
-   * -----BEGIN PUBLIC KEY-----\r\n
-   * MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEj1fgdbpNbt06EY/8C+wbBXq6VvG+vCVD\r\n
-   * Nl74LvVAmXfpdzCWFKbdrnIlX3EFDxkd9qpk35F/kLcqV3rDn/u3dg==\r\n
-   * -----END PUBLIC KEY-----\r\n
-   * ```
-   *
-   */
-  public static readBase64WithPEM(content: string): ByteArray {
-    const base64 = content
-      // there are two kinks of line-endings, CRLF(\r\n) and LF(\n)
-      // we need handle both
-      .split(/\r?\n/)
-      .filter(x => !x.startsWith('---'))
-      .join('')
-      // remove the line-endings in the end of content
-      .trim();
-    return decodeBase64(base64);
+  public static readBase64WithPEM(content: string) {
+    return readBase64WithPEM(content);
   }
 
   /**
@@ -227,6 +231,71 @@ export class Secp256K1 extends AsymmetricKey {
     const privateKey = await secp256k1.createPrivateKey();
     const publicKey = await secp256k1.publicKeyCreate(privateKey);
     return new Secp256K1(publicKey, privateKey);
+  }
+
+  /**
+   * Parse the key pair from publicKey file and privateKey file
+   * @param publicKeyPath path of public key file
+   * @param privateKeyPath path of private key file
+   */
+  public static parseKeyFiles(
+    publicKeyPath: string,
+    privateKeyPath: string
+  ): AsymmetricKey {
+    const publicKey = Secp256K1.parsePublicKeyFile(publicKeyPath);
+    const privateKey = Ed25519.parsePrivateKeyFile(privateKeyPath);
+    // nacl expects that the private key will contain both.
+    return new Ed25519({
+      publicKey,
+      secretKey: Buffer.concat([privateKey, publicKey])
+    });
+  }
+
+  public static accountHash(publicKey: ByteArray): ByteArray {
+    return accountHashHelper(SignatureAlgorithm.Ed25519, publicKey);
+  }
+
+  public static parseKeyPair(
+    publicKey: ByteArray,
+    privateKey: ByteArray
+  ): AsymmetricKey {
+    const publ = Ed25519.parsePublicKey(publicKey);
+    const priv = Ed25519.parsePrivateKey(privateKey);
+    // nacl expects that the private key will contain both.
+    return new Ed25519({
+      publicKey: publ,
+      secretKey: Buffer.concat([priv, publ])
+    });
+  }
+
+  public static parsePrivateKeyFile(path: string): ByteArray {
+    return Secp256K1.parsePrivateKey(Secp256K1.readBase64File(path));
+  }
+
+  public static parsePublicKeyFile(path: string): ByteArray {
+    return Secp256K1.parsePublicKey(Secp256K1.readBase64File(path));
+  }
+
+  public static parsePrivateKey(bytes: ByteArray) {
+    return secp256k1.privateKeyImport(bytes);
+  }
+
+  public static parsePublicKey(bytes: ByteArray) {
+    return secp256k1.signatureImport(bytes);
+  }
+
+  public static readBase64WithPEM(content: string) {
+    return readBase64WithPEM(content);
+  }
+
+  /**
+   * Read the Base64 content of a file, get rid of PEM frames.
+   *
+   * @param path the path of file to read from
+   */
+  private static readBase64File(path: string): ByteArray {
+    const content = fs.readFileSync(path).toString();
+    return Secp256K1.readBase64WithPEM(content);
   }
 
   exportPrivateKeyInPem(): string {
