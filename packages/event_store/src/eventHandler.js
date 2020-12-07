@@ -52,31 +52,21 @@ class EventHandler {
         
         outputStream._write = async (chunk, encoding, done) => {
             // Removes 'data:' prefix from the event to convert it to JSON
-            let jsonData;
-            try {
-                jsonData = JSON.parse(chunk.toString().split("\n")[0].substr(5));
-                if (jsonData == undefined) {
-                    throw new Error("Not a json after all");
-                }
-            } catch (err) {
-                done();
-                return;
-            }
-
-            // Uncomment to get JSON output from event stream to stdout
-            // console.log(jsonData);
-
-            if (jsonData.BlockFinalized) {
-                console.log("\nSaving Finalized Block..."); // For debugging
-                await storage.onFinalizedBlock(jsonData.BlockFinalized);
-            } else if (jsonData.DeployProcessed) {
-                console.log("\nSaving Processed Deploys..."); // For debugging
-                await storage.onDeployProcessed(jsonData.DeployProcessed);
-            } else if (jsonData.BlockAdded) {
-                console.log("\nSaving Added Block..."); // For debugging
-                await storage.onBlockAdded(jsonData.BlockAdded);
-            }
-    
+            chunk.toString().split("\n")
+                .filter(str => str.startsWith('data'))
+                .map(str => JSON.parse(str.substr(5)))
+                .forEach(async event => {
+                    if (event.BlockFinalized) {
+                        console.log("Saving Finalized Block..."); // For debugging
+                        await storage.onFinalizedBlock(event.BlockFinalized);
+                    } else if (event.DeployProcessed) {
+                        console.log("Saving Deploys..."); // For debugging
+                        await storage.onDeployProcessed(event.DeployProcessed);
+                    } else if (event.BlockAdded) {
+                        console.log("Saving Added Block..."); // For debugging
+                        await storage.onBlockAdded(event.BlockAdded);
+                    }
+                });
             done();
         }
 

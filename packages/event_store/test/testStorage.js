@@ -49,9 +49,21 @@ describe('Storage', async () => {
         await storage.onDeployProcessed(e);
 
         let deploy = await storage.findDeployByHash(e.deploy_hash);
-        assert.strictEqual(deploy.cost, parseInt(e.execution_result.cost));
-        assert.strictEqual(deploy.errorMessage, e.execution_result.error_message);
+        assert.strictEqual(deploy.cost, parseInt(e.execution_result.Success.cost));
+        assert.strictEqual(deploy.errorMessage, null);
         assert.strictEqual(deploy.state, 'processed');
+        
+        let transfers = await deploy.getTransfers();
+        let transfer = transfers[0];
+        assert.strictEqual(transfers.length, 1);
+        
+        let expectedTransfer = e.execution_result.Success.effect.transforms[1];
+        let expectedTransferKey = expectedTransfer.key;
+        expectedTransfer = expectedTransfer.transform.WriteTransfer;
+
+        assert.strictEqual(transfer.transferHash, expectedTransferKey);
+        assert.strictEqual(transfer.deployHash, e.deploy_hash);
+        // TODO: more test.
     });
 
     it('Should handle BlockAdded event', async () => {

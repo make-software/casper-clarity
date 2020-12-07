@@ -48,11 +48,20 @@ export interface AccountDeploy {
   errorMessage: string;
   blockHash: string;
 }
+
 export interface AccountDeploysResult {
   data: AccountDeploy[];
   pageCount: number;
   itemCount: number;
   pages: Page[];
+}
+
+export interface TransferResult {
+  deployHash: string;
+  sourcePurse: string;
+  targetPurse: string;
+  amount: string;
+  id: string;
 }
 
 export class EventService {
@@ -87,6 +96,11 @@ export class EventService {
     const response = await axios.get(
       this.url + `/accountDeploys/${accountHex}?page=${page}&limit=${limit}`
     );
+    return response.data;
+  }
+
+  async getTransfersByPurse(purseUref: string): Promise<TransferResult[]> {
+    const response = await axios.get(this.url + `/transfers/${purseUref}`);
     return response.data;
   }
 }

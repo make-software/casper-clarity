@@ -6,11 +6,14 @@ module.exports = (sequelize, DataTypes) => {
             models.Deploy.Block = models.Deploy.belongsTo(models.Block, {
                 foreignKey: 'blockHeight'
             });
+            models.Deploy.Transfers = models.Deploy.hasMany(models.Transfer, {
+                foreignKey: 'deployHash'
+            });
         }
 
-        async toJSON() {
+        async toJSON(skipTransfers = false) {
             let block = await this.getBlock();
-            return {
+            let result = {
                 "deployHash": this.deployHash,
                 "account": this.account,
                 "state": this.state,
@@ -18,6 +21,13 @@ module.exports = (sequelize, DataTypes) => {
                 "errorMessage": this.errorMessage,
                 "blockHash": block.blockHash
             }
+            if (!skipTransfers) {
+                let transfers = await this.getTransfers();
+                result['transfers'] = transfers.map(transfer => {
+                    return transfer.toJSON()
+                })
+            }
+            return result;
         }
     };
 
@@ -32,7 +42,11 @@ module.exports = (sequelize, DataTypes) => {
         errorMessage: DataTypes.STRING
     }, {
         sequelize,
-        modelName: 'Deploy'
+        modelName: 'Deploy',
+        indexes: [ 
+            { fields: [ 'deployHash' ] },
+            { fields: [ 'account' ] }
+        ]
     });
     
     return Deploy;
