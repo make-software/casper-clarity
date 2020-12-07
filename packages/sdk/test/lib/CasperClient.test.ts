@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { DeployUtil, Keys, PublicKey } from '../../src/lib';
-import { Ed25519, SignatureAlgorithm } from '../../src/lib/Keys';
+import { Ed25519, Secp256K1, SignatureAlgorithm } from '../../src/lib/Keys';
 import JSBI from 'jsbi';
 
 let casperClient: CasperClient;
@@ -47,6 +47,48 @@ describe('CasperClient', () => {
     const keyPairFromFile = Keys.Ed25519.parseKeyPair(
       publicKeyFromFIle,
       privateKeyFromFile
+    );
+
+    expect(keyPairFromFile.publicKey.rawPublicKey).to.deep.equal(
+      edKeyPair.publicKey.rawPublicKey
+    );
+    expect(keyPairFromFile.privateKey).to.deep.equal(edKeyPair.privateKey);
+  });
+
+  it('should generate new Secp256K1 key pair, and compute public key from private key', () => {
+    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Secp256K1);
+    const publicKey = edKeyPair.publicKey.rawPublicKey;
+    const privateKey = edKeyPair.privateKey;
+    const convertFromPrivateKey = casperClient.privateToPublicKey(
+      privateKey,
+      SignatureAlgorithm.Secp256K1
+    );
+    expect(convertFromPrivateKey).to.deep.equal(publicKey);
+  });
+
+  it('should generate PEM file for Secp256K1 correctly', () => {
+    const edKeyPair: Secp256K1 = casperClient.newKeyPair(
+      SignatureAlgorithm.Secp256K1
+    );
+    const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
+    const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
+    fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
+    fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
+    const publicKeyFromFIle = casperClient.loadPublicKeyFromFile(
+      tempDir + '/public.pem',
+      SignatureAlgorithm.Secp256K1
+    );
+    const privateKeyFromFile = casperClient.loadPrivateKeyFromFile(
+      tempDir + '/private.pem',
+      SignatureAlgorithm.Secp256K1
+    );
+
+    const keyPairFromFile = Keys.Secp256K1.parseKeyPair(
+      publicKeyFromFIle,
+      privateKeyFromFile,
+      'raw'
     );
 
     expect(keyPairFromFile.publicKey.rawPublicKey).to.deep.equal(

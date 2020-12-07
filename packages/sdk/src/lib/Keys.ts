@@ -275,10 +275,11 @@ export class Secp256K1 extends AsymmetricKey {
 
   public static parseKeyPair(
     publicKey: ByteArray,
-    privateKey: ByteArray
+    privateKey: ByteArray,
+    originalFormat: 'raw' | 'der'
   ): AsymmetricKey {
-    const publ = Secp256K1.parsePublicKey(publicKey);
-    const priv = Secp256K1.parsePrivateKey(privateKey);
+    const publ = Secp256K1.parsePublicKey(publicKey, originalFormat);
+    const priv = Secp256K1.parsePrivateKey(privateKey, originalFormat);
     // nacl expects that the private key will contain both.
     return new Secp256K1(publ, priv);
   }
@@ -291,12 +292,16 @@ export class Secp256K1 extends AsymmetricKey {
     return Secp256K1.parsePublicKey(Secp256K1.readBase64File(path));
   }
 
-  public static parsePrivateKey(bytes: ByteArray) {
-    const rawKeyHex = keyEncoder.encodePrivate(
-      Buffer.from(bytes),
-      'der',
-      'raw'
-    );
+  public static parsePrivateKey(
+    bytes: ByteArray,
+    originalFormat: 'der' | 'raw' = 'der'
+  ) {
+    let rawKeyHex: string;
+    if (originalFormat === 'der') {
+      rawKeyHex = keyEncoder.encodePrivate(Buffer.from(bytes), 'der', 'raw');
+    } else {
+      rawKeyHex = encodeBase16(bytes);
+    }
     const privateKey = ec
       .keyFromPrivate(rawKeyHex, 'hex')
       .getPrivate()
@@ -304,8 +309,17 @@ export class Secp256K1 extends AsymmetricKey {
     return privateKey;
   }
 
-  public static parsePublicKey(bytes: ByteArray) {
-    const rawKeyHex = keyEncoder.encodePublic(Buffer.from(bytes), 'der', 'raw');
+  public static parsePublicKey(
+    bytes: ByteArray,
+    originalFormat: 'der' | 'raw' = 'der'
+  ) {
+    let rawKeyHex: string;
+    if (originalFormat === 'der') {
+      rawKeyHex = keyEncoder.encodePublic(Buffer.from(bytes), 'der', 'raw');
+    } else {
+      rawKeyHex = encodeBase16(bytes);
+    }
+
     const publicKey = Uint8Array.from(
       ec.keyFromPublic(rawKeyHex, 'hex').getPublic(true, 'array')
     );
