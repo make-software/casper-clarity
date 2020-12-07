@@ -4,7 +4,7 @@ interface UserAccount {
   // Public key in PEM format.
   publicKeyBase64: string;
   // Now we only support ed25519 in Clarity.
-  sigAlgorithm?: 'ed25519';
+  sigAlgorithm?: string;
 }
 
 interface NamedHash {
