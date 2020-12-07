@@ -16,12 +16,17 @@ interface CasperLabsHelper {
   sign: (messageBase16: string, publicKeyBase64?: string) => Promise<string>;
   // returns base64 encoded public key of user current selected account.
   getSelectedPublicKeyBase64: () => Promise<string | undefined>;
+}
 
-  // TESTING METHODS
+interface SignerTestingHelper {
   /*
    * Force connection to Signer (for testing)
    */
   forceConnection: () => void;
+  /**
+   * Force disconnect from Signer
+   */
+  forceDisconnect: () => void;
   /**
    * Check if there is an existing vault
    */
@@ -51,4 +56,5 @@ interface CasperLabsHelper {
 
 interface Window {
   casperlabsHelper?: CasperLabsHelper;
+  signerTestingHelper?: SignerTestingHelper;
 }

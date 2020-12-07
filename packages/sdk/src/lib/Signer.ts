@@ -21,13 +21,6 @@ export const sendConnectionRequest: () => void = () => {
 };
 
 /**
- * Force connection to the Signer (without requiring confirmation)
- */
-export const forceConnection: () => void = () => {
-  return window.casperlabsHelper!.forceConnection();
-};
-
-/**
  * Return base64 encoded public key of user current selected account.
  *
  * @throws Error if haven't connected to CasperLabs Signer browser extension.
@@ -56,35 +49,43 @@ export const sign: (
   return window.casperlabsHelper!.sign(messageBase16, publicKeyBase64);
 };
 
+export const forceConnection: () => void = () => {
+  return window.signerTestingHelper!.forceConnection();
+};
+
+export const forceDisconnect: () => void = () => {
+  return window.signerTestingHelper!.forceDisconnect();
+};
+
 export const hasCreatedVault: () => Promise<boolean | undefined> = () => {
-  return window.casperlabsHelper!.hasCreatedVault();
+  return window.signerTestingHelper!.hasCreatedVault();
 };
 
 export const resetExistingVault: () => Promise<void> = () => {
-  return window.casperlabsHelper!.resetExistingVault();
+  return window.signerTestingHelper!.resetExistingVault();
 };
 
 export const createNewVault: (password: string) => Promise<void> = (
   password: string
 ) => {
-  return window.casperlabsHelper!.createNewVault(password);
+  return window.signerTestingHelper!.createNewVault(password);
 };
 
 export const createTestAccount: (
   name: string,
   privateKey: string
 ) => Promise<void> = (name: string, privateKey: string) => {
-  return window.casperlabsHelper!.createTestAccount(name, privateKey);
+  return window.signerTestingHelper!.createTestAccount(name, privateKey);
 };
 
 export const getToSignMessageID: () => Promise<number | null> = () => {
-  return window.casperlabsHelper!.getToSignMessageID();
+  return window.signerTestingHelper!.getToSignMessageID();
 };
 
 export const signTestDeploy: (msgId: number) => Promise<void> = (
   msgId: number
 ) => {
-  return window.casperlabsHelper!.signTestDeploy(msgId);
+  return window.signerTestingHelper!.signTestDeploy(msgId);
 };
 
 const throwIfNotConnected = () => {
