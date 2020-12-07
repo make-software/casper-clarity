@@ -88,6 +88,12 @@ Cypress.Commands.add('connectSigner', () => {
     });
     Signer.forceConnection();
 })
+Cypress.Commands.add('disconnectSigner', () => {
+    Cypress.log({
+        name: 'Disconnecting from Signer...'
+    });
+    Signer.forceDisconnect();
+});
 Cypress.Commands.add('checkVaultExists', () => {
     Cypress.log({
         name: 'Checking for existing vault...'
@@ -98,7 +104,7 @@ Cypress.Commands.add('resetExistingVault', () => {
     Cypress.log({
         name: 'Resetting existing vault...'
     });
-    return Signer.resetExistingVault();
+    Signer.resetExistingVault();
 })
 Cypress.Commands.add('createTestVault', (password) => {
     Cypress.log({
