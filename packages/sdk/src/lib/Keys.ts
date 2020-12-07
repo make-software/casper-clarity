@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
-import { SignKeyPair } from 'tweetnacl-ts';
+import { SignKeyPair, SignLength } from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
 import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
@@ -233,6 +233,14 @@ export class Ed25519 extends AsymmetricKey {
       this.publicKey.rawPublicKey
     );
   }
+
+  static privateToPublicKey(privateKey: ByteArray) {
+    if (privateKey.length === SignLength.SecretKey) {
+      return nacl.sign_keyPair_fromSecretKey(privateKey).publicKey;
+    } else {
+      return nacl.sign_keyPair_fromSeed(privateKey).publicKey;
+    }
+  }
 }
 
 export class Secp256K1 extends AsymmetricKey {
@@ -240,10 +248,9 @@ export class Secp256K1 extends AsymmetricKey {
     super(publicKey, privateKey, SignatureAlgorithm.Secp256K1);
   }
 
-  static async new() {
+  static new() {
     const keyPair = ec.genKeyPair();
     const publicKey = Uint8Array.from(keyPair.getPublic(true, 'array'));
-    console.log(keyPair.getPublic(true, 'hex'));
     const privateKey = keyPair.getPrivate().toBuffer();
     return new Secp256K1(publicKey, privateKey);
   }
@@ -346,5 +353,9 @@ export class Secp256K1 extends AsymmetricKey {
       sha256(Buffer.from(msg)),
       this.publicKey.rawPublicKey
     );
+  }
+
+  static privateToPublicKey(privateKey: ByteArray): ByteArray {
+    return secp256k1.publicKeyCreate(privateKey, true);
   }
 }

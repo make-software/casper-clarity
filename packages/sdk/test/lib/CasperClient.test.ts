@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { DeployUtil, Keys, PublicKey } from '../../src/lib';
-import { Ed25519 } from '../../src/lib/Keys';
+import { Ed25519, SignatureAlgorithm } from '../../src/lib/Keys';
 import JSBI from 'jsbi';
 
 let casperClient: CasperClient;
@@ -17,26 +17,31 @@ describe('CasperClient', () => {
   });
 
   it('should generate new Ed25519 key pair, and compute public key from private key', () => {
-    const edKeyPair = casperClient.newEdKeyPair();
+    const edKeyPair = casperClient.newKeyPair();
     const publicKey = edKeyPair.publicKey.rawPublicKey;
     const privateKey = edKeyPair.privateKey;
-    const convertFromPrivateKey = casperClient.privateToPublicKey(privateKey);
+    const convertFromPrivateKey = casperClient.privateToPublicKey(
+      privateKey,
+      SignatureAlgorithm.Ed25519
+    );
     expect(convertFromPrivateKey).to.deep.equal(publicKey);
   });
 
   it('should generate PEM file for Ed25519 correctly', () => {
-    const edKeyPair = casperClient.newEdKeyPair();
+    const edKeyPair = casperClient.newKeyPair();
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
     const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-'));
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
-    const publicKeyFromFIle = casperClient.loadEdPublicKeyFromFile(
-      tempDir + '/public.pem'
+    const publicKeyFromFIle = casperClient.loadPublicKeyFromFile(
+      tempDir + '/public.pem',
+      SignatureAlgorithm.Ed25519
     );
-    const privateKeyFromFile = casperClient.loadEdPrivateKeyFromFile(
-      tempDir + '/private.pem'
+    const privateKeyFromFile = casperClient.loadPrivateKeyFromFile(
+      tempDir + '/private.pem',
+      SignatureAlgorithm.Ed25519
     );
 
     const keyPairFromFile = Keys.Ed25519.parseKeyPair(
