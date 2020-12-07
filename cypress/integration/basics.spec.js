@@ -10,6 +10,14 @@ context('Basic Functionality', () => {
         cy.intercept('GET', '/block').as('getBlock')
         cy.visit('http://localhost:8000')
 
+        cy.disconnectSigner();
+        cy.checkVaultExists()
+            .then((vault) => {
+                if(vault) {
+                    cy.resetExistingVault();
+                }
+            })
+
         // Aliases for side nav tabs
         sideNavLinks = {
             'Accounts'        : '#sideMenu > li:nth-child(1) > a',
@@ -42,40 +50,189 @@ context('Basic Functionality', () => {
         }
     })
 
-    it('Should deploy a contract', async () => {
+    it('Should error if Signer not connected', () => {
+        
+        // Create vault but don't connect
+        cy.createTestVault('cypress')
+        .then(() => {
+            // This pause is required to allow the vault creation to complete prior to the account creation attempt
+            cy.wait(1000);
+            cy.createTestAccount(
+                'Cypress',
+                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+            );
+        })
 
-        // in future may be worth resetting the vault and starting fresh for each test
-        cy.checkVaultExists()
-            .then((vault) => {
-                if (!vault) {
-                    cy.createTestVault('cypress')
-                        .then(() => {
-                            cy.wait(1000);
-                            cy.connectSigner();
-                            // This pause is required to allow the vault creation to complete prior to the account creation attempt
-                            cy.wait(1000);
-                            cy.createTestAccount(
-                                'Cypress',
-                                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
-                            );
-                        })
-                } else {
-                    cy.resetExistingVault()
-                        .then(() => {
-                            cy.createTestVault('cypress')
-                                .then(() => {
-                                    cy.wait(1000);
-                                    cy.connectSigner();
-                                    // This pause is required to allow the vault creation to complete prior to the account creation attempt
-                                    cy.wait(1000)
-                                    cy.createTestAccount(
-                                        'Cypress',
-                                        'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
-                                    );
-                                })
-                        })
-                }
+        // Go to deploy contract screen
+        cy.get(sideNavLinks.DeployContract)
+            .click()
+
+        // Fill out main form
+        cy.get('#id-contract-type')
+            .select('Name')
+            .should('have.value', 'Name')
+            .then(() => {
+                cy.get('#id-contract-hash')
+                    .type('erc20')
+                    .should('have.value', 'erc20')
+                    .then(() => {
+                        cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
+                            .should('have.value', 'call')
+                            .clear()
+                            .type('transfer')
+                            .should('have.value', 'transfer')
+                            .then(() => {
+                                cy.get('#id-payment-amount')
+                                    .clear()
+                                    // Clearing leaves a 0 in the input box
+                                    .type('10000')
+                                    .should('have.value', '100000')
+                            })
+                    })
             })
+        
+        // For type codes inspect the dropdown in the Setting Arguments section
+        let transferArguments = [
+            {
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
+            },
+            {
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
+            }
+        ]
+        // Enter arguments for contract
+        for (let row = 0; row < transferArguments.length; row++) {
+            let argument = transferArguments[row];
+            cy.deployContractAddArgument(
+                argument.name,
+                argument.type,
+                argument.value,
+                row
+            )
+        }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
+            .click()
+
+        // Sign
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
+            .click()
+
+        // Check warning on prompt
+        cy.get('#id-sign-modal > div > div > div.modal-body > p')
+            .should('contain.text', 'Please connect to the Signer first.')
+
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
+            .click()
+
+        // Check error
+        cy.get('#alert-message > div')
+            .should('contain.text', 'Please install/connect the CasperLabs Signer extension first!')
+    })
+
+    it('Should error if no account created', () => {
+        
+        // Create vault, connect but don't create an account
+        cy.createTestVault('cypress');
+        cy.connectSigner();
+
+        // Go to deploy contract screen
+        cy.get(sideNavLinks.DeployContract)
+            .click()
+
+        // Fill out main form
+        cy.get('#id-contract-type')
+            .select('Name')
+            .should('have.value', 'Name')
+            .then(() => {
+                cy.get('#id-contract-hash')
+                    .type('erc20')
+                    .should('have.value', 'erc20')
+                    .then(() => {
+                        cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
+                            .should('have.value', 'call')
+                            .clear()
+                            .type('transfer')
+                            .should('have.value', 'transfer')
+                            .then(() => {
+                                cy.get('#id-payment-amount')
+                                    .clear()
+                                    // Clearing leaves a 0 in the input box
+                                    .type('10000')
+                                    .should('have.value', '100000')
+                            })
+                    })
+            })
+        
+        // For type codes inspect the dropdown in the Setting Arguments section
+        let transferArguments = [
+            {
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
+            },
+            {
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
+            }
+        ]
+        // Enter arguments for contract
+        for (let row = 0; row < transferArguments.length; row++) {
+            let argument = transferArguments[row];
+            cy.deployContractAddArgument(
+                argument.name,
+                argument.type,
+                argument.value,
+                row
+            )
+        }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
+            .click()
+
+        // Sign
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
+            .click()
+
+        // Check warning on prompt
+        cy.get('#id-sign-modal > div > div > div.modal-body > p')
+            .should('contain.text', ' We will use CasperLabs Signer extension to sign the deploy')
+
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
+            .click()
+
+        // Check error
+        cy.get('#alert-message > div')
+            .should('contain.text', 'Please create an account in the Plugin first!')
+    })
+
+    // BUG: This is resulting in an error: Bad response format - needs investigating
+    it('Should deploy a contract', () => {
+        
+        // Create vault and connect
+        cy.createTestVault('cypress')
+        .then(() => {
+            cy.connectSigner();
+            // This pause is required to allow the vault creation to complete prior to the account creation attempt
+            cy.wait(1000);
+            cy.createTestAccount(
+                'Cypress',
+                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+            );
+        })
 
         // Go to deploy contract screen
         cy.get(sideNavLinks.DeployContract)
@@ -149,38 +306,34 @@ context('Basic Functionality', () => {
                 cy.signTestDeploy(msgId);
             });
 
-        // Clean up error messages and close prompts
-        // cy.get('.alert > .close > span')
-        //     .click()
-        // cy.get('.btn').contains('Close')
-        //     .wait(100)
-        //     .click()
     })
 
-    // it('Should search for block', () => {
-    //     // Go to Search screen
-    //     cy.get(sideNavLinks.Search)
-    //         .click()
+    // BUG: The search page seems to be broken
+    it('Should search for block', () => {
+        // Go to Search screen
+        cy.get(sideNavLinks.Search)
+            .click()
 
-    //     // Get block hash from network highlight box
-    //     cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
-    //         .should('not.contain.html', 'null')
-    //         .then(($span) => {
-    //             // Enter block hash into search box
-    //             cy.get('#id-search-hash-base16')
-    //                 .type($span.get(0).innerText)
-    //                 .should('have.value', $span.get(0).innerText)
-    //                 .wait(100)
-    //                 .get('#root > div > main > div > div > div > div > div.card-body > button')
-    //                 .click()
-    //                 .wait('@getBlock')
-    //                 .then(() => {
-    //                     cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
-    //                     .should(($a) => {
-    //                         assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
-    //                     })    
-    //                 })
-    //         })            
-    // })
+        // Get block hash from network highlight box
+        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
+            .should('not.contain.html', 'null')
+            .then(($span) => {
+                // Enter block hash into search box
+                cy.get('#id-search-hash-base16')
+                    .type($span.get(0).innerText)
+                    .should('have.value', $span.get(0).innerText)
+                    .wait(100)
+                    .get('#root > div > main > div > div > div > div > div.card-body > button')
+                    .click()
+                    .wait('@getBlock')
+                    .then(() => {
+                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > table > tbody > tr:nth-child(4) > td > a')
+                        .should(($a) => {
+                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
+                        })    
+                    })
+            })            
+    })
+
 })
   
