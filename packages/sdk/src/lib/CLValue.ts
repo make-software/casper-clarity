@@ -284,7 +284,7 @@ export class PublicKey extends CLTypedAndToBytes {
         accountHash = '01' + encodeBase16(this.rawPublicKey);
         break;
       case SECP256K1_TAG:
-        accountHash = '10' + encodeBase16(this.rawPublicKey);
+        accountHash = '02' + encodeBase16(this.rawPublicKey);
         break;
       default:
         throw new Error('Unsupported type of public key');
@@ -311,10 +311,16 @@ export class PublicKey extends CLTypedAndToBytes {
     return new PublicKey(publicKey, ED25519_TAG);
   }
 
+  static fromSecp256K1(publicKey: ByteArray) {
+    return new PublicKey(publicKey, SECP256K1_TAG);
+  }
+
   static from(publicKey: ByteArray, signatureAlgorithm: SignatureAlgorithm) {
     switch (signatureAlgorithm) {
       case SignatureAlgorithm.Ed25519:
         return PublicKey.fromEd25519(publicKey);
+      case SignatureAlgorithm.Secp256K1:
+        return PublicKey.fromSecp256K1(publicKey);
       default:
         throw new Error('Unsupported type of public key');
     }
