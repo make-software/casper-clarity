@@ -110,7 +110,11 @@ module.exports = (sequelize, DataTypes) => {
         },
     }, {
         sequelize,
-        modelName: 'Block'
+        modelName: 'Block',
+        indexes: [ 
+            { fields: [ 'blockHeight' ] },
+            { fields: [ 'blockHash' ] }
+        ]
     });
 
     return Block;

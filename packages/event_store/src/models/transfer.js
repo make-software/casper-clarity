@@ -28,7 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         id: DataTypes.STRING
     }, {
         sequelize,
-        modelName: 'Transfer'
+        modelName: 'Transfer',
+        indexes: [ 
+            { fields: [ 'deployHash' ] },
+            { fields: [ 'sourcePurse' ] },
+            { fields: [ 'targetPurse' ] }
+        ]
     });
     
     return Transfer;

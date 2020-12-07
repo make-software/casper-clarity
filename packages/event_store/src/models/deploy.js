@@ -42,7 +42,11 @@ module.exports = (sequelize, DataTypes) => {
         errorMessage: DataTypes.STRING
     }, {
         sequelize,
-        modelName: 'Deploy'
+        modelName: 'Deploy',
+        indexes: [ 
+            { fields: [ 'deployHash' ] },
+            { fields: [ 'account' ] }
+        ]
     });
     
     return Deploy;
