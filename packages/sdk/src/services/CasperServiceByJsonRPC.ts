@@ -10,8 +10,18 @@ export interface GetPeersResult extends RpcResult {
   peers: Record<string, string>;
 }
 
+interface LastAddedBlockInfo {
+  hash: string;
+  timestamp: string;
+  era_id: number;
+  height: number;
+  state_root_hash: string;
+  creator: string;
+}
+
 export interface GetStatusResult extends GetPeersResult {
-  last_finalized_block: JsonBlock | null;
+  last_added_block_info: LastAddedBlockInfo;
+  build_version: string;
 }
 
 export interface GetStateRootHashResult extends RpcResult {

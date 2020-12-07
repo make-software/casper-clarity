@@ -183,7 +183,7 @@ export default class App extends React.Component<AppProps, {}> {
       <div>
         <Navigation {...this.props} />
         <Content {...this.props} />
-        <Footer />
+        <Footer {...this.props} />
       </div>
     );
   }
@@ -563,38 +563,44 @@ const Alerts = observer((props: AppProps) => {
   );
 });
 
-const Footer = () => (
-  <section>
-    <footer className="sticky-footer">
-      <div className="container">
-        <div className="text-center">
-          <small>
-            Get in touch on{' '}
-            <a href="https://discordapp.com/invite/Q38s3Vh">Discord</a> or {}
-            <a
-              href="https://t.me/casperlabs"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Telegram
-            </a>
-            <div className="d-block">{process.env.REACT_APP_GIT_SHA}</div>
-          </small>
-          <small>
-            Main
-            <a
-              href="https://casperlabs.io"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              CasperLabs Website
-            </a>
-          </small>
+const Footer = observer((props: AppProps) => {
+  return (
+    <section>
+      <footer className="sticky-footer">
+        <div className="container">
+          <div className="text-center">
+            <small>
+              Get in touch on{' '}
+              <a href="https://discordapp.com/invite/Q38s3Vh">Discord</a> or {}
+              <a
+                href="https://t.me/casperlabs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram
+              </a>
+              <div className="d-block">
+                Clarity build: {process.env.REACT_APP_GIT_SHA}
+              </div>
+              <div className="d-block">
+                Node build: {props.networkInfoContainer.nodeBuildVersion}
+              </div>
+            </small>
+            <small>
+              <a
+                href="https://casperlabs.io"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                CasperLabs Website
+              </a>
+            </small>
+          </div>
         </div>
-      </div>
-    </footer>
-    <a className="scroll-to-top rounded" href="#page-top">
-      <i className="fa fa-angle-up"></i>
-    </a>
-  </section>
-);
+      </footer>
+      <a className="scroll-to-top rounded" href="#page-top">
+        <i className="fa fa-angle-up"></i>
+      </a>
+    </section>
+  );
+});
