@@ -147,4 +147,25 @@ export class CasperClient {
   public async getDeployByHash(deployHash: string) {
     return await this.eventStoreClient.getDeployByHash(deployHash);
   }
+
+  public async getAccountMainPurseUref(publicKey: PublicKey) {
+    const stateRootHash = await this.nodeClient
+      .getLatestBlockInfo()
+      .then(it => it.block?.header.state_root_hash);
+
+    if (!stateRootHash) {
+      return null;
+    }
+
+    const balanceUref = await this.nodeClient.getAccountBalanceUrefByPublicKeyHash(
+      stateRootHash,
+      encodeBase16(publicKey.toAccountHash())
+    );
+
+    return balanceUref;
+  }
+
+  public async getTransfersByPurse(purseUref: string) {
+    return await this.eventStoreClient.getTransfersByPurse(purseUref);
+  }
 }

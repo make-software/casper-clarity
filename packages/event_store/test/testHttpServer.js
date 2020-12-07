@@ -110,9 +110,8 @@ describe('HttpServer', async () => {
                 {
                     amount: "1000000000",
                     deployHash: "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-                    fromAccount: "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
-                    sourcePurse: "f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
-                    targetPurse: "ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
+                    sourcePurse: "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+                    targetPurse: "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
                     id: "1233"
                 }
             ]
@@ -160,19 +159,17 @@ describe('HttpServer', async () => {
     it('Should server transfers.', async () => {
         let transfer1 = {
             deployHash: "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-            fromAccount: "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
-            sourcePurse: "f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
-            targetPurse: "ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
+            sourcePurse: "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+            targetPurse: "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
             amount: "1000000000",
             id: "1233"
         }
         let transfer2 = {
             "amount": "40000000",
             "deployHash": "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-            "fromAccount": "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
             "id": null,
-            "sourcePurse": "f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
-            "targetPurse": "ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004"
+            "sourcePurse": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+            "targetPurse": "uref-ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004"
        }
 
        let response = await chai.request(app).get(`/transfers/${transfer1.sourcePurse}`);

@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
         toJSON() {
             return {
                 "deployHash": this.deployHash,
-                "fromAccount": this.fromAccount,
                 "sourcePurse": this.sourcePurse,
                 "targetPurse": this.targetPurse,
                 "amount": this.amount,

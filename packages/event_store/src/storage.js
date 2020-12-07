@@ -58,8 +58,8 @@ class Storage {
                         transferHash: transferHash,
                         deployHash: deploy.deployHash,
                         fromAccount: transferEvent.from.substring(13),
-                        sourcePurse: transferEvent.source.substring(5),
-                        targetPurse: transferEvent.target.substring(5),
+                        sourcePurse: transferEvent.source,
+                        targetPurse: transferEvent.target,
                         amount: transferEvent.amount,
                         id: transferEvent.id
                     });
