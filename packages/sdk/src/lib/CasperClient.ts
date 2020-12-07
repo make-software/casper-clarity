@@ -8,6 +8,7 @@ import {
   Transfer
 } from './DeployUtil';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
+import { CasperHDKey } from './HdKey';
 
 type ByteArray = Uint8Array;
 
@@ -65,6 +66,10 @@ export class CasperClient {
       default:
         throw new Error('Invalid signature algorithm');
     }
+  }
+
+  public newHdWallet(seed: ByteArray) {
+    return CasperHDKey.fromMasterSeed(seed);
   }
 
   /**
