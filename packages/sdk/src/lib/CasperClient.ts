@@ -1,4 +1,10 @@
-import { CasperServiceByJsonRPC, EventService } from '../services';
+import {
+  AccountDeploy,
+  CasperServiceByJsonRPC,
+  DeployResult,
+  EventService,
+  TransferResult
+} from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
 import { encodeBase16 } from './Conversions';
 import {
@@ -25,7 +31,9 @@ export class CasperClient {
    * Generate new key pair.
    * @param algo Currently we support Ed25519 and Secp256K1.
    */
-  public newKeyPair(algo: SignatureAlgorithm = SignatureAlgorithm.Ed25519) {
+  public newKeyPair(
+    algo: SignatureAlgorithm = SignatureAlgorithm.Ed25519
+  ): AsymmetricKey {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.new();
@@ -42,7 +50,10 @@ export class CasperClient {
    * @param path the path to the publicKey file
    * @param algo the signature algorithm of the file
    */
-  public loadPublicKeyFromFile(path: string, algo: SignatureAlgorithm) {
+  public loadPublicKeyFromFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePublicKeyFile(path);
@@ -57,7 +68,10 @@ export class CasperClient {
    * Load private key
    * @param path the path to the private key file
    */
-  public loadPrivateKeyFromFile(path: string, algo: SignatureAlgorithm) {
+  public loadPrivateKeyFromFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePrivateKeyFile(path);
@@ -68,7 +82,7 @@ export class CasperClient {
     }
   }
 
-  public newHdWallet(seed: ByteArray) {
+  public newHdWallet(seed: ByteArray): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
 
@@ -76,7 +90,10 @@ export class CasperClient {
    * Compute public key from private Key.
    * @param privateKey
    */
-  public privateToPublicKey(privateKey: ByteArray, algo: SignatureAlgorithm) {
+  public privateToPublicKey(
+    privateKey: ByteArray,
+    algo: SignatureAlgorithm
+  ): ByteArray {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.privateToPublicKey(privateKey);
@@ -118,14 +135,14 @@ export class CasperClient {
   /**
    * Get the balance of public key
    */
-  public async balanceOfByPublicKey(publicKey: PublicKey) {
+  public async balanceOfByPublicKey(publicKey: PublicKey): Promise<number> {
     return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
   }
 
   /**
    * Get the balance by account hash
    */
-  public async balanceOfByAccountHash(accountHashStr: string) {
+  public async balanceOfByAccountHash(accountHashStr: string): Promise<number> {
     try {
       const stateRootHash = await this.nodeClient
         .getLatestBlockInfo()
@@ -162,7 +179,7 @@ export class CasperClient {
     publicKey: PublicKey,
     page: number = 0,
     limit: number = 20
-  ) {
+  ): Promise<AccountDeploy[]> {
     const data = await this.eventStoreClient.getAccountDeploys(
       publicKey.toAccountHex(),
       page,
@@ -175,11 +192,13 @@ export class CasperClient {
    * Get deploy by hash
    * @param deployHash
    */
-  public async getDeployByHash(deployHash: string) {
+  public async getDeployByHash(deployHash: string): Promise<DeployResult> {
     return await this.eventStoreClient.getDeployByHash(deployHash);
   }
 
-  public async getAccountMainPurseUref(publicKey: PublicKey) {
+  public async getAccountMainPurseUref(
+    publicKey: PublicKey
+  ): Promise<string | null> {
     const stateRootHash = await this.nodeClient
       .getLatestBlockInfo()
       .then(it => it.block?.header.state_root_hash);
@@ -196,7 +215,9 @@ export class CasperClient {
     return balanceUref;
   }
 
-  public async getTransfersByPurse(purseUref: string) {
+  public async getTransfersByPurse(
+    purseUref: string
+  ): Promise<TransferResult[]> {
     return await this.eventStoreClient.getTransfersByPurse(purseUref);
   }
 }
