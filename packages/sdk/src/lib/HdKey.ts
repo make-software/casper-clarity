@@ -2,6 +2,7 @@ import { HDKeyT } from 'ethereum-cryptography/pure/hdkey';
 import { HDKey } from 'ethereum-cryptography/hdkey';
 import { sha256 } from 'ethereum-cryptography/sha256';
 import { ByteArray } from '../index';
+import { Secp256K1 } from './Keys';
 
 export class CasperHDKey {
   // todo select a lucky number and register in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
@@ -41,11 +42,12 @@ export class CasperHDKey {
     return this.hdKey.publicExtendedKey;
   }
 
-  public derive(path: string) {
-    return new CasperHDKey(this.hdKey.derive(path));
+  public derive(path: string): Secp256K1 {
+    const secpKeyPair = this.hdKey.derive(path);
+    return new Secp256K1(secpKeyPair.publicKey!, secpKeyPair.privateKey!);
   }
 
-  public deriveIndex(index: number) {
+  public deriveIndex(index: number): Secp256K1 {
     return this.derive(this.bip44Path(index));
   }
 

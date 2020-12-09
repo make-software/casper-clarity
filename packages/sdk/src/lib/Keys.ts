@@ -8,6 +8,7 @@ import { ec as EC } from 'elliptic';
 import * as secp256k1 from 'ethereum-cryptography/secp256k1';
 import KeyEncoder from 'key-encoder';
 import { sha256 } from 'ethereum-cryptography/sha256';
+import { CasperHDKey } from './HdKey';
 
 const keyEncoder = new KeyEncoder('secp256k1');
 const ec = new EC('secp256k1');
@@ -246,6 +247,10 @@ export class Ed25519 extends AsymmetricKey {
     const privateKey = Ed25519.parsePrivateKeyFile(privateKeyPath);
     const publicKey = Ed25519.privateToPublicKey(privateKey);
     return Ed25519.parseKeyPair(publicKey, privateKey);
+  }
+
+  static deriveIndex(hdKey: CasperHDKey, index: number) {
+    return hdKey.deriveIndex(index);
   }
 }
 
