@@ -241,6 +241,12 @@ export class Ed25519 extends AsymmetricKey {
       return nacl.sign_keyPair_fromSeed(privateKey).publicKey;
     }
   }
+
+  static loadKeyPairFromPrivateFile(privateKeyPath: string) {
+    const privateKey = Ed25519.parsePrivateKeyFile(privateKeyPath);
+    const publicKey = Ed25519.privateToPublicKey(privateKey);
+    return Ed25519.parseKeyPair(publicKey, privateKey);
+  }
 }
 
 export class Secp256K1 extends AsymmetricKey {
@@ -371,5 +377,11 @@ export class Secp256K1 extends AsymmetricKey {
 
   static privateToPublicKey(privateKey: ByteArray): ByteArray {
     return secp256k1.publicKeyCreate(privateKey, true);
+  }
+
+  static loadKeyPairFromPrivateFile(privateKeyPath: string) {
+    const privateKey = Secp256K1.parsePrivateKeyFile(privateKeyPath);
+    const publicKey = Secp256K1.privateToPublicKey(privateKey);
+    return Secp256K1.parseKeyPair(publicKey, privateKey, 'raw');
   }
 }
