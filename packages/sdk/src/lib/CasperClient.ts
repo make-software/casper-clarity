@@ -82,6 +82,20 @@ export class CasperClient {
     }
   }
 
+  public loadKeyPairFromPrivateFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): AsymmetricKey {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.loadKeyPairFromPrivateFile(path);
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.loadKeyPairFromPrivateFile(path);
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
+  }
+
   public newHdWallet(seed: ByteArray): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
