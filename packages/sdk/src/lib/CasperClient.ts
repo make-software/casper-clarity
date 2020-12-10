@@ -14,7 +14,7 @@ import {
   Transfer
 } from './DeployUtil';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
-import { CasperHDKey } from './HdKey';
+import { CasperHDKey } from './CasperHDKey';
 
 type ByteArray = Uint8Array;
 
@@ -31,9 +31,7 @@ export class CasperClient {
    * Generate new key pair.
    * @param algo Currently we support Ed25519 and Secp256K1.
    */
-  public newKeyPair(
-    algo: SignatureAlgorithm = SignatureAlgorithm.Ed25519
-  ): AsymmetricKey {
+  public newKeyPair(algo: SignatureAlgorithm): AsymmetricKey {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.new();

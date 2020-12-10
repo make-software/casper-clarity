@@ -8,7 +8,7 @@ import { ec as EC } from 'elliptic';
 import * as secp256k1 from 'ethereum-cryptography/secp256k1';
 import KeyEncoder from 'key-encoder';
 import { sha256 } from 'ethereum-cryptography/sha256';
-import { CasperHDKey } from './HdKey';
+import { CasperHDKey } from './CasperHDKey';
 
 const keyEncoder = new KeyEncoder('secp256k1');
 const ec = new EC('secp256k1');

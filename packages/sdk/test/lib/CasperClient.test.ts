@@ -18,7 +18,7 @@ describe('CasperClient', () => {
   });
 
   it('should generate new Ed25519 key pair, and compute public key from private key', () => {
-    const edKeyPair = casperClient.newKeyPair();
+    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Ed25519);
     const publicKey = edKeyPair.publicKey.rawPublicKey;
     const privateKey = edKeyPair.privateKey;
     const convertFromPrivateKey = casperClient.privateToPublicKey(
@@ -29,7 +29,7 @@ describe('CasperClient', () => {
   });
 
   it('should generate PEM file for Ed25519 correctly', () => {
-    const edKeyPair = casperClient.newKeyPair();
+    const edKeyPair = casperClient.newKeyPair(SignatureAlgorithm.Ed25519);
     const publicKeyInPem = edKeyPair.exportPublicKeyInPem();
     const privateKeyInPem = edKeyPair.exportPrivateKeyInPem();
 
