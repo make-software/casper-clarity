@@ -48,8 +48,35 @@ module.exports = {
         "account": "010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932",
         "block_hash":"aacd466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "execution_result":{
-            "cost":"11",
-            "error_message":null
+            "Success": {
+                "effect": {
+                    "operations": [],
+                    "transforms": [
+                        {
+                            "key": "account-hash-2a1f98a5b8074cdbbd46847766b29486fff48e186c65bb12a2dc6bab5190caf8",
+                            "transform": "Identity"
+                        },
+                        {
+                            "key": "transfer-9f8ec179be8b2d526ed44d077f8b23830f1f1d41eafe77a88bd245a9b5eb0258",
+                            "transform": {
+                                "WriteTransfer": {
+                                    "deploy_hash": "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
+                                    "from": "account-hash-8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+                                    "source": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+                                    "target": "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
+                                    "amount": "1000000000",
+                                    "gas": "0",
+                                    "id": "1233"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "transfers": [
+                    "transfer-9f8ec179be8b2d526ed44d077f8b23830f1f1d41eafe77a88bd245a9b5eb0258"
+                ],
+                "cost": "11"
+            }
         }
     },
 
@@ -58,8 +85,35 @@ module.exports = {
         "account": "010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932",
         "block_hash":"aacd466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "execution_result":{
-            "cost":"12",
-            "error_message":null
+            "Success": {
+                "effect": {
+                    "operations": [],
+                    "transforms": [
+                        {
+                            "key": "account-hash-2a1f98a5b8074cdbbd46847766b29486fff48e186c65bb12a2dc6bab5190caf8",
+                            "transform": "Identity"
+                        },
+                        {
+                            "key": "transfer-123ec179be8b2d526ed44d077f8b23830f1f1d41eafe77a88bd245a9b5eb0aaa",
+                            "transform": {
+                                "WriteTransfer": {
+                                    "deploy_hash": "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
+                                    "from": "account-hash-8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+                                    "source": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+                                    "target": "uref-ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004",
+                                    "amount": "40000000",
+                                    "gas": "0",
+                                    "id": null
+                                }
+                            }
+                        }
+                    ]
+                },
+                "transfers": [
+                    "transfer-123ec179be8b2d526ed44d077f8b23830f1f1d41eafe77a88bd245a9b5eb0aaa"
+                ],
+                "cost": "12"
+            }
         }
     },
 
@@ -68,8 +122,14 @@ module.exports = {
         "account": "1234501c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932",
         "block_hash":"abcd466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "execution_result":{
-            "cost":"12",
-            "error_message":null
+            "Success": {
+                "effect": {
+                    "operations": [],
+                    "transforms": []
+                },
+                "transfers": [],
+                "cost": "13"
+            }
         }
     },
 

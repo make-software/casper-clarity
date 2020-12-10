@@ -6,14 +6,16 @@ export class NetworkInfoContainer {
   @observable validatorSize: number = 0;
   @observable blockHeight: number = 0;
   @observable blockHash?: string;
+  @observable nodeBuildVersion?: string;
   constructor(
     private errors: ErrorContainer,
     private casperService: CasperServiceByJsonRPC
   ) {}
 
   async refresh() {
-    const lastBlock = await this.casperService.getLatestBlockInfo();
-    this.blockHeight = lastBlock.block?.header.height || 0;
-    this.blockHash = lastBlock.block?.hash;
+    const status = await this.casperService.getStatus();
+    this.blockHeight = status.last_added_block_info.height;
+    this.blockHash = status.last_added_block_info.hash;
+    this.nodeBuildVersion = status.build_version;
   }
 }
