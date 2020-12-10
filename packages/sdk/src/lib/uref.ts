@@ -40,7 +40,7 @@ export class URef extends CLTypedAndToBytes {
   /**
    * Parses a casper-client supported string formatted argument into a `URef`.
    */
-  static fromFormattedStr(input: string) {
+  public static fromFormattedStr(input: string) {
     if (!input.startsWith(FORMATTED_STRING_PREFIX)) {
       throw new Error("prefix is not 'uref-'");
     }
@@ -59,11 +59,11 @@ export class URef extends CLTypedAndToBytes {
    * Serializes the URef into an array of bytes that represents it in the Casper serialization
    * format.
    */
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([this.uRefAddr, Uint8Array.from([this.accessRights])]);
   }
 
-  clType(): CLType {
+  public clType(): CLType {
     return CLTypeHelper.uRef();
   }
 }

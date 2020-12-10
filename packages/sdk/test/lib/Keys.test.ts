@@ -135,8 +135,6 @@ describe('Secp256K1', () => {
     fs.writeFileSync(tempDir + '/public.pem', publicKeyInPem);
     fs.writeFileSync(tempDir + '/private.pem', privateKeyInPem);
 
-    console.log(privateKeyInPem);
-
     // expect importing keys from pem files works well
     expect(Secp256K1.parsePublicKeyFile(tempDir + '/public.pem')).to.deep.eq(
       signKeyPair.publicKey.rawPublicKey

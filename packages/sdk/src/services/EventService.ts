@@ -71,24 +71,24 @@ export class EventService {
     this.url = url;
   }
 
-  async getBlocks(page: number, count: number): Promise<BlocksResult> {
+  public async getBlocks(page: number, count: number): Promise<BlocksResult> {
     const response = await axios.get(
       this.url + `/blocks?page=${page}&limit=${count}`
     );
     return response.data;
   }
 
-  async getDeployByHash(deployHash: string): Promise<DeployResult> {
+  public async getDeployByHash(deployHash: string): Promise<DeployResult> {
     const response = await axios.get(this.url + `/deploy/${deployHash}`);
     return response.data;
   }
 
-  async getBlockByHash(blockHash: string): Promise<BlockResult> {
+  public async getBlockByHash(blockHash: string): Promise<BlockResult> {
     const response = await axios.get(this.url + `/block/${blockHash}`);
     return response.data;
   }
 
-  async getAccountDeploys(
+  public async getAccountDeploys(
     accountHex: string,
     page: number,
     limit: number
@@ -99,7 +99,9 @@ export class EventService {
     return response.data;
   }
 
-  async getTransfersByPurse(purseUref: string): Promise<TransferResult[]> {
+  public async getTransfersByPurse(
+    purseUref: string
+  ): Promise<TransferResult[]> {
     const response = await axios.get(this.url + `/transfers/${purseUref}`);
     return response.data;
   }

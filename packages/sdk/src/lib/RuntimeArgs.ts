@@ -10,7 +10,7 @@ type ByteArray = Uint8Array;
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([toBytesString(this.name), this.value.toBytes()]);
   }
 }
@@ -18,18 +18,18 @@ export class NamedArg implements ToBytes {
 export class RuntimeArgs implements ToBytes {
   constructor(private args: NamedArg[]) {}
 
-  static fromMap(args: Record<string, CLValue>) {
+  public static fromMap(args: Record<string, CLValue>) {
     const vec = Object.keys(args).map(a => {
       return new NamedArg(a, args[a]);
     });
     return new RuntimeArgs(vec);
   }
 
-  insert(key: string, value: CLValue) {
+  public insert(key: string, value: CLValue) {
     this.args.push(new NamedArg(key, value));
   }
 
-  toBytes() {
+  public toBytes() {
     return toBytesVecT(this.args);
   }
 }
