@@ -1,7 +1,11 @@
-import { CasperServiceByJsonRPC, EventService } from '../services';
+import {
+  AccountDeploy,
+  CasperServiceByJsonRPC,
+  DeployResult,
+  EventService,
+  TransferResult
+} from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
-import * as nctl from 'tweetnacl-ts';
-import { SignLength } from 'tweetnacl-ts';
 import { encodeBase16 } from './Conversions';
 import {
   Deploy,
@@ -9,31 +13,107 @@ import {
   ExecutableDeployItem,
   Transfer
 } from './DeployUtil';
-import { AsymmetricKey } from './Keys';
+import { AsymmetricKey, SignatureAlgorithm } from './Keys';
+import { CasperHDKey } from './CasperHDKey';
 
 type ByteArray = Uint8Array;
 
 export class CasperClient {
   private nodeClient: CasperServiceByJsonRPC;
   private eventStoreClient: EventService;
+
   constructor(nodeUrl: string, eventStoreUrl: string) {
     this.nodeClient = new CasperServiceByJsonRPC(nodeUrl);
     this.eventStoreClient = new EventService(eventStoreUrl);
   }
 
   /**
-   * Generate new Ed25519 key pair.
+   * Generate new key pair.
+   * @param algo Currently we support Ed25519 and Secp256K1.
    */
-  public newEdKeyPair() {
-    return Keys.Ed25519.new();
+  public newKeyPair(algo: SignatureAlgorithm): AsymmetricKey {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.new();
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.new();
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
   }
 
   /**
-   * Load Ed25519 private key
-   * @param path
+   * Load private key from file
+   *
+   * @param path the path to the publicKey file
+   * @param algo the signature algorithm of the file
    */
-  public loadEdPrivateKeyFromFile(path: string) {
-    return Keys.Ed25519.parsePrivateKeyFile(path);
+  public loadPublicKeyFromFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): ByteArray {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.parsePublicKeyFile(path);
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.parsePublicKeyFile(path);
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
+  }
+
+  /**
+   * Load private key
+   * @param path the path to the private key file
+   */
+  public loadPrivateKeyFromFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): ByteArray {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.parsePrivateKeyFile(path);
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.parsePrivateKeyFile(path);
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
+  }
+
+  public loadKeyPairFromPrivateFile(
+    path: string,
+    algo: SignatureAlgorithm
+  ): AsymmetricKey {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.loadKeyPairFromPrivateFile(path);
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.loadKeyPairFromPrivateFile(path);
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
+  }
+
+  public newHdWallet(seed: ByteArray): CasperHDKey {
+    return CasperHDKey.fromMasterSeed(seed);
+  }
+
+  /**
+   * Compute public key from private Key.
+   * @param privateKey
+   */
+  public privateToPublicKey(
+    privateKey: ByteArray,
+    algo: SignatureAlgorithm
+  ): ByteArray {
+    switch (algo) {
+      case SignatureAlgorithm.Ed25519:
+        return Keys.Ed25519.privateToPublicKey(privateKey);
+      case SignatureAlgorithm.Secp256K1:
+        return Keys.Secp256K1.privateToPublicKey(privateKey);
+      default:
+        throw new Error('Invalid signature algorithm');
+    }
   }
 
   public makeDeploy(
@@ -65,36 +145,16 @@ export class CasperClient {
   }
 
   /**
-   * Load Ed25519 private key
-   * @param path
-   */
-  public loadEdPublicKeyFromFile(path: string) {
-    return Keys.Ed25519.parsePublicKeyFile(path);
-  }
-
-  /**
-   * Compute Ed25519 public key from private Key.
-   * @param privateKey
-   */
-  public privateToPublicKey(privateKey: ByteArray) {
-    if (privateKey.length === SignLength.SecretKey) {
-      return nctl.sign_keyPair_fromSecretKey(privateKey).publicKey;
-    } else {
-      return nctl.sign_keyPair_fromSeed(privateKey).publicKey;
-    }
-  }
-
-  /**
    * Get the balance of public key
    */
-  public async balanceOfByPublicKey(publicKey: PublicKey) {
+  public async balanceOfByPublicKey(publicKey: PublicKey): Promise<number> {
     return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
   }
 
   /**
    * Get the balance by account hash
    */
-  public async balanceOfByAccountHash(accountHashStr: string) {
+  public async balanceOfByAccountHash(accountHashStr: string): Promise<number> {
     try {
       const stateRootHash = await this.nodeClient
         .getLatestBlockInfo()
@@ -131,7 +191,7 @@ export class CasperClient {
     publicKey: PublicKey,
     page: number = 0,
     limit: number = 20
-  ) {
+  ): Promise<AccountDeploy[]> {
     const data = await this.eventStoreClient.getAccountDeploys(
       publicKey.toAccountHex(),
       page,
@@ -144,11 +204,13 @@ export class CasperClient {
    * Get deploy by hash
    * @param deployHash
    */
-  public async getDeployByHash(deployHash: string) {
+  public async getDeployByHash(deployHash: string): Promise<DeployResult> {
     return await this.eventStoreClient.getDeployByHash(deployHash);
   }
 
-  public async getAccountMainPurseUref(publicKey: PublicKey) {
+  public async getAccountMainPurseUref(
+    publicKey: PublicKey
+  ): Promise<string | null> {
     const stateRootHash = await this.nodeClient
       .getLatestBlockInfo()
       .then(it => it.block?.header.state_root_hash);
@@ -165,7 +227,9 @@ export class CasperClient {
     return balanceUref;
   }
 
-  public async getTransfersByPurse(purseUref: string) {
+  public async getTransfersByPurse(
+    purseUref: string
+  ): Promise<TransferResult[]> {
     return await this.eventStoreClient.getTransfersByPurse(purseUref);
   }
 }

@@ -72,7 +72,7 @@ export interface DeployHeader {
 class DeployHash implements ToBytes {
   constructor(private hash: ByteArray) {}
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return toBytesDeployHash(this.hash);
   }
 }
@@ -98,8 +98,8 @@ export interface Deploy {
 }
 
 export class Approval {
-  signer: string;
-  signature: string;
+  public signer: string;
+  public signature: string;
 }
 
 interface ToJson {
@@ -107,20 +107,20 @@ interface ToJson {
 }
 
 export abstract class ExecutableDeployItem implements ToBytes, ToJson {
-  abstract tag: number;
+  public abstract tag: number;
 
-  abstract toBytes(): ByteArray;
+  public abstract toBytes(): ByteArray;
 
-  abstract toJson(): Record<string, any>;
+  public abstract toJson(): Record<string, any>;
 }
 
 export class ModuleBytes extends ExecutableDeployItem {
-  tag = 0;
+  public tag = 0;
   constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
     super();
   }
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
@@ -128,7 +128,7 @@ export class ModuleBytes extends ExecutableDeployItem {
     ]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       ModuleBytes: {
         module_bytes: encodeBase16(this.moduleBytes),
@@ -139,7 +139,7 @@ export class ModuleBytes extends ExecutableDeployItem {
 }
 
 export class StoredContractByHash extends ExecutableDeployItem {
-  tag = 1;
+  public tag = 1;
   constructor(
     private hash: Uint8Array,
     private entryPoint: string,
@@ -148,7 +148,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
     super();
   }
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
@@ -157,7 +157,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
     ]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       StoredContractByHash: {
         hash: encodeBase16(this.hash),
@@ -169,7 +169,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
 }
 
 export class StoredContractByName extends ExecutableDeployItem {
-  tag = 2;
+  public tag = 2;
 
   constructor(
     private name: string,
@@ -179,7 +179,7 @@ export class StoredContractByName extends ExecutableDeployItem {
     super();
   }
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
@@ -188,7 +188,7 @@ export class StoredContractByName extends ExecutableDeployItem {
     ]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       StoredContractByName: {
         name: this.name,
@@ -200,7 +200,7 @@ export class StoredContractByName extends ExecutableDeployItem {
 }
 
 export class StoredVersionedContractByName extends ExecutableDeployItem {
-  tag = 4;
+  public tag = 4;
 
   constructor(
     private name: string,
@@ -211,7 +211,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
     super();
   }
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     let serializedVersion;
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
@@ -227,7 +227,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
     ]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       StoredVersionedContractByName: {
         name: this.name,
@@ -239,13 +239,13 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
 }
 
 export class StoredVersionedContractByHash extends ExecutableDeployItem {
-  hash: Uint8Array;
-  version: number | null;
-  entryPoint: string;
-  args: ByteArray;
-  tag = 3;
+  public hash: Uint8Array;
+  public version: number | null;
+  public entryPoint: string;
+  public args: ByteArray;
+  public tag = 3;
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     let serializedVersion;
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
@@ -261,7 +261,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
     ]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       StoredVersionedContractByHash: {
         hash: encodeBase16(this.hash),
@@ -274,8 +274,8 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
 }
 
 export class Transfer extends ExecutableDeployItem {
-  args: ByteArray;
-  tag = 5;
+  public args: ByteArray;
+  public tag = 5;
 
   /**
    * Constructor for Transfer deploy item.
@@ -315,11 +315,11 @@ export class Transfer extends ExecutableDeployItem {
     this.args = runtimeArgs.toBytes();
   }
 
-  toBytes(): ByteArray {
+  public toBytes(): ByteArray {
     return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
   }
 
-  toJson(): Record<string, any> {
+  public toJson(): Record<string, any> {
     return {
       Transfer: { args: encodeBase16(this.args) }
     };

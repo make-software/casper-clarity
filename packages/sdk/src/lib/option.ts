@@ -33,7 +33,7 @@ export class Option extends CLTypedAndToBytes {
    *
    * @returns True if the `Option` has no value.
    */
-  isNone(): boolean {
+  public isNone(): boolean {
     return this.t === null;
   }
 
@@ -42,21 +42,21 @@ export class Option extends CLTypedAndToBytes {
    *
    * @returns True if the `Option` has some value.
    */
-  isSome(): boolean {
+  public isSome(): boolean {
     return this.t !== null;
   }
 
   /**
    * Serializes the `Option` into an array of bytes.
    */
-  toBytes() {
+  public toBytes() {
     if (this.t === null) {
       return Uint8Array.from([OPTION_TAG_NONE]);
     }
     return concat([Uint8Array.from([OPTION_TAG_SOME]), this.t.toBytes()]);
   }
 
-  clType(): CLType {
+  public clType(): CLType {
     return CLTypeHelper.option(this.innerType!);
   }
 }
