@@ -1,5 +1,12 @@
-## Casper-client-sdk-doc
+# CasperLabs SDK for JavaScript
 
-Documentation for [casper-client-sdk](https://www.npmjs.com/package/casper-client-sdk).
+## Installation
 
-You could preview it at [https://casper-ecosystem.github.io/casper-client-sdk-docs/](https://casper-ecosystem.github.io/casper-client-sdk-docs/).
+```bash
+# Basic Node.JS installation
+npm install casper-client-sdk --save
+```
+
+## Document
+
+You could preview it at [https://casper-ecosystem.github.io/casper-client-sdk-docs/code](https://casper-ecosystem.github.io/casper-client-sdk-docs/code).
