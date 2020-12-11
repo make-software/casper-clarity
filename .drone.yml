@@ -21,6 +21,12 @@ type: docker
 name: build-publish
 
 steps:
+- name: make-test
+  image: "casperlabs/buildenv:latest"
+  commands:
+    - "make setup"
+    - "make test"
+
 - name: build-docker-image
   image: "casperlabs/buildenv:latest"
   commands:
