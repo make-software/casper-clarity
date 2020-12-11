@@ -24,8 +24,9 @@ steps:
 - name: build-docker-image
   image: "casperlabs/buildenv:latest"
   commands:
-  - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
-  - "make docker-build-all"
+    - "make setup"
+    - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
+    - "make docker-build-all"
 
 - name: docker-publish
   commands:
