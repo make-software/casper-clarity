@@ -54,17 +54,22 @@ class EventHandler {
             // Removes 'data:' prefix from the event to convert it to JSON
             chunk.toString().split("\n")
                 .filter(str => str.startsWith('data'))
-                .map(str => JSON.parse(str.substr(5)))
-                .forEach(async event => {
-                    if (event.BlockFinalized) {
-                        console.log("Saving Finalized Block..."); // For debugging
-                        await storage.onFinalizedBlock(event.BlockFinalized);
-                    } else if (event.DeployProcessed) {
-                        console.log("Saving Deploys..."); // For debugging
-                        await storage.onDeployProcessed(event.DeployProcessed);
-                    } else if (event.BlockAdded) {
-                        console.log("Saving Added Block..."); // For debugging
-                        await storage.onBlockAdded(event.BlockAdded);
+                .forEach(async str => {
+                    let event;
+                    try {
+                        event = JSON.parse(str.substr(5));
+                        if (event.BlockFinalized) {
+                            console.log("Saving Finalized Block..."); // For debugging
+                            await storage.onFinalizedBlock(event.BlockFinalized);
+                        } else if (event.DeployProcessed) {
+                            console.log("Saving Deploys..."); // For debugging
+                            await storage.onDeployProcessed(event.DeployProcessed);
+                        } else if (event.BlockAdded) {
+                            console.log("Saving Added Block..."); // For debugging
+                            await storage.onBlockAdded(event.BlockAdded);
+                        }
+                    } catch (err) {
+                        console.log(`Error while processing an event.\nEvent: ${str}\nError: ${err}`);
                     }
                 });
             done();

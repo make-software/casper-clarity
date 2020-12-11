@@ -1,48 +1,4 @@
 module.exports = {
-    finalizedBlockEvent1: {
-        "proto_block":{
-            "hash":"aa25466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c55677",
-            "deploys":[
-                "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-                "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3"
-            ],
-            "random_bit":true
-        },
-        "timestamp":"2020-10-08T12:11:35.808Z",
-        "era_end":null,
-        "era_id":163,
-        "height":1800,
-        "proposer":"01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606"
-    },
-
-    finalizedBlockEvent2: {
-        "proto_block":{
-            "hash":"bb25466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c55677",
-            "deploys":[],
-            "random_bit":true
-        },
-        "timestamp":"2020-10-08T12:12:35.808Z",
-        "era_end":null,
-        "era_id":163,
-        "height":1801,
-        "proposer":"01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606"
-    },
-
-    finalizedBlockEvent3: {
-        "proto_block":{
-            "hash":"cc25466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c55677",
-            "deploys":[
-                "deploy3_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-            ],
-            "random_bit":true
-        },
-        "timestamp":"2020-10-08T12:13:35.808Z",
-        "era_end":null,
-        "era_id":163,
-        "height":1802,
-        "proposer":"01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606"
-    },
-
     deployProcessedEvent1: {
         "deploy_hash":"deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
         "account": "010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932",
@@ -179,7 +135,7 @@ module.exports = {
             ],
             "random_bit":true,
             "era_end":null,
-            "timestamp":"2020-10-08T12:12:35.808Z",
+            "timestamp":"2020-10-08T12:13:35.808Z",
             "era_id":163,
             "height":1802,
             "proposer":"01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606"

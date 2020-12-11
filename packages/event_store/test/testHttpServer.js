@@ -13,9 +13,6 @@ describe('HttpServer', async () => {
     beforeEach(async () => {
         await models.sequelize.sync({ force: true, logging: false });
         storage = new Storage(models);
-        await storage.onFinalizedBlock(data.finalizedBlockEvent1);
-        await storage.onFinalizedBlock(data.finalizedBlockEvent2);
-        await storage.onFinalizedBlock(data.finalizedBlockEvent3);
         await storage.onDeployProcessed(data.deployProcessedEvent1);
         await storage.onDeployProcessed(data.deployProcessedEvent2);
         await storage.onDeployProcessed(data.deployProcessedEvent3);
@@ -41,7 +38,6 @@ describe('HttpServer', async () => {
             timestamp: '2020-10-08T12:11:35.808Z',
             eraId: 163,
             proposer: '01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606',
-            state: 'added',
             height: 1800,
             deploys: [
                 'deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3',
@@ -62,7 +58,6 @@ describe('HttpServer', async () => {
                     timestamp: '2020-10-08T12:13:35.808Z',
                     eraId: 163,
                     proposer: '01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606',
-                    state: 'added',
                     height: 1802
                 }, {
                     blockHash: 'block2_09191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111',
@@ -70,7 +65,6 @@ describe('HttpServer', async () => {
                     timestamp: '2020-10-08T12:12:35.808Z',
                     eraId: 163,
                     proposer: '01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606',
-                    state: 'added',
                     height: 1801
                 }, {
                     blockHash: 'block1_6409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111',
@@ -78,7 +72,6 @@ describe('HttpServer', async () => {
                     timestamp: '2020-10-08T12:11:35.808Z',
                     eraId: 163,
                     proposer: '01d28e8ac5e5a02512c134fecb5cde43755b59d4616e109a4afd6c4f908bf82606',
-                    state: 'added',
                     height: 1800
                 }
             ],
@@ -103,7 +96,6 @@ describe('HttpServer', async () => {
             account: "010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932",
             blockHash: "block1_6409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
             deployHash: 'deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3',
-            state: 'processed',
             cost: 11,
             errorMessage: null,
             transfers: [
@@ -129,7 +121,6 @@ describe('HttpServer', async () => {
                     { 
                         deployHash: 'deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3',
                         account: '010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932',
-                        state: 'processed',
                         cost: 11,
                         errorMessage: null,
                         blockHash: 'block1_6409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111' 
@@ -137,7 +128,6 @@ describe('HttpServer', async () => {
                     { 
                         deployHash: 'deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3',
                         account: '010c801c47ed20a9ec40a899ddc7b51a15db2a6c55041313eb0201ae04ee9bf932',
-                        state: 'processed',
                         cost: 12,
                         errorMessage: null,
                         blockHash: 'block1_6409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111' 
