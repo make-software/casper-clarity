@@ -24,7 +24,7 @@ module.exports = (on, config) => {
     if (browser.family === 'chromium' && browser.name !== 'electron') {
       // auto open devtools
       //launchOptions.args.push('--auto-open-devtools-for-tabs')
-      launchOptions.extensions.push('~/CasperLabs/signer/build')
+      launchOptions.extensions.push('packages/signer/build')
 
       // whatever you return here becomes the launchOptions
       return launchOptions
