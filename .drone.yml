@@ -27,6 +27,9 @@ steps:
     - "make setup"
     - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
     - "make docker-build-all"
+  volumes:
+    - name: docker_sock
+      path: "/var/run/docker.sock"
 
 - name: docker-publish
   commands:
@@ -44,16 +47,14 @@ steps:
       from_secret: docker_password
     DOCKER_USERNAME:
       from_secret: docker_username
+  volumes:
+    - name: docker_sock
+      path: "/var/run/docker.sock"
   when:
     event:
     - push
     branch:
     - master
-
-volumes:
-- name: docker_sock
-  host:
-    path: "/var/run/docker.sock"
 
 trigger:
   event:
