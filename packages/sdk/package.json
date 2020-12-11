@@ -12,7 +12,8 @@
     "clean": "rm -rf ./dist",
     "~build": "tsc --watch",
     "test": "TS_NODE_FILES=true mocha -r ts-node/register test/**/*.test.ts",
-    "docs": " typedoc --out docs src"
+    "docs": " typedoc --out docs src",
+    "publish-doc": "yarn run docks && "
   },
   "keywords": [
     "Casper",
@@ -32,6 +33,7 @@
     "@types/humanize-duration": "^3.18.1",
     "@types/node": "^12.6.2",
     "chai": "^4.2.0",
+    "gh-pages": "^3.1.0",
     "concurrently": "^4.1.1",
     "husky": "^2.7.0",
     "lint-staged": "^8.2.1",
