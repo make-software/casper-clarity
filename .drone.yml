@@ -14,7 +14,7 @@ clone:
           EMAIL=ci git merge --no-edit FETCH_HEAD
       fi
       git rev-parse HEAD
-    image: "casperlabs/buildenv:latest"
+    image: "casperlabs/clarity-build:latest"
 
 kind: pipeline
 type: docker
@@ -22,13 +22,13 @@ name: build-publish
 
 steps:
 - name: make-test
-  image: "casperlabs/buildenv:latest"
+  image: "casperlabs/clarity-build:latest"
   commands:
     - "make setup"
     - "make test"
 
 - name: build-docker-image
-  image: "casperlabs/buildenv:latest"
+  image: "casperlabs/clarity-build:latest"
   commands:
     - "make setup"
     - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
@@ -47,7 +47,7 @@ steps:
       docker push casperlabs/explorer:latest
       docker push casperlabs/event-handler:latest
       docker push casperlabs/event-web-server:latest
-  image: "casperlabs/buildenv:latest"
+  image: "casperlabs/clarity-build:latest"
   environment:
     DOCKER_PASSWORD:
       from_secret: docker_password
