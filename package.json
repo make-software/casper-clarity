@@ -16,7 +16,7 @@
   ],
   "devDependencies": {
     "concurrently": "^3.6.0",
-    "cypress": "6.0.1",
+    "cypress": "6.1.0",
     "cypress-browser-extension-plugin": "^0.1.0",
     "husky": "^2.7.0",
     "lerna": "^3.22.1",
