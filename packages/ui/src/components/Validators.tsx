@@ -69,13 +69,15 @@ export default class Validators extends RefreshableComponent<Props, {}> {
     );
 
     // Prepare bids rows.
-    let rows = Object.keys(data.bids)
-      .map(validatorId => {
+    let rows = data.bids
+      .map(bid => {
+        let stake = bid.bid.staked_amount;
         return {
-          validatorId: validatorId,
-          delegation_rate: data?.bids[validatorId].delegation_rate,
-          stakeStr: data?.bids[validatorId].staked_amount,
-          stakeNum: BigNumber.from(data?.bids[validatorId].staked_amount)
+          validatorId: bid.public_key,
+          delegation_rate: bid.bid.delegation_rate,
+          stakeStr: stake,
+          stakeNum: BigNumber.from(stake),
+          reward: bid.bid.reward
         };
       })
       .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -108,21 +110,23 @@ export default class Validators extends RefreshableComponent<Props, {}> {
     );
 
     // For each era build navigation element and data table.
-    for (const [index, eraId] of Object.keys(data.era_validators).entries()) {
-      let eraName = `Era ${eraId} ${index == 0 ? '(current)' : ''}`;
-      let tabName = `validator-tab-${eraId}`;
+    // for (const [index, eraId] of Object.keys(data.era_validators).entries()) {
+    for (const [index, era] of data.era_validators.entries()) {
+      let eraName = `Era ${era.era_id} ${index == 0 ? '(current)' : ''}`;
+      let tabName = `validator-tab-${era.era_id}`;
       let navName = `${tabName}-nav`;
 
       // Build era navigation element.
       navs.push(navElement(false, navName, tabName, eraName));
 
       // Prepare era rows.
-      let rows = Object.keys(data.era_validators[eraId])
-        .map(validatorId => {
+      let rows = era.validator_weights
+        .map(validator_weight => {
+          let stake = validator_weight.weight;
           return {
-            validatorId: validatorId,
-            stakeStr: data?.era_validators[eraId][validatorId],
-            stakeNum: BigNumber.from(data?.era_validators[eraId][validatorId])
+            validatorId: validator_weight.public_key,
+            stakeStr: stake,
+            stakeNum: BigNumber.from(stake)
           };
         })
         .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -137,7 +141,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             headers={['Validator ID', 'Slot', 'Stake']}
             rows={rows}
             renderRow={(validatorInfo, index) => {
-              let key = `${eraId}-${validatorInfo.validatorId}`;
+              let key = `${era.era_id}-${validatorInfo.validatorId}`;
               return (
                 <tr key={key}>
                   <td>{validatorInfo.validatorId}</td>
