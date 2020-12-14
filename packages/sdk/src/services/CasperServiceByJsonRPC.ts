@@ -6,8 +6,13 @@ interface RpcResult {
   api_version: string;
 }
 
+interface Peer {
+  node_id: string;
+  address: string;
+}
+
 export interface GetPeersResult extends RpcResult {
-  peers: Record<string, string>;
+  peers: Peer[];
 }
 
 interface LastAddedBlockInfo {
