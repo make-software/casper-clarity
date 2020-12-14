@@ -48,7 +48,12 @@ describe('StoredValue', () => {
 
     const serializer = new TypedJSON(StoredValue);
     const storedValue = serializer.parse(mockJson);
-    console.log(storedValue);
+    expect(storedValue?.Account).not.eq(undefined);
+    expect(storedValue?.Account?.accountHash).to.eq(
+      mockJson.Account.account_hash
+    );
+    expect(storedValue?.Account?.actionThresholds).not.eq(undefined);
+    expect(storedValue?.Account?.namedKeys[0].name).to.eq('contract_version');
   });
 
   it('should parse Transfer stored value correctly', function () {
