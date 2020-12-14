@@ -93,7 +93,6 @@ describe('StoredValue', () => {
     const storedValue = serializer.parse(mockJson);
     expect(storedValue?.Contract).to.not.eq(undefined);
     expect(storedValue?.Contract).to.eq(mockJson.Contract);
-    console.log(storedValue);
   });
 
   it('should parse ContractPackage stored value correctly', function () {
@@ -106,7 +105,6 @@ describe('StoredValue', () => {
     const storedValue = serializer.parse(mockJson);
     expect(storedValue?.ContractPackage).to.not.eq(undefined);
     expect(storedValue?.ContractPackage).to.eq(mockJson.ContractPackage);
-    console.log(storedValue);
   });
 
   it('should parse DeployInfo stored value correctly', function () {
@@ -132,6 +130,5 @@ describe('StoredValue', () => {
       mockJson.DeployInfo.deploy_hash
     );
     expect(storedValue?.DeployInfo?.from).to.eq(mockJson.DeployInfo.from);
-    console.log(storedValue);
   });
 });
