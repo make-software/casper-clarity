@@ -12,10 +12,10 @@ export class ConnectedPeersContainer {
 
   async refreshPeers() {
     let peers = await this.casperService.getPeers();
-    this.peers = Object.keys(peers.peers).map(nodeId => {
+    this.peers = peers.peers.map(peer => {
       return {
-        nodeId: nodeId,
-        address: peers.peers[nodeId]
+        nodeId: peer.node_id,
+        address: peer.address
       };
     });
   }

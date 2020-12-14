@@ -18,7 +18,8 @@ let httpServer = (models) => {
         if (block === null) {
             res.status(404).send("Block not found.");
         } else {
-            res.send(await block.toJSON());
+            let deploys = await storage.findDeployHashesByBlockHash(block.blockHash);
+            res.send(await block.toJSON(deploys));
         }
     });
 
@@ -39,7 +40,7 @@ let httpServer = (models) => {
         const pageCount = Math.ceil(blocks.count / req.query.limit);
         let result = {
             data: await Promise.all(blocks.rows.map(block => {
-                return block.toJSON(skipDeploys = true);
+                return block.toJSON();
             })),
             pageCount: pageCount,
             itemCount: itemCount,

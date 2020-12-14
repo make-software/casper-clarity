@@ -6,8 +6,13 @@ interface RpcResult {
   api_version: string;
 }
 
+interface Peer {
+  node_id: string;
+  address: string;
+}
+
 export interface GetPeersResult extends RpcResult {
-  peers: Record<string, string>;
+  peers: Peer[];
 }
 
 interface LastAddedBlockInfo {
@@ -108,9 +113,34 @@ export interface BidInfo {
   funds_locked: null | string;
 }
 
+export interface ValidatorWeight {
+  public_key: string;
+  weight: string;
+}
+
+export interface EraValidators {
+  era_id: number;
+  validator_weights: ValidatorWeight[];
+}
+
+export interface Bid {
+  bonding_purse: string;
+  staked_amount: string;
+  delegation_rate: number;
+  reward: string;
+  // delegators: [],
+}
+
+export interface ValidatorBid {
+  public_key: string;
+  bid: Bid;
+}
+
 export interface ValidatorsInfoResult extends RpcResult {
-  era_validators: Record<string, Record<string, string>>;
-  bids: Record<string, BidInfo>;
+  state_root_hash: string;
+  block_height: number;
+  era_validators: EraValidators[];
+  bids: ValidatorBid[];
 }
 
 export class CasperServiceByJsonRPC {

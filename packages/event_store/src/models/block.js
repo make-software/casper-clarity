@@ -2,15 +2,9 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Block extends Model {
-        static associate(models) {
-            models.Block.Deploys = models.Block.hasMany(models.Deploy, {
-                foreignKey: 'blockHeight'
-            });
-        }
+        static associate(models) {}
 
-        async toJSON(skipDeploys = false) {
-            // var tag = '/blocks block ' + this.blockHash;
-            // console.time(tag);
+        async toJSON(deploys = null) {
             let result = {
                 "blockHash": this.blockHash,
                 "parentHash": this.parentHash,
@@ -20,13 +14,11 @@ module.exports = (sequelize, DataTypes) => {
                 "state": this.state,
                 "height": this.blockHeight,
             };
-            if (!skipDeploys) {
-                let deploys = await this.getDeploys();
-                result["deploys"] = deploys.map(deploy => {
-                    return deploy.deployHash;
-                });
+
+            if (deploys) {
+                result["deploys"] = deploys;
             }
-            // console.timeEnd(tag);
+            
             return result; 
         }
     };
@@ -97,17 +89,7 @@ module.exports = (sequelize, DataTypes) => {
                     }
                 }
             }
-        },
-        state: {                            //Specify what the state variants are
-            type: DataTypes.STRING,
-            validate: {
-                isStateValid() {
-                    if ( typeof(this.state) !== 'string' ) {
-                        console.warn("\n\tWARN: invalid state for block at height: " + this.blockHeight + "\n");
-                    }
-                }
-            }
-        },
+        }
     }, {
         sequelize,
         modelName: 'Block',

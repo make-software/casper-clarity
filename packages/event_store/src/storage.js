@@ -6,48 +6,34 @@ class Storage {
         this.pubsub = pubsub;
     }
 
-    async onFinalizedBlock(event) {
-        let existingBlock = await this.models.Block.findOne({where: {blockHeight: event.height}});
-        if (existingBlock !== null) {
-            // logs msg
-            console.warn("\n\tWARN: event is a duplicate of existing block at height: " + event.height);
-            console.warn("\tThis may cause problems in subsequent events\n");
-            return;
-        };
-        await this.models.Block.create({
-            blockHeight: event.height,
-            blockHash: null,
-            timestamp: event.timestamp,
-            eraId: event.era_id,
-            proposer: event.proposer,
-            state: 'finalized',
-            Deploys: event.proto_block.deploys.map(deployHash => {
-                return {
-                    deployHash: deployHash,
-                    state: 'finalized'
-                }
-            })
-        }, {
-            include: [ this.models.Block.Deploys ]
-        });
-    }
-
     async onDeployProcessed(event) {
         let deploy = await this.findDeployByHash(event.deploy_hash);
-        if (deploy === null || deploy.state !== 'finalized'){
+        if (deploy !== null){
             // logs msg
-            console.warn("\n\tWARN: Could not find existing finalized deploy to process");
-            console.warn("\tThis might be due to a problem in the corresponding blockFinalized event\n");
+            console.warn(`Deploy ${event.deploy_hash} already exists. Skipping.`);
             return;
         }
 
-        deploy.account = event.account;
-        deploy.state = 'processed';
+        let deployData = {
+            deployHash: event.deploy_hash,
+            account: event.account,
+            timestamp: null, // BlockAdded event will have that info.
+        };
 
         if (event.execution_result.Success) {
             let result = event.execution_result.Success;
-            deploy.cost = result.cost;
-            deploy.errorMessage = null;
+            deployData.cost = result.cost;
+            deployData.errorMessage = null;
+        } else {
+            let result = event.execution_result.Failure;
+            deployData.errorMessage = result.error_message;
+            deployData.cost = result.cost;
+        }
+
+        await this.models.Deploy.create(deployData);
+
+        if (event.execution_result.Success) {
+            let result = event.execution_result.Success;
             result.transfers.forEach(transferHash => {
                 result.effect.transforms.forEach(async transform => {
                     if(transform.key != transferHash) {
@@ -56,7 +42,7 @@ class Storage {
                     let transferEvent = transform.transform.WriteTransfer;
                     await this.models.Transfer.create({
                         transferHash: transferHash,
-                        deployHash: deploy.deployHash,
+                        deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
                         sourcePurse: transferEvent.source,
                         targetPurse: transferEvent.target,
@@ -65,13 +51,8 @@ class Storage {
                     });
                 });
             });
-        } else {
-            let result = event.execution_result.Failure;
-            deploy.errorMessage = result.error_message;
-            deploy.cost = result.cost;
         }
 
-        await deploy.save();
 
         if(this.pubsub !== null) {
             this.pubsub.broadcast_deploy(await deploy.toJSON());
@@ -79,17 +60,31 @@ class Storage {
     }
 
     async onBlockAdded(event) {
-        let block = await this.findBlockByHeight(event.block_header.height);
-        if (block === null || block.state !== 'finalized') {
+        let block = await this.findBlockByHash(event.block_hash);
+        if (block !== null) {
             // logs msg
-            console.warn("\n\tWARN: block missing at height: " + event.block_header.height);
-            console.warn("\tThis might be due to a problem in the corresponding blockFinalized event\n");
+            console.warn(`Block ${event.block_header.height} already exists. Skipping`);
             return;
         }
-        block.state = 'added';
-        block.parentHash = event.block_header.parent_hash;
-        block.blockHash = event.block_hash;
-        await block.save();
+
+        await this.models.Block.create({
+            blockHash: event.block_hash,
+            blockHeight: event.block_header.height,
+            parentHash: event.block_header.parent_hash,
+            timestamp: event.block_header.timestamp,
+            eraId: event.block_header.era_id,
+            proposer: event.block_header.proposer,
+        });
+
+        // Update deploys.
+        await this.models.Deploy.update({
+            timestamp: event.block_header.timestamp,
+            blockHash: event.block_hash
+        }, {
+            where: {
+                deployHash: event.block_header.deploy_hashes
+            }
+        });
 
         if(this.pubsub !== null){
             this.pubsub.broadcast_block(await block.toJSON());
@@ -97,9 +92,7 @@ class Storage {
     }
 
     async findBlockByHeight(height) {
-        return this.models.Block.findByPk(height, {
-            include: this.models.Deploy
-        });
+        return this.models.Block.findByPk(height);
     }
 
     async findBlockByHash(blockHash) {
@@ -107,19 +100,15 @@ class Storage {
             where: { 
                 blockHash: blockHash 
             } 
-        }, {
-            include: this.models.Deploy
         });
     }
 
     async findBlocks(limit, offset) {
-        // console.("findBlocks");
         let blocks = await this.models.Block.findAll({
             limit: limit,
             offset: offset,
             order: [['blockHeight', 'DESC']]
         });
-        // console.timeEnd("findBlocks");
         let count = await this.models.Block.count();
         return {
             rows: blocks,
@@ -128,19 +117,28 @@ class Storage {
     }
 
     async findDeployByHash(deployHash) {
-        return this.models.Deploy.findByPk(deployHash, {
-            include: this.models.Block
-        });
+        return this.models.Deploy.findByPk(deployHash);
     }
 
     async findDeploysByAccount(account, limit, offset) {
         return this.models.Deploy.findAndCountAll({
             limit: limit,
             offset: offset,
-            order: [['blockHeight', 'DESC']],
+            order: [['timestamp', 'DESC']],
             where: {
                 account: account
             }
+        });
+    }
+
+    async findDeployHashesByBlockHash(blockHash) {
+        return this.models.Deploy.findAll({
+            attributes: ['deployHash'],
+            where: {
+                blockHash: blockHash
+            }
+        }).then(deploys => {
+            return deploys.map(deploy => deploy.deployHash)
         });
     }
 
@@ -157,8 +155,6 @@ class Storage {
             }
         });
     }
-    
-
 }
 
 module.exports = Storage
