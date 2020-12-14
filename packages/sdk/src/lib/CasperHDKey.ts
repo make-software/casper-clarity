@@ -22,6 +22,10 @@ export class CasperHDKey {
     ].join('/');
   }
 
+  /**
+   * Generate HDKey from master seed
+   * @param seed
+   */
   public static fromMasterSeed(seed: ByteArray): CasperHDKey {
     return new CasperHDKey(HDKey.fromMasterSeed(Buffer.from(seed)));
   }
@@ -42,23 +46,43 @@ export class CasperHDKey {
     return this.hdKey.publicExtendedKey;
   }
 
+  /**
+   * Derive the child key basing the path
+   * @param path
+   */
   public derive(path: string): Secp256K1 {
     const secpKeyPair = this.hdKey.derive(path);
     return new Secp256K1(secpKeyPair.publicKey!, secpKeyPair.privateKey!);
   }
 
+  /**
+   * Derive child key basing the bip44 protocol
+   * @param index the index of child key
+   */
   public deriveIndex(index: number): Secp256K1 {
     return this.derive(this.bip44Path(index));
   }
 
+  /**
+   * Generate the signature for the message by using the key
+   * @param msg The message to sign
+   */
   public sign(msg: ByteArray) {
     return this.hdKey.sign(sha256(Buffer.from(msg)));
   }
 
+  /**
+   * Verify the signature
+   * @param signature the signature generated for the msg
+   * @param msg the raw message
+   */
   public verify(signature: ByteArray, msg: ByteArray) {
     return this.hdKey.verify(sha256(Buffer.from(msg)), Buffer.from(signature));
   }
 
+  /**
+   * Get the JSON representation of the wallet
+   */
   public toJSON() {
     return this.hdKey.toJSON();
   }
