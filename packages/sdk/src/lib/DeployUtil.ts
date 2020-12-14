@@ -59,16 +59,43 @@ export const humanizerTTL = (ttl: number) => {
   return shortEnglishHumanizer(ttl);
 };
 
+/**
+ * The header portion of a Deploy
+ */
 export interface DeployHeader {
+  /**
+   * The account within which the deploy will be run.
+   */
   account: PublicKey;
+  /**
+   * When the deploy was created.
+   */
   timestamp: number;
+  /**
+   * How long the deploy will stay valid.
+   */
   ttl: number;
+  /**
+   * Price per gas unit for this deploy.
+   */
   gasPrice: number;
+  /**
+   * Hash of the Wasm code.
+   */
   bodyHash: ByteArray;
+  /**
+   * Other deploys that have to be run before this one.
+   */
   dependencies: ByteArray[];
+  /**
+   * Which chain the deploy is supposed to be run on.
+   */
   chainName: string;
 }
 
+/**
+ * The cryptographic hash of a Deploy.
+ */
 class DeployHash implements ToBytes {
   constructor(private hash: ByteArray) {}
 
@@ -77,6 +104,10 @@ class DeployHash implements ToBytes {
   }
 }
 
+/**
+ * Serialized DeployHeader to an array of bytes
+ * @param deployHeader
+ */
 const toBytesDeployHeader = (deployHeader: DeployHeader) => {
   return concat([
     deployHeader.account.toBytes(),
@@ -89,14 +120,35 @@ const toBytesDeployHeader = (deployHeader: DeployHeader) => {
   ]);
 };
 
+/**
+ * A deploy containing a smart contract along with the requester's signature(s).
+ */
 export interface Deploy {
+  /**
+   * The DeployHash identifying this Deploy
+   */
   hash: ByteArray;
+  /**
+   * The deployHeader
+   */
   header: DeployHeader;
+  /**
+   * The ExecutableDeployItem for payment code.
+   */
   payment: ExecutableDeployItem;
+  /**
+   * the ExecutableDeployItem for session code.
+   */
   session: ExecutableDeployItem;
+  /**
+   * An array of signature and public key of the signers, who approve this deploy
+   */
   approvals: Approval[];
 }
 
+/**
+ * A struct containing a signature and the public key of the signer.
+ */
 export class Approval {
   public signer: string;
   public signature: string;
@@ -116,6 +168,7 @@ export abstract class ExecutableDeployItem implements ToBytes, ToJson {
 
 export class ModuleBytes extends ExecutableDeployItem {
   public tag = 0;
+
   constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
     super();
   }
@@ -140,6 +193,7 @@ export class ModuleBytes extends ExecutableDeployItem {
 
 export class StoredContractByHash extends ExecutableDeployItem {
   public tag = 1;
+
   constructor(
     private hash: Uint8Array,
     private entryPoint: string,
@@ -326,10 +380,19 @@ export class Transfer extends ExecutableDeployItem {
   }
 }
 
+/**
+ * Serialize deployHeader into a array of bytes
+ * @param deployHeader
+ */
 export const serializeHeader = (deployHeader: DeployHeader) => {
   return toBytesDeployHeader(deployHeader);
 };
 
+/**
+ * Serialize deployBody into a array of bytes
+ * @param payment
+ * @param session
+ */
 export const serializeBody = (
   payment: ExecutableDeployItem,
   session: ExecutableDeployItem
@@ -443,6 +506,11 @@ export const setSignature = (
   return deploy;
 };
 
+/**
+ * Standard payment code.
+ *
+ * @param paymentAmount the number of motes paying to execution engine
+ */
 export const standardPayment = (paymentAmount: bigint | JSBI) => {
   const paymentArgs = RuntimeArgs.fromMap({
     amount: CLValue.fromU512(paymentAmount.toString())
@@ -451,6 +519,11 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
   return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());
 };
 
+/**
+ * Convert the deploy object to json
+ *
+ * @param deploy
+ */
 export const deployToJson = (deploy: Deploy) => {
   const header = deploy.header;
   const headerJson = {
