@@ -4,12 +4,12 @@ import ErrorContainer from './ErrorContainer';
 import { CleanableFormData } from './FormData';
 import AuthService from '../services/AuthService';
 import {
+  BalanceServiceByJsonRPC,
+  CasperServiceByJsonRPC,
   decodeBase64,
   encodeBase16,
   encodeBase64,
   Keys,
-  CasperServiceByJsonRPC,
-  BalanceServiceByJsonRPC,
   PublicKey,
   Signer
 } from 'casper-client-sdk';
@@ -27,26 +27,19 @@ export const accountHashForEd25519 = (publicKeyBase64: string) => {
 };
 
 export const getPublicKeyHashBase64 = (account: UserAccount) => {
-  if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
-    return encodeBase64(
-      Keys.Ed25519.accountHash(decodeBase64(account.publicKeyBase64))
-    );
-  }
-  throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
+  return encodeBase64(getPublicKeyFromAccount(account).toAccountHash());
 };
 
 export const getAccountHash = (account: UserAccount) => {
-  if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
-    return accountHashForEd25519(account.publicKeyBase64);
-  }
-  throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
+  return getPublicKeyFromAccount(account).toAccountHex();
 };
 
 export const getPublicKeyFromAccount = (account: UserAccount) => {
-  if (!account.sigAlgorithm || account.sigAlgorithm === 'ed25519') {
-    return PublicKey.fromEd25519(decodeBase64(account.publicKeyBase64));
+  let algo = Keys.SignatureAlgorithm.Ed25519;
+  if (account.sigAlgorithm) {
+    algo = account.sigAlgorithm as Keys.SignatureAlgorithm;
   }
-  throw new Error(`Clarity currently don't support ${account.sigAlgorithm}`);
+  return PublicKey.from(decodeBase64(account.publicKeyBase64), algo);
 };
 
 export class AuthContainer {
@@ -211,7 +204,7 @@ export class AuthContainer {
       await this.addAccount({
         name: form.name.$,
         publicKeyBase64: form.publicKeyBase64.$,
-        sigAlgorithm: 'ed25519'
+        sigAlgorithm: form.algo.$
       });
       return true;
     } else {
@@ -268,6 +261,17 @@ function saveToFile(content: string, filename: string) {
 }
 
 class AccountFormData extends CleanableFormData {
+  algo: FieldState<string> = new FieldState<string>(
+    Keys.SignatureAlgorithm.Ed25519
+  ).validators(x => {
+    if (
+      x === Keys.SignatureAlgorithm.Ed25519 ||
+      x === Keys.SignatureAlgorithm.Secp256K1
+    ) {
+      return false;
+    }
+    return 'Unsupported signature algorithm';
+  });
   name: FieldState<string> = new FieldState<string>('');
   publicKeyBase64: FieldState<string> = new FieldState('');
 
@@ -345,9 +349,15 @@ export class ImportAccountFormData extends AccountFormData {
       return 'The content of imported file cannot be empty!';
     }
     try {
-      this.key = Keys.Ed25519.parsePublicKey(
-        Keys.Ed25519.readBase64WithPEM(this.fileContent)
-      );
+      if (this.algo.$ === Keys.SignatureAlgorithm.Ed25519) {
+        this.key = Keys.Ed25519.parsePublicKey(
+          Keys.Ed25519.readBase64WithPEM(this.fileContent)
+        );
+      } else {
+        this.key = Keys.Secp256K1.parsePublicKey(
+          Keys.Ed25519.readBase64WithPEM(this.fileContent)
+        );
+      }
     } catch (e) {
       return e.message;
     }

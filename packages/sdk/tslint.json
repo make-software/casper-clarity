@@ -8,7 +8,7 @@
     "object-literal-sort-keys": false,
     "max-classes-per-file": false,
     "no-namespace": false,
-    "member-access": false,
+    "member-access": true,
     "no-empty-interface": false,
     "no-bitwise": false,
     "interface-name": false
