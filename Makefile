@@ -36,17 +36,12 @@ test:
 
 # install all package
 .make/bootstrap:
-	npm install
 	yarn bootstrap
-	cd packages/event_store && npm install && cd -
-	mkdir -p $(dir $@) && touch $@
 
 
 .make/npm/build-explorer: .make/bootstrap
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	cd packages/sdk && yarn run build && cd -
-	cd packages/ui && yarn run build && cd -
-	cd packages/server && yarn run build && cd -
+	yarn run build
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: build-explorer

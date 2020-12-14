@@ -14993,6 +14993,11 @@ redis-mock@^0.54.0:
   resolved "https://registry.yarnpkg.com/redis-mock/-/redis-mock-0.54.0.tgz#caef81c802820811b5596d44b1587062c85bfb16"
   integrity sha512-aJHQ63CO7/OaGyGzqCEnSccpaVRB1Hb4QzFeGj8jW8wrOQhQVQYhyOES7rc9+68mGHuLFYHDE8aFT9/EHQ9p/g==
 
+reflect-metadata@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
+  integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
+
 regenerate-unicode-properties@^8.2.0:
   version "8.2.0"
   resolved "https://registry.yarnpkg.com/regenerate-unicode-properties/-/regenerate-unicode-properties-8.2.0.tgz#e5de7111d655e7ba60c057dbe9ff37c87e65cdec"
@@ -17334,6 +17339,11 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
+
+typedjson@^1.6.0-rc2:
+  version "1.6.0-rc2"
+  resolved "https://registry.yarnpkg.com/typedjson/-/typedjson-1.6.0-rc2.tgz#fcddf1d9d75de36f9d7acfc72c038d7ee874abeb"
+  integrity sha512-Lz5B8FMGho5+2KGnirEe+pP+Z+Qqr+Os4jIRZSw8Btq8woSAuUm+v/XwRuoMZvaFHYCfZGh+ryQ18g8Vet2S+g==
 
 typedoc-default-themes@^0.10.2:
   version "0.10.2"

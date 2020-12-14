@@ -54,6 +54,8 @@
   "dependencies": {
     "axios": "^0.21.0",
     "blakejs": "^1.1.0",
+    "typedjson": "^1.6.0-rc2",
+    "reflect-metadata": "^0.1.13",
     "jsbi": "^3.1.2",
     "rxjs": "^6.5.3",
     "ethereum-cryptography": "^0.1.3",
