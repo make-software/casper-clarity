@@ -18,10 +18,16 @@ import { SignatureAlgorithm } from './Keys';
 type ByteArray = Uint8Array;
 
 export interface CLTyped {
+  /**
+   * Returns the CLType
+   */
   clType: () => CLType;
 }
 
 export interface ToBytes {
+  /**
+   * Serializes a `Key` into an array of bytes.
+   */
   toBytes: () => ByteArray;
 }
 

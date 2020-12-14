@@ -80,6 +80,12 @@ export class CasperClient {
     }
   }
 
+  /**
+   * Load private key file to restore keyPair
+   *
+   * @param path The path to the private key
+   * @param algo
+   */
   public loadKeyPairFromPrivateFile(
     path: string,
     algo: SignatureAlgorithm
@@ -94,6 +100,11 @@ export class CasperClient {
     }
   }
 
+  /**
+   * Create a new hierarchical deterministic wallet, supporting bip32 protocol
+   *
+   * @param seed The seed buffer for parent key
+   */
   public newHdWallet(seed: ByteArray): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
@@ -116,6 +127,13 @@ export class CasperClient {
     }
   }
 
+  /**
+   * Construct a unsigned Deploy object
+   *
+   * @param deployParams Parameters for deploy
+   * @param session
+   * @param payment
+   */
   public makeDeploy(
     deployParams: DeployParams,
     session: ExecutableDeployItem,
@@ -124,18 +142,38 @@ export class CasperClient {
     return DeployUtil.makeDeploy(deployParams, session, payment);
   }
 
+  /**
+   * Sign the deploy with the specified signKeyPair
+   * @param deploy unsigned Deploy object
+   * @param signKeyPair the keypair to sign the Deploy object
+   */
   public signDeploy(deploy: Deploy, signKeyPair: AsymmetricKey): Deploy {
     return DeployUtil.signDeploy(deploy, signKeyPair);
   }
 
+  /**
+   * Send deploy to network
+   * @param signedDeploy Signed deploy object
+   */
   public putDeploy(signedDeploy: Deploy): Promise<string> {
     return this.nodeClient.deploy(signedDeploy).then(it => it.deploy_hash);
   }
 
+  /**
+   * convert the deploy object to json
+   * @param deploy
+   */
   public deployToJson(deploy: Deploy) {
     return DeployUtil.deployToJson(deploy);
   }
 
+  /**
+   * Construct the deploy for transfer purpose
+   *
+   * @param deployParams
+   * @param session
+   * @param payment
+   */
   public makeTransferDeploy(
     deployParams: DeployParams,
     session: Transfer,
@@ -208,6 +246,10 @@ export class CasperClient {
     return await this.eventStoreClient.getDeployByHash(deployHash);
   }
 
+  /**
+   * Get the main purse uref for the specified publicKey
+   * @param publicKey
+   */
   public async getAccountMainPurseUref(
     publicKey: PublicKey
   ): Promise<string | null> {
@@ -227,6 +269,10 @@ export class CasperClient {
     return balanceUref;
   }
 
+  /**
+   * Get transfers for the specified purseUref, including sending and receiving transactions
+   * @param purseUref
+   */
   public async getTransfersByPurse(
     purseUref: string
   ): Promise<TransferResult[]> {

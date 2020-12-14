@@ -16,6 +16,9 @@ const ec = new EC('secp256k1');
 const ED25519_PEM_SECRET_KEY_TAG = 'PRIVATE KEY';
 const ED25519_PEM_PUBLIC_KEY_TAG = 'PUBLIC KEY';
 
+/**
+ * Supported types of Asymmetric Key algorithm
+ */
 export enum SignatureAlgorithm {
   Ed25519 = 'ed25519',
   Secp256K1 = 'secp256k1'
@@ -97,12 +100,27 @@ export abstract class AsymmetricKey {
       `-----END ${tag}-----\n`;
   }
 
+  /**
+   * Export the public key encoded in pem
+   */
   public abstract exportPublicKeyInPem(): string;
 
+  /**
+   * Expect the private key encoded in pem
+   */
   public abstract exportPrivateKeyInPem(): string;
 
+  /**
+   * Sign the message by using the keyPair
+   * @param msg
+   */
   public abstract sign(msg: ByteArray): ByteArray;
 
+  /**
+   * Verify the signature along with the raw message
+   * @param signature
+   * @param msg
+   */
   public abstract verfiy(signature: ByteArray, msg: ByteArray): boolean;
 }
 
@@ -113,12 +131,16 @@ export class Ed25519 extends AsymmetricKey {
   }
 
   /**
-   * Generating a new key pair
+   * Generating a new Ed25519 key pair
    */
   public static new() {
     return new Ed25519(nacl.sign_keyPair());
   }
 
+  /**
+   * Generate the accountHex for the Ed25519 public key
+   * @param publicKey
+   */
   public static accountHex(publicKey: ByteArray): string {
     return '01' + encodeBase16(publicKey);
   }
@@ -141,10 +163,19 @@ export class Ed25519 extends AsymmetricKey {
     });
   }
 
+  /**
+   * Generate the accountHash for the Ed25519 public key
+   * @param publicKey
+   */
   public static accountHash(publicKey: ByteArray): ByteArray {
     return accountHashHelper(SignatureAlgorithm.Ed25519, publicKey);
   }
 
+  /**
+   * Construct keyPair from a public key and private key
+   * @param publicKey
+   * @param privateKey
+   */
   public static parseKeyPair(
     publicKey: ByteArray,
     privateKey: ByteArray
@@ -202,6 +233,9 @@ export class Ed25519 extends AsymmetricKey {
     return key;
   }
 
+  /**
+   * Export the private key encoded in pem
+   */
   public exportPrivateKeyInPem() {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 46, 2, 1, 0, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32]);
@@ -214,6 +248,9 @@ export class Ed25519 extends AsymmetricKey {
     return this.toPem(ED25519_PEM_SECRET_KEY_TAG, encoded);
   }
 
+  /**
+   * Expect the public key encoded in pem
+   */
   public exportPublicKeyInPem() {
     // prettier-ignore
     const derPrefix = Buffer.from([48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0]);
@@ -223,10 +260,19 @@ export class Ed25519 extends AsymmetricKey {
     return this.toPem(ED25519_PEM_PUBLIC_KEY_TAG, encoded);
   }
 
+  /**
+   * Sign the message by using the keyPair
+   * @param msg
+   */
   public sign(msg: ByteArray): ByteArray {
     return nacl.sign_detached(msg, this.privateKey);
   }
 
+  /**
+   * Verify the signature along with the raw message
+   * @param signature
+   * @param msg
+   */
   public verfiy(signature: ByteArray, msg: ByteArray) {
     return nacl.sign_detached_verify(
       msg,
@@ -235,6 +281,10 @@ export class Ed25519 extends AsymmetricKey {
     );
   }
 
+  /**
+   * Derive public key from private key
+   * @param privateKey
+   */
   public static privateToPublicKey(privateKey: ByteArray) {
     if (privateKey.length === SignLength.SecretKey) {
       return nacl.sign_keyPair_fromSecretKey(privateKey).publicKey;
@@ -243,14 +293,14 @@ export class Ed25519 extends AsymmetricKey {
     }
   }
 
+  /**
+   * Restore Ed25519 keyPair from private key file
+   * @param privateKeyPath
+   */
   public static loadKeyPairFromPrivateFile(privateKeyPath: string) {
     const privateKey = Ed25519.parsePrivateKeyFile(privateKeyPath);
     const publicKey = Ed25519.privateToPublicKey(privateKey);
     return Ed25519.parseKeyPair(publicKey, privateKey);
-  }
-
-  public static deriveIndex(hdKey: CasperHDKey, index: number) {
-    return hdKey.deriveIndex(index);
   }
 }
 
@@ -259,6 +309,9 @@ export class Secp256K1 extends AsymmetricKey {
     super(publicKey, privateKey, SignatureAlgorithm.Secp256K1);
   }
 
+  /**
+   * Generating a new Secp256K1 key pair
+   */
   public static new() {
     const keyPair = ec.genKeyPair();
     const publicKey = Uint8Array.from(keyPair.getPublic(true, 'array'));
@@ -280,10 +333,20 @@ export class Secp256K1 extends AsymmetricKey {
     return new Secp256K1(publicKey, privateKey);
   }
 
+  /**
+   * Generate the accountHash for the Secp256K1 public key
+   * @param publicKey
+   */
   public static accountHash(publicKey: ByteArray): ByteArray {
     return accountHashHelper(SignatureAlgorithm.Secp256K1, publicKey);
   }
 
+  /**
+   * Construct keyPair from public key and private key
+   * @param publicKey
+   * @param privateKey
+   * @param originalFormat the format of the public/private key
+   */
   public static parseKeyPair(
     publicKey: ByteArray,
     privateKey: ByteArray,
@@ -351,6 +414,9 @@ export class Secp256K1 extends AsymmetricKey {
     return Secp256K1.readBase64WithPEM(content);
   }
 
+  /**
+   * Export the private key encoded in pem
+   */
   public exportPrivateKeyInPem(): string {
     return keyEncoder.encodePrivate(
       encodeBase16(this.privateKey),
@@ -359,6 +425,9 @@ export class Secp256K1 extends AsymmetricKey {
     );
   }
 
+  /**
+   * Expect the public key encoded in pem
+   */
   public exportPublicKeyInPem(): string {
     return keyEncoder.encodePublic(
       encodeBase16(this.publicKey.rawPublicKey),
@@ -367,11 +436,20 @@ export class Secp256K1 extends AsymmetricKey {
     );
   }
 
+  /**
+   * Sign the message by using the keyPair
+   * @param msg
+   */
   public sign(msg: ByteArray): ByteArray {
     const res = secp256k1.ecdsaSign(sha256(Buffer.from(msg)), this.privateKey);
     return res.signature;
   }
 
+  /**
+   * Verify the signature along with the raw message
+   * @param signature
+   * @param msg
+   */
   public verfiy(signature: ByteArray, msg: ByteArray) {
     return secp256k1.ecdsaVerify(
       signature,
@@ -380,13 +458,30 @@ export class Secp256K1 extends AsymmetricKey {
     );
   }
 
+  /**
+   * Derive public key from private key
+   * @param privateKey
+   */
   public static privateToPublicKey(privateKey: ByteArray): ByteArray {
     return secp256k1.publicKeyCreate(privateKey, true);
   }
 
+  /**
+   * Restore Secp256K1 keyPair from private key file
+   * @param privateKeyPath a path to file of the private key
+   */
   public static loadKeyPairFromPrivateFile(privateKeyPath: string) {
     const privateKey = Secp256K1.parsePrivateKeyFile(privateKeyPath);
     const publicKey = Secp256K1.privateToPublicKey(privateKey);
     return Secp256K1.parseKeyPair(publicKey, privateKey, 'raw');
+  }
+
+  /**
+   * From hdKey derive a child Secp256K1 key
+   * @param hdKey
+   * @param index
+   */
+  public static deriveIndex(hdKey: CasperHDKey, index: number) {
+    return hdKey.deriveIndex(index);
   }
 }
