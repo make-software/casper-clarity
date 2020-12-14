@@ -9,7 +9,8 @@
     "test:sdk": "npm test --prefix ./packages/sdk",
     "build": "lerna run build",
     "publish": "lerna publish",
-    "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\""
+    "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\"",
+    "cypress:chrome": "node_modules/.bin/cypress run -b chrome"
   },
   "workspaces": [
     "packages/*"

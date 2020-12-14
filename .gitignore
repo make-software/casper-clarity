@@ -26,5 +26,7 @@ contracts
 *.sln
 *.sw*
 
-# Cypress env file
+# Cypress
 cypress.env.json
+packages/cypress/videos
+packages/cypress/screenshots
