@@ -101,6 +101,59 @@ export class SDeployInfo {
   gas: string;
 }
 
+/**
+ * Info about a seigniorage allocation for a validator
+ */
+@jsonObject
+class Validator {
+  // Validator's public key
+  @jsonMember({ name: 'validator_public_key', constructor: String })
+  validatorPublicKey: string;
+
+  // Allocated amount
+  @jsonMember({ constructor: String })
+  amount: string;
+}
+
+/**
+ * Info about a seigniorage allocation for a delegator
+ */
+@jsonObject
+class Delegator {
+  // Delegator's public key
+  @jsonMember({ name: 'delegator_public_key', constructor: String })
+  delegatorPublicKey: string;
+
+  // Validator's public key
+  @jsonMember({ name: 'validator_public_key', constructor: String })
+  validatorPublicKey: string;
+
+  // Allocated amount
+  @jsonMember({ constructor: String })
+  amount: string;
+}
+
+/**
+ * Information about a seigniorage allocation
+ */
+@jsonObject
+export class SeigniorageAllocation {
+  @jsonMember({ constructor: Validator })
+  Validator?: Validator;
+
+  @jsonMember({ constructor: Delegator })
+  Delegator?: Delegator;
+}
+
+/**
+ * Auction metdata.  Intended to be recorded at each era.
+ */
+@jsonObject
+export class EraInfo {
+  @jsonArrayMember(SeigniorageAllocation, { name: 'seigniorage_allocations' })
+  seigniorageAllocations: SeigniorageAllocation[];
+}
+
 @jsonObject
 export class StoredValue {
   //todo SCLValue;
@@ -128,4 +181,7 @@ export class StoredValue {
   // A record of a deploy
   @jsonMember({ constructor: SDeployInfo })
   DeployInfo?: SDeployInfo;
+
+  @jsonMember({ constructor: EraInfo })
+  EraInfo?: EraInfo;
 }
