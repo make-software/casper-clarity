@@ -3,26 +3,26 @@ import { jsonArrayMember, jsonMember, jsonObject } from 'typedjson';
 @jsonObject
 class NamedKey {
   @jsonMember({ constructor: String })
-  name: string;
+  public name: string;
   @jsonMember({ constructor: String })
-  key: string;
+  public key: string;
 }
 
 @jsonObject
 class AssociatedKey {
   @jsonMember({ name: 'account_hash', constructor: String })
-  accountHash: string;
+  public accountHash: string;
   @jsonMember({ constructor: Number })
-  weight: number;
+  public weight: number;
 }
 
 @jsonObject
 class ActionThresholds {
   @jsonMember({ constructor: Number })
-  deployment: number;
+  public deployment: number;
 
   @jsonMember({ name: 'key_management', constructor: Number })
-  keyManagement: number;
+  public keyManagement: number;
 }
 
 /**
@@ -37,68 +37,66 @@ class SAccount {
   @jsonMember({ name: 'account_hash', constructor: String })
   private _accountHash: string;
   @jsonArrayMember(NamedKey, { name: 'named_keys' })
-  namedKeys: NamedKey[];
+  public namedKeys: NamedKey[];
   @jsonMember({ name: 'main_purse', constructor: String })
-  mainPurse: string;
+  public mainPurse: string;
   @jsonArrayMember(AssociatedKey, { name: 'associated_keys' })
-  associatedKeys: AssociatedKey[];
+  public associatedKeys: AssociatedKey[];
   @jsonMember({ name: 'action_thresholds', constructor: ActionThresholds })
-  actionThresholds: ActionThresholds;
-
-  public getAccountHash() {}
+  public actionThresholds: ActionThresholds;
 }
 
 @jsonObject
 export class STransfer {
   // Deploy that created the transfer
   @jsonMember({ name: 'deploy_hash', constructor: String })
-  deployHash: string;
+  public deployHash: string;
 
   // Account from which transfer was executed
   @jsonMember({ constructor: String })
-  from: string;
+  public from: string;
 
   // Source purse
   @jsonMember({ constructor: String })
-  source: string;
+  public source: string;
 
   // Target purse
   @jsonMember({ constructor: String })
-  target: string;
+  public target: string;
 
   // Transfer amount
   @jsonMember({ constructor: String })
-  amount: string;
+  public amount: string;
 
   // Gas
   @jsonMember({ constructor: String })
-  gas: string;
+  public gas: string;
 
   // User-defined id
   @jsonMember({ constructor: String, preserveNull: true })
-  id: Number | null;
+  public id: string | null;
 }
 
 @jsonObject
 export class SDeployInfo {
   // The relevant Deploy.
   @jsonMember({ name: 'deploy_hash', constructor: String })
-  deployHash: string;
+  public deployHash: string;
 
   // Transfers performed by the Deploy.
   @jsonArrayMember(String)
-  transfers: String[];
+  public transfers: string[];
 
   // Account identifier of the creator of the Deploy.
   @jsonMember({ constructor: String })
-  from: string;
+  public from: string;
   // Source purse used for payment of the Deploy.
   @jsonMember({ constructor: String })
-  source: string;
+  public source: string;
 
   // Gas cost of executing the Deploy.
   @jsonMember({ constructor: String })
-  gas: string;
+  public gas: string;
 }
 
 /**
@@ -108,11 +106,11 @@ export class SDeployInfo {
 class Validator {
   // Validator's public key
   @jsonMember({ name: 'validator_public_key', constructor: String })
-  validatorPublicKey: string;
+  public validatorPublicKey: string;
 
   // Allocated amount
   @jsonMember({ constructor: String })
-  amount: string;
+  public amount: string;
 }
 
 /**
@@ -122,15 +120,15 @@ class Validator {
 class Delegator {
   // Delegator's public key
   @jsonMember({ name: 'delegator_public_key', constructor: String })
-  delegatorPublicKey: string;
+  public delegatorPublicKey: string;
 
   // Validator's public key
   @jsonMember({ name: 'validator_public_key', constructor: String })
-  validatorPublicKey: string;
+  public validatorPublicKey: string;
 
   // Allocated amount
   @jsonMember({ constructor: String })
-  amount: string;
+  public amount: string;
 }
 
 /**
@@ -139,10 +137,10 @@ class Delegator {
 @jsonObject
 export class SeigniorageAllocation {
   @jsonMember({ constructor: Validator })
-  Validator?: Validator;
+  public Validator?: Validator;
 
   @jsonMember({ constructor: Delegator })
-  Delegator?: Delegator;
+  public Delegator?: Delegator;
 }
 
 /**
@@ -151,37 +149,37 @@ export class SeigniorageAllocation {
 @jsonObject
 export class EraInfo {
   @jsonArrayMember(SeigniorageAllocation, { name: 'seigniorage_allocations' })
-  seigniorageAllocations: SeigniorageAllocation[];
+  public seigniorageAllocations: SeigniorageAllocation[];
 }
 
 @jsonObject
 export class StoredValue {
-  //todo SCLValue;
+  // todo SCLValue;
 
   // An account
   @jsonMember({ constructor: SAccount })
-  Account?: SAccount;
+  public Account?: SAccount;
 
   // A contract's Wasm
   @jsonMember({ constructor: String })
-  ContractWASM?: string;
+  public ContractWASM?: string;
 
   // Methods and type signatures supported by a contract
   @jsonMember({ constructor: String })
-  Contract?: string;
+  public Contract?: string;
 
   // A contract definition, metadata, and security container
   @jsonMember({ constructor: String })
-  ContractPackage?: string;
+  public ContractPackage?: string;
 
-  //A record of a transfer
+  // A record of a transfer
   @jsonMember({ constructor: STransfer })
-  Transfer?: STransfer;
+  public Transfer?: STransfer;
 
   // A record of a deploy
   @jsonMember({ constructor: SDeployInfo })
-  DeployInfo?: SDeployInfo;
+  public DeployInfo?: SDeployInfo;
 
   @jsonMember({ constructor: EraInfo })
-  EraInfo?: EraInfo;
+  public EraInfo?: EraInfo;
 }
