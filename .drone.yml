@@ -14,45 +14,53 @@ clone:
           EMAIL=ci git merge --no-edit FETCH_HEAD
       fi
       git rev-parse HEAD
-    image: "casperlabs/buildenv:latest"
+    image: "casperlabs/clarity-build:latest"
 
 kind: pipeline
+type: docker
 name: build-publish
 
 steps:
-- name: build-docker-image
+- name: make-test
+  image: "casperlabs/clarity-build:latest"
   commands:
-  - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
-  - "make docker-build-all"
-  image: "casperlabs/buildenv:latest"
+    - "make setup"
+    - "make test"
+
+- name: build-docker-image
+  image: "casperlabs/clarity-build:latest"
+  commands:
+    - "make setup"
+    - "export DOCKER_TAG=DRONE-${DRONE_BUILD_NUMBER}"
+    - "make docker-build-all"
   volumes:
-  - name: docker_sock
-    path: "/var/run/docker.sock"
+    - name: docker_sock
+      path: "/var/run/docker.sock"
 
 - name: docker-publish
   commands:
   - |
       echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       docker tag casperlabs/explorer:DRONE-${DRONE_BUILD_NUMBER} casperlabs/explorer:latest
-      docker tag casperlabs/grpcwebproxy:DRONE-${DRONE_BUILD_NUMBER} casperlabs/grpcwebproxy:latest
+      docker tag casperlabs/event-handler:DRONE-${DRONE_BUILD_NUMBER} casperlabs/event-handler:latest
+      docker tag casperlabs/event-web-server:DRONE-${DRONE_BUILD_NUMBER} casperlabs/event-web-server:latest
       docker push casperlabs/explorer:latest
-      docker push casperlabs/grpcwebproxy:latest
-  image: "casperlabs/buildenv:latest"
+      docker push casperlabs/event-handler:latest
+      docker push casperlabs/event-web-server:latest
+  image: "casperlabs/clarity-build:latest"
   environment:
     DOCKER_PASSWORD:
       from_secret: docker_password
     DOCKER_USERNAME:
       from_secret: docker_username
   volumes:
-  - name: docker_sock
-    path: "/var/run/docker.sock"
+    - name: docker_sock
+      path: "/var/run/docker.sock"
   when:
     event:
     - push
     branch:
     - master
-  depends_on:
-  - build-docker-image
 
 volumes:
 - name: docker_sock
@@ -74,6 +82,7 @@ trigger:
 
 ---
 kind: pipeline
+type: docker
 name: failed-build-alert
 
 clone:
