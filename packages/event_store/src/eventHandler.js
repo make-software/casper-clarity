@@ -59,10 +59,8 @@ class EventHandler {
                     try {
                         event = JSON.parse(str.substr(5));
                         if (event.DeployProcessed) {
-                            console.log("Saving Deploys..."); // For debugging
                             await storage.onDeployProcessed(event.DeployProcessed);
                         } else if (event.BlockAdded) {
-                            console.log("Saving Added Block..."); // For debugging
                             await storage.onBlockAdded(event.BlockAdded);
                         }
                     } catch (err) {
