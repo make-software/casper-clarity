@@ -55,7 +55,7 @@ const auth = new AuthContainer(
 const faucet = new FaucetContainer(
   errors,
   faucetService,
-  casperService,
+  eventService,
   // Update the balances when a new faucet request went through.
   () => auth.refreshBalances(true)
 );

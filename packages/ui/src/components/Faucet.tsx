@@ -110,16 +110,13 @@ const StatusCell = observer((props: { request: FaucetRequest }) => {
   const info = props.request.deployInfo;
   const iconAndMessage: () => [any, string | undefined] = () => {
     if (info) {
-      const attempts = info.execution_results;
-      const success = attempts.find(x => x.result.error_message === null);
-      const failure = attempts.find(x => x.result.error_message !== null);
-      if (success)
+      if (!info.errorMessage) {
         return [
           <Icon name="check-circle" color="green" />,
-          `Successfully included in block ${success.block_hash}`
+          `Successfully included in block ${info.blockHash}`
         ];
-      if (failure) {
-        const errm = failure.result.error_message;
+      } else {
+        const errm = info.errorMessage;
         const hint =
           errm === 'Exit code: 1'
             ? '. It looks like you already funded this account!'
@@ -128,7 +125,7 @@ const StatusCell = observer((props: { request: FaucetRequest }) => {
             : '';
         return [
           <FailIcon />,
-          `Failed in block ${failure.block_hash}: ${errm + hint}`
+          `Failed in block ${info.blockHash}: ${errm + hint}`
         ];
       }
     }

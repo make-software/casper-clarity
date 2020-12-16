@@ -4785,6 +4785,25 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
+casper-client-sdk@latest:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/casper-client-sdk/-/casper-client-sdk-1.0.7.tgz#f578fff8b19dae335edda66d543a2a34d56830ee"
+  integrity sha512-RXamV9EmaQMYDJxPRLdBYJ4aHcOVhiOvkDc66FR4fyG9bpV8AFdpoC1mmfZzh79ePG3bh/AMLxIr9oobNlydsA==
+  dependencies:
+    "@ethersproject/bignumber" "^5.0.8"
+    "@ethersproject/bytes" "^5.0.5"
+    "@ethersproject/constants" "^5.0.5"
+    axios "^0.21.0"
+    blakejs "^1.1.0"
+    ethereum-cryptography "^0.1.3"
+    humanize-duration "^3.24.0"
+    jsbi "^3.1.2"
+    key-encoder "^2.0.3"
+    rpc-client-js "^1.0.2"
+    rxjs "^6.5.3"
+    tweetnacl-ts "^1.0.3"
+    tweetnacl-util "^0.15.0"
+
 chai-http@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/chai-http/-/chai-http-4.3.0.tgz#3c37c675c1f4fe685185a307e345de7599337c1a"
