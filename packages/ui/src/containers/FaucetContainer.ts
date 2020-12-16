@@ -4,7 +4,7 @@ import ErrorContainer from './ErrorContainer';
 import StorageCell from '../lib/StorageCell';
 import FaucetService from '../services/FaucetService';
 import { getPublicKeyHashBase64 } from './AuthContainer';
-import { CasperServiceByJsonRPC, GetDeployResult } from 'casper-client-sdk';
+import { EventService, DeployResult } from 'casper-client-sdk';
 
 export class FaucetContainer {
   private _faucetRequests = new StorageCell<FaucetRequest[]>(
@@ -19,7 +19,7 @@ export class FaucetContainer {
   constructor(
     private errors: ErrorContainer,
     private faucetService: FaucetService,
-    private casperService: CasperServiceByJsonRPC,
+    private eventService: EventService,
     // Callback when the faucet status finished so we can update the balances.
     private onFaucetStatusChange: () => void
   ) {}
@@ -61,15 +61,11 @@ export class FaucetContainer {
     let updated = false;
     let anyNeededUpdate = false;
     for (let req of requests) {
-      const needsUpdate =
-        typeof req.deployInfo === 'undefined' ||
-        req.deployInfo!.execution_results.length === 0;
+      const needsUpdate = typeof req.deployInfo === 'undefined';
 
       if (needsUpdate) {
         anyNeededUpdate = true;
-        const info = await this.errors.withCapture(
-          this.tryGetDeployInfo(req.deployHashBase16)
-        );
+        const info = await this.tryGetDeployInfo(req.deployHashBase16);
         if (info != null) {
           req.deployInfo = info;
           updated = true;
@@ -88,8 +84,12 @@ export class FaucetContainer {
 
   private async tryGetDeployInfo(
     deployHashBase16: string
-  ): Promise<GetDeployResult | null> {
-    return await this.casperService.getDeployInfo(deployHashBase16);
+  ): Promise<DeployResult | null> {
+    try {
+      return await this.eventService.getDeployByHash(deployHashBase16);
+    } catch (err) {
+      return null;
+    }
   }
 }
 
@@ -99,7 +99,7 @@ export interface FaucetRequest {
   account: UserAccount;
   deployHashBase16: string;
   // Assigned later when the data becomes available.
-  deployInfo?: GetDeployResult;
+  deployInfo?: DeployResult;
 }
 
 export default FaucetContainer;

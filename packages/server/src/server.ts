@@ -155,7 +155,10 @@ if (process.env.JSON_RPC_PROXY === 'true') {
     '/rpc',
     createProxyMiddleware('/rpc', {
       target: jsonRpcUrl,
-      changeOrigin: true
+      changeOrigin: true,
+      onError: err => {
+        console.log(err);
+      }
     })
   );
 }

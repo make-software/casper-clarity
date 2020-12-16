@@ -7,6 +7,7 @@ class Storage {
     }
 
     async onDeployProcessed(event) {
+        console.log(`Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
         let deploy = await this.findDeployByHash(event.deploy_hash);
         if (deploy !== null){
             // logs msg
@@ -60,6 +61,12 @@ class Storage {
     }
 
     async onBlockAdded(event) {
+        let deploysStr = event.block_header.deploy_hashes.join(', ');
+        console.log(
+            `Processing BlockAdded event. BlockHash: ${event.block_hash}, ` + 
+            `Deploys: [${deploysStr}].`
+        );
+
         let block = await this.findBlockByHash(event.block_hash);
         if (block !== null) {
             // logs msg
