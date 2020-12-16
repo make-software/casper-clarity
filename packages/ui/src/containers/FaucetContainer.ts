@@ -66,7 +66,6 @@ export class FaucetContainer {
       if (needsUpdate) {
         anyNeededUpdate = true;
         const info = await this.tryGetDeployInfo(req.deployHashBase16);
-        console.log(info);
         if (info != null) {
           req.deployInfo = info;
           updated = true;
