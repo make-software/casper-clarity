@@ -17,7 +17,7 @@ export class BalanceServiceByJsonRPC {
    * @param blockHashBase16
    * @param publicKey
    */
-  async getAccountBalance(
+  public async getAccountBalance(
     blockHashBase16: string,
     publicKey: PublicKey
   ): Promise<number | undefined> {

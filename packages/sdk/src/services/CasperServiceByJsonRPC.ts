@@ -6,8 +6,13 @@ interface RpcResult {
   api_version: string;
 }
 
+interface Peer {
+  node_id: string;
+  address: string;
+}
+
 export interface GetPeersResult extends RpcResult {
-  peers: Record<string, string>;
+  peers: Peer[];
 }
 
 interface LastAddedBlockInfo {
@@ -108,9 +113,34 @@ export interface BidInfo {
   funds_locked: null | string;
 }
 
+export interface ValidatorWeight {
+  public_key: string;
+  weight: string;
+}
+
+export interface EraValidators {
+  era_id: number;
+  validator_weights: ValidatorWeight[];
+}
+
+export interface Bid {
+  bonding_purse: string;
+  staked_amount: string;
+  delegation_rate: number;
+  reward: string;
+  // delegators: [],
+}
+
+export interface ValidatorBid {
+  public_key: string;
+  bid: Bid;
+}
+
 export interface ValidatorsInfoResult extends RpcResult {
-  era_validators: Record<string, Record<string, string>>;
-  bids: Record<string, BidInfo>;
+  state_root_hash: string;
+  block_height: number;
+  era_validators: EraValidators[];
+  bids: ValidatorBid[];
 }
 
 export class CasperServiceByJsonRPC {
@@ -127,7 +157,9 @@ export class CasperServiceByJsonRPC {
    *
    * @param deployHashBase16
    */
-  async getDeployInfo(deployHashBase16: string): Promise<GetDeployResult> {
+  public async getDeployInfo(
+    deployHashBase16: string
+  ): Promise<GetDeployResult> {
     return await this.client.request({
       method: 'info_get_deploy',
       params: {
@@ -136,7 +168,9 @@ export class CasperServiceByJsonRPC {
     });
   }
 
-  async getBlockInfo(blockHashBase16: JsonBlockHash): Promise<GetBlockResult> {
+  public async getBlockInfo(
+    blockHashBase16: JsonBlockHash
+  ): Promise<GetBlockResult> {
     return await this.client.request({
       method: 'chain_get_block',
       params: {
@@ -145,25 +179,25 @@ export class CasperServiceByJsonRPC {
     });
   }
 
-  async getLatestBlockInfo(): Promise<GetBlockResult> {
+  public async getLatestBlockInfo(): Promise<GetBlockResult> {
     return await this.client.request({
       method: 'chain_get_block'
     });
   }
 
-  async getPeers(): Promise<GetPeersResult> {
+  public async getPeers(): Promise<GetPeersResult> {
     return await this.client.request({
       method: 'info_get_peers'
     });
   }
 
-  async getStatus(): Promise<GetStatusResult> {
+  public async getStatus(): Promise<GetStatusResult> {
     return await this.client.request({
       method: 'info_get_status'
     });
   }
 
-  async getValidatorsInfo(): Promise<ValidatorsInfoResult> {
+  public async getValidatorsInfo(): Promise<ValidatorsInfoResult> {
     return await this.client.request({
       method: 'state_get_auction_info'
     });
@@ -172,7 +206,7 @@ export class CasperServiceByJsonRPC {
   /**
    * Get the reference to the balance so we can cache it.
    */
-  async getAccountBalanceUrefByPublicKeyHash(
+  public async getAccountBalanceUrefByPublicKeyHash(
     stateRootHash: string,
     accountHash: string
   ) {
@@ -187,7 +221,7 @@ export class CasperServiceByJsonRPC {
   /**
    * Get the reference to the balance so we can cache it.
    */
-  async getAccountBalanceUrefByPublicKey(
+  public async getAccountBalanceUrefByPublicKey(
     stateRootHash: string,
     publicKey: PublicKey
   ) {
@@ -197,7 +231,7 @@ export class CasperServiceByJsonRPC {
     );
   }
 
-  async getAccountBalance(
+  public async getAccountBalance(
     stateRootHash: string,
     balanceUref: string
   ): Promise<number> {
@@ -212,7 +246,9 @@ export class CasperServiceByJsonRPC {
       .then(res => parseInt(res.balance_value, 10));
   }
 
-  async getStateRootHash(blockHashBase16: JsonBlockHash): Promise<string> {
+  public async getStateRootHash(
+    blockHashBase16: JsonBlockHash
+  ): Promise<string> {
     return await this.client
       .request({
         method: 'chain_get_state_root_hash',
@@ -229,7 +265,11 @@ export class CasperServiceByJsonRPC {
    * @param key
    * @param path
    */
-  async getBlockState(stateRootHash: string, key: string, path: string[]) {
+  public async getBlockState(
+    stateRootHash: string,
+    key: string,
+    path: string[]
+  ) {
     return await this.client.request({
       method: 'state_get_item',
       params: {
@@ -240,7 +280,7 @@ export class CasperServiceByJsonRPC {
     });
   }
 
-  async deploy(signedDeploy: DeployUtil.Deploy) {
+  public async deploy(signedDeploy: DeployUtil.Deploy) {
     return await this.client.request({
       method: 'account_put_deploy',
       params: deployToJson(signedDeploy)

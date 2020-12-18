@@ -7,46 +7,59 @@ DOCKER_TAG ?= latest
 # https://stackoverflow.com/questions/5426934/why-this-makefile-removes-my-goal
 .SECONDARY:
 
+bootstrap: .make/bootstrap
+
+# Just alias for bootstrap
+setup: .make/bootstrap
+
 docker-build-all: \
 	docker-build/explorer \
+	docker-build/event-web-server \
+	docker-build/event-handler
 
-## Build local docker image to casperlabs/explorer:latest
 docker-build/explorer: .make/docker-build/explorer
 
-build-contracts: \
-	contracts/faucet_stored.wasm
+docker-build/event-web-server: .make/docker-build/event-web-server
 
-build-explorer: .make/npm/explorer
+docker-build/event-handler: .make/docker-build/event-handler
 
-contracts/faucet_stored.wasm:
-	./docker-buildenv.sh "cd smart-contract && make all"
+build-explorer: .make/npm/build-explorer
+
+build-event-store: .make/npm/build-event-store
+
+build-all: \
+	   build-explorer
+
+test:
+	yarn test
+	cd packages/event_store && npm test && cd -
 
 # install all package
-.make/npm/bootstrap:
-	./docker-buildenv.sh "yarn"
-	mkdir -p $(dir $@) && touch $@
+.make/bootstrap:
+	yarn bootstrap
 
-.make/npm/explorer: \
-	.make/npm/bootstrap \
+
+.make/npm/build-explorer: .make/bootstrap
 	# CI=false so on Drone it won't fail on warnings (currently about href).
-	./docker-buildenv.sh "\
-		  cd packages/sdk && yarn run build && cd - && \
-		  cd packages/ui && yarn run build && cd - && \
-		  cd packages/server && yarn run build && cd - \
-		"
+	yarn run build
 	mkdir -p $(dir $@) && touch $@
 
-.make/docker-build/explorer: \
-		Dockerfile \
-		build-explorer \
-		build-contracts
+.make/docker-build/explorer: build-explorer
 	docker build -t casperlabs/explorer:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
 
+.make/docker-build/event-web-server:
+	cd packages/event_store && \
+	docker build -t casperlabs/event-web-server:$(DOCKER_TAG) -f Dockerfile.web_server .
+	mkdir -p $(dir $@) && touch $@
+
+.make/docker-build/event-handler:
+	cd packages/event_store && \
+	docker build -t casperlabs/event-handler:$(DOCKER_TAG) -f Dockerfile.handler .
+	mkdir -p $(dir $@) && touch $@
+
 clean:
-	./docker-buildenv.sh "\
-		lerna clean -y && \
-		rm -rf node_modules && \
-		lerna run clean && \
-		rm -rf .make \
-	"
+	lerna clean -y || true
+	rm -rf node_modules
+	rm -rf packages/event_store/node_modules
+	rm -rf .make

@@ -3,9 +3,9 @@ import { observer } from 'mobx-react';
 
 import AuthContainer, {
   accountHashForEd25519,
+  getAccountHash,
   ImportAccountFormData,
-  NewAccountFormData,
-  getAccountHash
+  NewAccountFormData
 } from '../containers/AuthContainer';
 import {
   Button,
@@ -16,9 +16,11 @@ import {
 } from './Utils';
 import Modal from './Modal';
 
-import { FileSelect, Form, SelectField, TextField, TextArea } from './Forms';
+import { FileSelect, Form, SelectField, TextArea, TextField } from './Forms';
 import { ObservableValue } from '../lib/ObservableValueMap';
 import DataTable from './DataTable';
+import { Keys, PublicKey } from 'casper-client-sdk';
+import { decodeBase64 } from 'tweetnacl-ts';
 
 interface Props {
   auth: AuthContainer;
@@ -98,8 +100,12 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <SelectField
               id="id-signature-algorithm"
               label="Signature Algorithm"
-              value={'Ed25519'}
-              options={[{ label: 'Ed25519', value: 'Ed25519' }]}
+              value={importAccountForm.algo.value}
+              options={[
+                { label: 'Ed25519', value: Keys.SignatureAlgorithm.Ed25519 },
+                { label: 'Secp256K1', value: Keys.SignatureAlgorithm.Secp256K1 }
+              ]}
+              onChange={x => importAccountForm.algo.onChange(x)}
             />
             <TextField
               id="id-account-name"
@@ -110,9 +116,13 @@ export default class Accounts extends RefreshableComponent<Props, {}> {
             <TextField
               id="id-account-hash-base16"
               label="Account Hash"
-              fieldState={accountHashForEd25519(
-                importAccountForm.publicKeyBase64.value
-              )}
+              fieldState={
+                importAccountForm.publicKeyBase64.value &&
+                PublicKey.from(
+                  decodeBase64(importAccountForm.publicKeyBase64.value),
+                  importAccountForm.algo.value as Keys.SignatureAlgorithm
+                ).toAccountHex()
+              }
               readonly={true}
             />
             <TextField
