@@ -25,7 +25,7 @@ export default interface AuthService {
 
   isAuthenticated(): Promise<Boolean>;
 
-  getUser(): Promise<User>;
+  getUser(): Promise<User | undefined>;
 
   /** Show the login window. */
   login(): Promise<void>;
