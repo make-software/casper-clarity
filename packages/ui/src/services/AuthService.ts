@@ -25,7 +25,7 @@ export default interface AuthService {
 
   isAuthenticated(): Promise<Boolean>;
 
-  getUser(): Promise<User | undefined>;
+  getUser(): Promise<User | null>;
 
   /** Show the login window. */
   login(): Promise<void>;
@@ -124,7 +124,15 @@ export class Auth0Service implements AuthService {
 
   async getUser() {
     const auth0 = await this.getAuth0();
-    return await auth0.getUser();
+    const user = await auth0.getUser();
+    if (!user) {
+      return null;
+    }
+    return {
+      sub: user.sub!,
+      name: user.name!,
+      email: user.email
+    };
   }
 }
 
