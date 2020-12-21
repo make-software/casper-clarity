@@ -1184,11 +1184,17 @@ export class CLValue implements ToBytes {
     ]);
   }
 
-  static fromBytes(bytes: ByteArray): Result<CLValue> {
-    const bRes = ByteArrayValue.fromBytes(bytes);
-    if (bRes.hasError()) {
-      return Result.Err(bRes.error);
+  public static fromBytes(bytes: ByteArray): Result<CLValue> {
+    const bytesRes = ByteArrayValue.fromBytes(bytes);
+    if (bytesRes.hasError()) {
+      return Result.Err(bytesRes.error);
     }
+    const clTypeRes = CLTypeHelper.fromBytes(bytesRes.remainder);
+    if (clTypeRes.hasError()) {
+      return Result.Err(clTypeRes.error);
+    }
+    const clValue = new CLValue(bytesRes.value, clTypeRes.value);
+    return Result.Ok(clValue, clTypeRes.remainder);
   }
 
   public static fromBool = (b: boolean) => {
