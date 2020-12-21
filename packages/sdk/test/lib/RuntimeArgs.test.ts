@@ -6,7 +6,7 @@ import { toBytesU32 } from '../../src/lib/byterepr';
 describe(`RuntimeArgs`, () => {
   it('should serialize RuntimeArgs correctly', () => {
     const args = RuntimeArgs.fromMap({
-      foo: CLValue.fromI32(1)
+      foo: CLValue.i32(1)
     });
     const bytes = args.toBytes();
     expect(bytes).to.deep.eq(

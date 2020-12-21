@@ -347,23 +347,23 @@ export class Transfer extends ExecutableDeployItem {
   ) {
     super();
     const runtimeArgs = new RuntimeArgs([]);
-    runtimeArgs.insert('amount', CLValue.fromU512(amount));
+    runtimeArgs.insert('amount', CLValue.u512(amount));
     if (sourcePurse) {
-      runtimeArgs.insert('source', CLValue.fromURef(sourcePurse));
+      runtimeArgs.insert('source', CLValue.uref(sourcePurse));
     }
     if (target instanceof URef) {
-      runtimeArgs.insert('target', CLValue.fromURef(target));
+      runtimeArgs.insert('target', CLValue.uref(target));
     } else if (target instanceof PublicKey) {
-      runtimeArgs.insert('target', CLValue.fromBytes(target.toAccountHash()));
+      runtimeArgs.insert('target', CLValue.byteArray(target.toAccountHash()));
     } else {
       throw new Error('Please specify target');
     }
     if (!id) {
-      runtimeArgs.insert('id', CLValue.fromOption(null, CLTypeHelper.u64()));
+      runtimeArgs.insert('id', CLValue.option(null, CLTypeHelper.u64()));
     } else {
       runtimeArgs.insert(
         'id',
-        CLValue.fromOption(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
+        CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
       );
     }
     this.args = runtimeArgs.toBytes();
@@ -513,7 +513,7 @@ export const setSignature = (
  */
 export const standardPayment = (paymentAmount: bigint | JSBI) => {
   const paymentArgs = RuntimeArgs.fromMap({
-    amount: CLValue.fromU512(paymentAmount.toString())
+    amount: CLValue.u512(paymentAmount.toString())
   });
 
   return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());

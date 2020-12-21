@@ -154,7 +154,7 @@ describe(`numbers' toBytes`, () => {
     const truth = decodeBase16(
       '0100000015000000110000006765745f7061796d656e745f70757273650a'
     );
-    const bytes = toBytesVecT([CLValue.fromString('get_payment_purse')]);
+    const bytes = toBytesVecT([CLValue.string('get_payment_purse')]);
     expect(bytes).to.deep.eq(truth);
   });
 
@@ -260,7 +260,7 @@ describe(`numbers' toBytes`, () => {
   });
   it('should serialize ByteArray correctly', () => {
     const byteArray = Uint8Array.from(Array(32).fill(42));
-    const bytes = CLValue.fromBytes(byteArray).toBytes();
+    const bytes = CLValue.byteArray(byteArray).toBytes();
     expect(bytes).to.deep.eq(
       Uint8Array.from([
         32,

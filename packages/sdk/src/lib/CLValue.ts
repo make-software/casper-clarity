@@ -1068,7 +1068,7 @@ class ByteArrayValue extends CLTypedAndToBytes {
     return toBytesBytesArray(this.bytes);
   }
 
-  static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
+  public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
     const u32Res = U32.fromBytes(bytes);
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
@@ -1197,94 +1197,94 @@ export class CLValue implements ToBytes {
     return Result.Ok(clValue, clTypeRes.remainder);
   }
 
-  public static fromBool = (b: boolean) => {
+  public static bool = (b: boolean) => {
     return CLValue.fromT(new Bool(b));
   };
 
-  public static fromU8 = (u8: number) => {
+  public static u8 = (u8: number) => {
     return CLValue.fromT(new U8(u8));
   };
 
-  public static fromU32 = (u32: number) => {
+  public static u32 = (u32: number) => {
     return CLValue.fromT(new U32(u32));
   };
 
-  public static fromI32 = (i32: number) => {
+  public static i32 = (i32: number) => {
     return CLValue.fromT(new I32(i32));
   };
 
-  public static fromU64 = (u64: BigNumberish) => {
+  public static u64 = (u64: BigNumberish) => {
     return CLValue.fromT(new U64(u64));
   };
 
-  public static fromI64 = (i64: BigNumberish) => {
+  public static i64 = (i64: BigNumberish) => {
     return CLValue.fromT(new I64(i64));
   };
 
-  public static fromU128 = (u128: BigNumberish) => {
+  public static u128 = (u128: BigNumberish) => {
     return CLValue.fromT(new U128(u128));
   };
 
-  public static fromU256 = (u256: BigNumberish) => {
+  public static u256 = (u256: BigNumberish) => {
     return CLValue.fromT(new U256(u256));
   };
 
-  public static fromU512 = (u512: BigNumberish) => {
+  public static u512 = (u512: BigNumberish) => {
     return CLValue.fromT(new U512(u512));
   };
 
-  public static fromUnit = () => {
+  public static unit = () => {
     return CLValue.fromT(new Unit());
   };
 
-  public static fromString = (x: string) => {
+  public static string = (x: string) => {
     return CLValue.fromT(new StringValue(x));
   };
 
-  public static fromKey = (key: KeyValue) => {
+  public static key = (key: KeyValue) => {
     return CLValue.fromT(key);
   };
 
-  public static fromURef = (uRef: URef) => {
+  public static uref = (uRef: URef) => {
     return CLValue.fromT(uRef);
   };
 
-  public static fromStringList = (strings: string[]) => {
+  public static stringList = (strings: string[]) => {
     return new CLValue(
       toBytesStringList(strings),
       CLTypeHelper.list(SimpleType.String)
     );
   };
 
-  public static fromList<T extends CLTypedAndToBytes>(vec: T[]) {
+  public static list<T extends CLTypedAndToBytes>(vec: T[]) {
     return CLValue.fromT(new List(vec));
   }
 
-  public static fromTuple1<T extends CLTypedAndToBytes>(t0: T) {
+  public static tuple1<T extends CLTypedAndToBytes>(t0: T) {
     return CLValue.fromT(new Tuple1(t0));
   }
 
-  public static fromTuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
+  public static tuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
     return CLValue.fromT(new Tuple2(t0, t1));
   }
 
-  public static fromTuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
+  public static tuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
     return CLValue.fromT(new Tuple3(t0, t1, t2));
   }
 
-  public static fromOption(t: CLTypedAndToBytes | null, innerType?: CLType) {
+  public static option(t: CLTypedAndToBytes | null, innerType?: CLType) {
     return CLValue.fromT(new Option(t, innerType));
   }
 
-  public static fromMap(mapEntries: MapEntry[]) {
+  public static map(mapEntries: MapEntry[]) {
     return CLValue.fromT(new MapValue(mapEntries));
   }
 
-  public static fromPublicKey(publicKey: ByteArray) {
+  public static publicKey(publicKey: ByteArray) {
     return CLValue.fromT(PublicKey.fromEd25519(publicKey));
   }
 
-  public static fromBytes(bytes: ByteArray) {
+  public static byteArray(bytes: ByteArray) {
     return new CLValue(
       toBytesBytesArray(bytes),
       CLTypeHelper.byteArray(bytes.byteLength)
