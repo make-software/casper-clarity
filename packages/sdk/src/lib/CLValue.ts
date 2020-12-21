@@ -885,7 +885,7 @@ export class CLTypeHelper {
       case SimpleType.URef:
       case SimpleType.PublicKey:
         return Result.Ok<CLType>(tag as SimpleType, rem);
-      case ComplexType.Option:
+      case ComplexType.Option: {
         // 1 inner type
         const innerTypeRes = CLTypeHelper.fromBytes(rem);
         if (innerTypeRes.hasError()) {
@@ -896,7 +896,8 @@ export class CLTypeHelper {
           CLTypeHelper.option(innerTypeRes.value),
           innerTypeRes.remainder
         );
-      case ComplexType.List:
+      }
+      case ComplexType.List: {
         // 1 inner type
         const innerTypeRes = CLTypeHelper.fromBytes(rem);
         if (innerTypeRes.hasError()) {
@@ -907,17 +908,22 @@ export class CLTypeHelper {
           CLTypeHelper.list(innerTypeRes.value),
           innerTypeRes.remainder
         );
-      case ComplexType.ByteArray:
+      }
+      case ComplexType.ByteArray: {
         // size of bytes
         const sizeRes = U32.fromBytes(rem);
         if (sizeRes.hasError()) {
           return Result.Err(sizeRes.error);
         }
-        return Result.Ok(CLTypeHelper.byteArray(sizeRes.value));
+        return Result.Ok(
+          CLTypeHelper.byteArray(sizeRes.value.value as number),
+          sizeRes.remainder
+        );
+      }
       case ComplexType.Result:
         // todo(abner) support Result
         throw new Error('Result type is unsupported now');
-      case ComplexType.Map:
+      case ComplexType.Map: {
         // type of key
         const keyTypeRes = CLTypeHelper.fromBytes(rem);
         if (keyTypeRes.hasError()) {
@@ -931,8 +937,9 @@ export class CLTypeHelper {
           CLTypeHelper.map(keyTypeRes.value, valueTypeRes.value),
           valueTypeRes.remainder
         );
+      }
 
-      case ComplexType.Tuple1:
+      case ComplexType.Tuple1: {
         // 1 inner type
         const innerTypeRes = CLTypeHelper.fromBytes(rem);
         if (innerTypeRes.hasError()) {
@@ -943,7 +950,8 @@ export class CLTypeHelper {
           CLTypeHelper.tuple1(innerTypeRes.value),
           innerTypeRes.remainder
         );
-      case ComplexType.Tuple2:
+      }
+      case ComplexType.Tuple2: {
         // 2 inner types
         const innerType1Res = CLTypeHelper.fromBytes(rem);
         if (innerType1Res.hasError()) {
@@ -959,7 +967,8 @@ export class CLTypeHelper {
           CLTypeHelper.tuple2(innerType1Res.value, innerType2Res.value),
           innerType2Res.remainder
         );
-      case ComplexType.Tuple3:
+      }
+      case ComplexType.Tuple3: {
         // 3 inner types
         const innerType1Res = CLTypeHelper.fromBytes(rem);
         if (innerType1Res.hasError()) {
@@ -984,6 +993,7 @@ export class CLTypeHelper {
           ),
           innerType3Res.remainder
         );
+      }
       case ComplexType.Any:
         // todo(abner) support Any
         throw new Error('Any type is unsupported now');
