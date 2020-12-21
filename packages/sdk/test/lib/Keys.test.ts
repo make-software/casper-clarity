@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { decodeBase16, decodeBase64, encodeBase16 } from '../../src';
+import { decodeBase16, decodeBase64, encodeBase16, PublicKey } from '../../src';
 import { Ed25519, Secp256K1 } from '../../src/lib/Keys';
 import { byteHash } from '../../src/lib/Contracts';
 import * as nacl from 'tweetnacl-ts';

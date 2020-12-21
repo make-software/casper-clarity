@@ -1,8 +1,28 @@
 import { concat } from '@ethersproject/bytes';
-import { CLType, CLTypedAndToBytes, CLTypeHelper } from './CLValue';
+import {
+  BytesDeserializableStatic,
+  CLType,
+  CLTypedAndToBytes,
+  CLTypeHelper,
+  FromBytesError,
+  Result,
+  staticImplements
+} from './CLValue';
 import { decodeBase16 } from './Conversions';
 
 const FORMATTED_STRING_PREFIX: string = 'uref-';
+/**
+ * Length of [[URef]] address field.
+ * @internal
+ */
+const UREF_ADDR_LENGTH = 32;
+/**
+ * Length of [[ACCESS_RIGHT]] field.
+ * @internal
+ */
+const ACCESS_RIGHT_LENGTH = 1;
+
+const UREF_BYTES_LENGTH = UREF_ADDR_LENGTH + ACCESS_RIGHT_LENGTH;
 
 export enum AccessRights {
   // No permissions
@@ -24,6 +44,7 @@ export enum AccessRights {
 }
 type ByteArray = Uint8Array;
 
+@staticImplements<BytesDeserializableStatic<URef>>()
 export class URef extends CLTypedAndToBytes {
   /**
    * Constructs new instance of URef.
@@ -65,5 +86,16 @@ export class URef extends CLTypedAndToBytes {
 
   public clType(): CLType {
     return CLTypeHelper.uRef();
+  }
+
+  public static fromBytes(bytes: ByteArray): Result<URef> {
+    if (bytes.length < UREF_BYTES_LENGTH) {
+      return Result.Err<URef>(FromBytesError.EarlyEndOfStream);
+    }
+
+    const urefBytes = bytes.subarray(0, UREF_ADDR_LENGTH);
+    const accessRights = bytes[UREF_BYTES_LENGTH - 1];
+    const uref = new URef(urefBytes, accessRights);
+    return Result.Ok(uref, bytes.subarray(UREF_BYTES_LENGTH));
   }
 }

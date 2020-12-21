@@ -8,14 +8,27 @@ import {
   toBytesU32,
   toBytesVecT
 } from './byterepr';
-import { BigNumberish } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { URef } from './uref';
 import { decodeBase16, encodeBase16 } from './Conversions';
 import { Option } from './option';
 import { byteHash } from './Contracts';
 import { SignatureAlgorithm } from './Keys';
 
+const ED25519_PUBLIC_KEY_LENGTH = 32;
+const SECP256K1_PUBLIC_KEY_LENGTH = 33;
 type ByteArray = Uint8Array;
+
+type Type<T> = new (...args: any[]) => T;
+
+/**
+ * Static interface  declaration
+ */
+export interface BytesDeserializableStatic<T> extends Type<BytesSerializable> {
+  fromBytes(bytes: ByteArray): Result<T>;
+}
+
+export interface BytesSerializable extends CLTyped, ToBytes {}
 
 export interface CLTyped {
   /**
@@ -25,16 +38,10 @@ export interface CLTyped {
 }
 
 export interface ToBytes {
-  /**
-   * Serializes a `Key` into an array of bytes.
-   */
   toBytes: () => ByteArray;
 }
 
-const ED25519_TAG = 1;
-const SECP256K1_TAG = 2;
-
-export abstract class CLTypedAndToBytes implements ToBytes, CLTyped {
+export abstract class CLTypedAndToBytes implements BytesSerializable {
   public abstract clType(): CLType;
 
   public abstract toBytes(): ByteArray;
@@ -43,6 +50,16 @@ export abstract class CLTypedAndToBytes implements ToBytes, CLTyped {
     return CLTypeHelper.toBytesHelper(this.clType());
   }
 }
+
+export function staticImplements<T>() {
+  // @ts-ignore
+  return (constructor: T) => {
+    // @ts-ignore
+  };
+}
+
+const ED25519_TAG = 1;
+const SECP256K1_TAG = 2;
 
 export enum SimpleType {
   Bool = 0,
@@ -61,7 +78,98 @@ export enum SimpleType {
   PublicKey = 22
 }
 
-class Bool extends CLTypedAndToBytes {
+enum ComplexType {
+  Option = 13,
+  List = 14,
+  ByteArray = 15,
+  Result = 16,
+  Map = 17,
+  Tuple1 = 18,
+  Tuple2 = 19,
+  Tuple3 = 20,
+  Any = 21
+}
+
+/**
+ * Enum representing possible results of deserialization.
+ */
+export enum FromBytesError {
+  /**
+   * Last operation was a success
+   */
+  Ok = 0,
+  /**
+   * Early end of stream
+   */
+  EarlyEndOfStream = 1,
+  /**
+   * Unexpected data encountered while decoding byte stream
+   */
+  FormattingError = 2
+}
+
+/**
+ * Class representing a result of an operation that might have failed. Can contain either a value
+ * resulting from a successful completion of a calculation, or an error. Similar to `Result` in Rust
+ * or `Either` in Haskell.
+ */
+export class Result<T> {
+  /**
+   * Creates new Result with value
+   * @param value value (success) or null (error)
+   * @param error FromBytesError code
+   * @param rem Remaining input stream
+   */
+  constructor(
+    private val: T | null,
+    private rem: ByteArray | null,
+    public error: FromBytesError
+  ) {}
+
+  public static Err<T>(errorCode: FromBytesError) {
+    return new Result<T>(null, null, errorCode);
+  }
+
+  public static Ok<T>(val: T, rem: ByteArray) {
+    return new Result<T>(val, rem, FromBytesError.Ok);
+  }
+
+  get remainder(): ByteArray {
+    if (this.rem === null) {
+      throw new Error("Don't have remainder");
+    }
+    return this.rem;
+  }
+
+  /**
+   * Assumes that reference wrapper contains a value and then returns it
+   */
+  get value(): T {
+    if (!this.hasValue()) {
+      throw new Error("Don't have value");
+    }
+    return this.val!;
+  }
+
+  /**
+   * Checks if given Result contains a value
+   */
+  public hasValue(): boolean {
+    return this.val !== null;
+  }
+
+  /**
+   * Checks if error value is set.
+   *
+   * Truth also implies !hasValue(), false value implies hasValue()
+   */
+  public hasError(): boolean {
+    return this.error !== FromBytesError.Ok;
+  }
+}
+
+@staticImplements<BytesDeserializableStatic<Bool>>()
+export class Bool extends CLTypedAndToBytes {
   constructor(private b: boolean) {
     super();
   }
@@ -72,6 +180,19 @@ class Bool extends CLTypedAndToBytes {
 
   public clType(): CLType {
     return SimpleType.Bool;
+  }
+
+  public static fromBytes(bytes: ByteArray): Result<Bool> {
+    if (bytes.length === 0) {
+      return Result.Err<Bool>(FromBytesError.EarlyEndOfStream);
+    }
+    if (bytes[0] === 1) {
+      return Result.Ok<Bool>(new Bool(true), bytes.subarray(1));
+    } else if (bytes[0] === 0) {
+      return Result.Ok<Bool>(new Bool(false), bytes.subarray(1));
+    } else {
+      return Result.Err<Bool>(FromBytesError.FormattingError);
+    }
   }
 }
 
@@ -96,7 +217,8 @@ abstract class NumberCoder extends CLTypedAndToBytes {
   public abstract clType(): CLType;
 }
 
-class U8 extends NumberCoder {
+@staticImplements<BytesDeserializableStatic<U8>>()
+export class U8 extends NumberCoder {
   constructor(u8: number) {
     super(8, false, u8);
   }
@@ -104,8 +226,16 @@ class U8 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U8;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U8> {
+    if (bytes.length === 0) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    return Result.Ok(new U8(bytes[0]), bytes.subarray(1));
+  }
 }
 
+@staticImplements<BytesDeserializableStatic<U32>>()
 export class U32 extends NumberCoder {
   constructor(n: number) {
     super(32, false, n);
@@ -114,9 +244,20 @@ export class U32 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U32;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U32> {
+    if (bytes.length < 4) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const u32Bytes = Buffer.from(bytes.subarray(0, 4));
+    const u32 = u32Bytes.readUInt32LE();
+
+    return Result.Ok(new U32(u32), bytes.subarray(4));
+  }
 }
 
-class I32 extends NumberCoder {
+@staticImplements<BytesDeserializableStatic<I32>>()
+export class I32 extends NumberCoder {
   constructor(n: number) {
     super(32, true, n);
   }
@@ -124,9 +265,19 @@ class I32 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.I32;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<I32> {
+    if (bytes.length < 4) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const i32Bytes = Buffer.from(bytes.subarray(0, 4));
+    const i32 = i32Bytes.readInt32LE();
+    return Result.Ok(new I32(i32), bytes.subarray(4));
+  }
 }
 
-class U64 extends NumberCoder {
+@staticImplements<BytesDeserializableStatic<U64>>()
+export class U64 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(64, false, n);
   }
@@ -134,9 +285,19 @@ class U64 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U64;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U64> {
+    if (bytes.length < 8) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const u64Bytes = bytes.subarray(0, 8);
+    const rem = bytes.subarray(8);
+    return Result.Ok(new U64(BigNumber.from(u64Bytes.reverse())), rem);
+  }
 }
 
-class I64 extends NumberCoder {
+@staticImplements<BytesDeserializableStatic<I64>>()
+export class I64 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(64, true, n);
   }
@@ -144,9 +305,22 @@ class I64 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.I64;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<I64> {
+    if (bytes.length < 8) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const i64Bytes = bytes.subarray(0, 8);
+    const rem = bytes.subarray(8);
+    return Result.Ok(
+      new I64(BigNumber.from(i64Bytes.reverse()).fromTwos(64)),
+      rem
+    );
+  }
 }
 
-class U128 extends NumberCoder {
+@staticImplements<BytesDeserializableStatic<U128>>()
+export class U128 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(128, false, n);
   }
@@ -154,8 +328,25 @@ class U128 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U128;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U128> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const n = bytes[0];
+    if (n === 0 || n > 16) {
+      return Result.Err(FromBytesError.FormattingError);
+    }
+    if (n + 1 > bytes.length) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const u128Bytes = bytes.subarray(1, 1 + n);
+    const rem = bytes.subarray(1 + n);
+    return Result.Ok(new U128(BigNumber.from(u128Bytes.reverse())), rem);
+  }
 }
 
+@staticImplements<BytesDeserializableStatic<U256>>()
 class U256 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(256, false, n);
@@ -164,8 +355,25 @@ class U256 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U256;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U128> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const n = bytes[0];
+    if (n === 0 || n > 32) {
+      return Result.Err(FromBytesError.FormattingError);
+    }
+    if (n + 1 > bytes.length) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const u256Bytes = bytes.subarray(1, 1 + n);
+    const rem = bytes.subarray(1 + n);
+    return Result.Ok(new U256(BigNumber.from(u256Bytes.reverse())), rem);
+  }
 }
 
+@staticImplements<BytesDeserializableStatic<U512>>()
 class U512 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(512, false, n);
@@ -174,9 +382,26 @@ class U512 extends NumberCoder {
   public clType(): CLType {
     return SimpleType.U512;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<U512> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const n = bytes[0];
+    if (n === 0 || n > 64) {
+      return Result.Err(FromBytesError.FormattingError);
+    }
+    if (n + 1 > bytes.length) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const u512Bytes = bytes.subarray(1, 1 + n);
+    const rem = bytes.subarray(1 + n);
+    return Result.Ok(new U512(BigNumber.from(u512Bytes.reverse())), rem);
+  }
 }
 
-class Unit extends CLTypedAndToBytes {
+@staticImplements<BytesDeserializableStatic<Unit>>()
+export class Unit extends CLTypedAndToBytes {
   public clType(): CLType {
     return SimpleType.Unit;
   }
@@ -184,10 +409,15 @@ class Unit extends CLTypedAndToBytes {
   public toBytes(): ByteArray {
     return Uint8Array.from([]);
   }
+
+  public static fromBytes(bytes: ByteArray): Result<Unit> {
+    return Result.Ok<Unit>(new Unit(), bytes);
+  }
 }
 
-class StringValue extends CLTypedAndToBytes {
-  constructor(private str: string) {
+@staticImplements<BytesDeserializableStatic<StringValue>>()
+export class StringValue extends CLTypedAndToBytes {
+  constructor(public str: string) {
     super();
   }
 
@@ -198,7 +428,77 @@ class StringValue extends CLTypedAndToBytes {
   public clType(): CLType {
     return SimpleType.String;
   }
+
+  public static fromBytes(bytes: ByteArray): Result<StringValue> {
+    const res = U32.fromBytes(bytes);
+    if (res.hasError()) {
+      return Result.Err(res.error);
+    }
+    const len = res.value.value as number;
+    const str = Buffer.from(res.remainder.subarray(0, len)).toString('utf8');
+    return Result.Ok<StringValue>(
+      new StringValue(str),
+      res.remainder.subarray(len)
+    );
+  }
 }
+
+// const fromBytesComplexType = (clType: CLTyped,)
+const fromBytesSimpleType = (simpleType: SimpleType, bytes: ByteArray) => {
+  let innerRes: Result<CLTypedAndToBytes>;
+  switch (simpleType) {
+    case SimpleType.Bool:
+      innerRes = Bool.fromBytes(bytes);
+      break;
+    case SimpleType.I32:
+      innerRes = I32.fromBytes(bytes);
+      break;
+    case SimpleType.I64:
+      innerRes = I64.fromBytes(bytes);
+      break;
+    case SimpleType.U8:
+      innerRes = U8.fromBytes(bytes);
+      break;
+    case SimpleType.U32:
+      innerRes = U32.fromBytes(bytes);
+      break;
+    case SimpleType.U64:
+      innerRes = U64.fromBytes(bytes);
+      break;
+    case SimpleType.U128:
+      innerRes = U128.fromBytes(bytes);
+      break;
+    case SimpleType.U256:
+      innerRes = U256.fromBytes(bytes);
+      break;
+    case SimpleType.U512:
+      innerRes = U512.fromBytes(bytes);
+      break;
+    case SimpleType.Unit:
+      innerRes = Unit.fromBytes(bytes);
+      break;
+    case SimpleType.String:
+      innerRes = StringValue.fromBytes(bytes);
+      break;
+    case SimpleType.Key:
+      innerRes = KeyValue.fromBytes(bytes);
+      break;
+    case SimpleType.URef:
+      innerRes = URef.fromBytes(bytes);
+      break;
+    case SimpleType.PublicKey:
+      innerRes = PublicKey.fromBytes(bytes);
+      break;
+    default:
+      innerRes = Result.Err(FromBytesError.FormattingError);
+      break;
+  }
+  if (innerRes.hasError()) {
+    return Result.Err(innerRes.error);
+  } else {
+    return Result.Ok(new Tuple1(innerRes.value), innerRes.remainder);
+  }
+};
 
 class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   constructor(private vec: T[]) {
@@ -229,6 +529,11 @@ class Tuple1 extends CLTypedAndToBytes {
   public clType(): CLType {
     return CLTypeHelper.tuple1(this.v0.clType());
   }
+
+  public static fromBytes(
+    innerTypeTag: number,
+    bytes: ByteArray
+  ): Result<Tuple1> {}
 }
 
 class Tuple2 extends CLTypedAndToBytes {
@@ -267,8 +572,9 @@ class Tuple3 extends CLTypedAndToBytes {
   }
 }
 
+@staticImplements<BytesDeserializableStatic<PublicKey>>()
 export class PublicKey extends CLTypedAndToBytes {
-  private constructor(public rawPublicKey: ByteArray, private tag: number) {
+  constructor(public rawPublicKey: ByteArray, private tag: number) {
     super();
   }
 
@@ -363,6 +669,36 @@ export class PublicKey extends CLTypedAndToBytes {
         throw new Error('Unsupported type of public key');
     }
   }
+
+  /** Deserializes a `PublicKey` from an array of bytes. */
+  public static fromBytes(bytes: ByteArray): Result<PublicKey> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const variant = bytes[0];
+    let currentPos = 1;
+
+    let expectedPublicKeySize: number;
+
+    switch (variant) {
+      case ED25519_TAG:
+        expectedPublicKeySize = ED25519_PUBLIC_KEY_LENGTH;
+        break;
+      case SECP256K1_TAG:
+        expectedPublicKeySize = SECP256K1_PUBLIC_KEY_LENGTH;
+        break;
+      default:
+        return Result.Err<PublicKey>(FromBytesError.FormattingError);
+    }
+    const publicKeyBytes = bytes.subarray(
+      currentPos,
+      currentPos + expectedPublicKeySize
+    );
+    currentPos += expectedPublicKeySize;
+
+    const publicKey = new PublicKey(publicKeyBytes, variant);
+    return Result.Ok(publicKey, bytes.subarray(currentPos));
+  }
 }
 
 export interface MapEntry {
@@ -389,13 +725,13 @@ class MapValue extends CLTypedAndToBytes {
 }
 
 class OptionType {
-  public tag = 13;
+  public tag = ComplexType.Option;
 
   constructor(public innerType: CLType) {}
 }
 
 class ListType {
-  public tag = 14;
+  public tag = ComplexType.List;
   public innerType: CLType;
 
   constructor(innerType: CLType) {
@@ -404,31 +740,31 @@ class ListType {
 }
 
 class ByteArrayType {
-  public tag = 15;
+  public tag = ComplexType.ByteArray;
 
   constructor(public size: number) {}
 }
 
 class MapType {
-  public tag = 17;
+  public tag = ComplexType.Map;
 
   constructor(public keyType: CLType, public valueType: CLType) {}
 }
 
 class Tuple1Type {
-  public tag = 18;
+  public tag = ComplexType.Tuple1;
 
   constructor(public t0: CLType) {}
 }
 
 class Tuple2Type {
-  public tag = 19;
+  public tag = ComplexType.Tuple2;
 
   constructor(public t0: CLType, public t1: CLType) {}
 }
 
 class Tuple3Type {
-  public tag = 20;
+  public tag = ComplexType.Tuple3;
 
   constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
 }
@@ -528,6 +864,121 @@ export class CLTypeHelper {
     return new Tuple3Type(t0, t1, t2);
   }
 
+  public static fromBytes(bytes: ByteArray): Result<CLType> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const tag = bytes[0];
+    const rem = bytes.subarray(1);
+    switch (tag) {
+      case SimpleType.Bool:
+      case SimpleType.I32:
+      case SimpleType.I64:
+      case SimpleType.U8:
+      case SimpleType.U32:
+      case SimpleType.U64:
+      case SimpleType.U256:
+      case SimpleType.U512:
+      case SimpleType.Unit:
+      case SimpleType.String:
+      case SimpleType.Key:
+      case SimpleType.URef:
+      case SimpleType.PublicKey:
+        return Result.Ok<CLType>(tag as SimpleType, rem);
+      case ComplexType.Option:
+        // 1 inner type
+        const innerTypeRes = CLTypeHelper.fromBytes(rem);
+        if (innerTypeRes.hasError()) {
+          return Result.Err(innerTypeRes.error);
+        }
+
+        return Result.Ok(
+          CLTypeHelper.option(innerTypeRes.value),
+          innerTypeRes.remainder
+        );
+      case ComplexType.List:
+        // 1 inner type
+        const innerTypeRes = CLTypeHelper.fromBytes(rem);
+        if (innerTypeRes.hasError()) {
+          return Result.Err(innerTypeRes.error);
+        }
+
+        return Result.Ok(
+          CLTypeHelper.list(innerTypeRes.value),
+          innerTypeRes.remainder
+        );
+      case ComplexType.ByteArray:
+        // size of bytes
+        const sizeRes = U32.fromBytes(rem);
+        if (sizeRes.hasError()) {
+          return Result.Err(sizeRes.error);
+        }
+        return Result.Ok(CLTypeHelper.byteArray(sizeRes.value));
+      case ComplexType.Result:
+        // todo(abner) support Result
+        throw new Error('Result type is unsupported now');
+      case ComplexType.Map:
+      case ComplexType.Tuple1:
+        // 1 inner type
+        const innerTypeRes = CLTypeHelper.fromBytes(rem);
+        if (innerTypeRes.hasError()) {
+          return Result.Err(innerTypeRes.error);
+        }
+
+        return Result.Ok(
+          CLTypeHelper.tuple1(innerTypeRes.value),
+          innerTypeRes.remainder
+        );
+      case ComplexType.Tuple2:
+        // 2 inner types
+        const innerType1Res = CLTypeHelper.fromBytes(rem);
+        if (innerType1Res.hasError()) {
+          return Result.Err(innerType1Res.error);
+        }
+
+        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        if (innerType2Res.hasError()) {
+          return Result.Err(innerType2Res.error);
+        }
+
+        return Result.Ok(
+          CLTypeHelper.tuple2(innerType1Res.value, innerType2Res.value),
+          innerType2Res.remainder
+        );
+      case ComplexType.Tuple3:
+        // 3 inner types
+        const innerType1Res = CLTypeHelper.fromBytes(rem);
+        if (innerType1Res.hasError()) {
+          return Result.Err(innerType1Res.error);
+        }
+
+        const innerType2Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        if (innerType2Res.hasError()) {
+          return Result.Err(innerType2Res.error);
+        }
+
+        const innerType3Res = CLTypeHelper.fromBytes(innerType1Res.remainder);
+        if (innerType3Res.hasError()) {
+          return Result.Err(innerType3Res.error);
+        }
+
+        return Result.Ok(
+          CLTypeHelper.tuple3(
+            innerType1Res.value,
+            innerType2Res.value,
+            innerType3Res.value
+          ),
+          innerType3Res.remainder
+        );
+      case ComplexType.Any:
+        // todo(abner) support Any
+        throw new Error('Any type is unsupported now');
+        break;
+      default:
+        return Result.Err(FromBytesError.FormattingError);
+    }
+  }
+
   public static toBytesHelper(type: CLType): ByteArray {
     if (type instanceof ListType) {
       return concat([
@@ -589,6 +1040,7 @@ export class CLTypeHelper {
   }
 }
 
+@staticImplements<BytesDeserializableStatic<ByteArrayValue>>()
 class ByteArrayValue extends CLTypedAndToBytes {
   constructor(private bytes: ByteArray) {
     super();
@@ -600,6 +1052,20 @@ class ByteArrayValue extends CLTypedAndToBytes {
 
   public toBytes(): ByteArray {
     return toBytesBytesArray(this.bytes);
+  }
+
+  static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
+    const u32Res = U32.fromBytes(bytes);
+    if (u32Res.hasError()) {
+      return Result.Err(u32Res.error);
+    }
+    const size = u32Res.value.value as number;
+    if (u32Res.remainder.length < size) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const b = new ByteArrayValue(u32Res.remainder.subarray(0, length));
+    const rem = u32Res.remainder.subarray(length);
+    return Result.Ok(b, rem);
   }
 }
 
@@ -702,6 +1168,13 @@ export class CLValue implements ToBytes {
       toBytesArrayU8(this.bytes),
       CLTypeHelper.toBytesHelper(this.clType)
     ]);
+  }
+
+  static fromBytes(bytes: ByteArray): Result<CLValue> {
+    const bRes = ByteArrayValue.fromBytes(bytes);
+    if (bRes.hasError()) {
+      return Result.Err(bRes.error);
+    }
   }
 
   public static fromBool = (b: boolean) => {
@@ -812,6 +1285,7 @@ export enum KeyVariant {
 const ACCOUNT_HASH_LENGTH: number = 32;
 
 /** A cryptographic public key. */
+@staticImplements<BytesDeserializableStatic<AccountHash>>()
 export class AccountHash extends CLTypedAndToBytes {
   /**
    * Constructs a new `AccountHash`.
@@ -830,12 +1304,26 @@ export class AccountHash extends CLTypedAndToBytes {
   public clType(): CLType {
     return CLTypeHelper.byteArray(ACCOUNT_HASH_LENGTH);
   }
+
+  public static fromBytes(bytes: ByteArray): Result<AccountHash> {
+    if (bytes.length < ACCOUNT_HASH_LENGTH) {
+      return Result.Err<AccountHash>(FromBytesError.EarlyEndOfStream);
+    }
+
+    const accountHashBytes = bytes.subarray(0, ACCOUNT_HASH_LENGTH);
+    const accountHash = new AccountHash(accountHashBytes);
+    return Result.Ok<AccountHash>(
+      accountHash,
+      bytes.subarray(ACCOUNT_HASH_LENGTH)
+    );
+  }
 }
 
 /**
  * The type under which data (e.g. [[CLValue]]s, smart contracts, user accounts)
  * are indexed on the network.
  */
+@staticImplements<BytesDeserializableStatic<KeyValue>>()
 export class KeyValue extends CLTypedAndToBytes {
   public variant: KeyVariant;
   public hash: Uint8Array | null;
@@ -880,6 +1368,39 @@ export class KeyValue extends CLTypedAndToBytes {
       return concat([Uint8Array.from([this.variant]), this.uRef!.toBytes()]);
     } else {
       throw new Error('Unknown variant');
+    }
+  }
+
+  public static fromBytes(bytes: ByteArray): Result<KeyValue> {
+    if (bytes.length < 1) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const tag = bytes[0];
+    let currentPos = 1;
+
+    if (tag === KeyVariant.HASH_ID) {
+      const hashBytes = bytes.subarray(currentPos, 32 + currentPos);
+      currentPos += 32;
+      const key = KeyValue.fromHash(hashBytes);
+      return Result.Ok<KeyValue>(key, bytes.subarray(currentPos));
+    } else if (tag === KeyVariant.UREF_ID) {
+      const urefBytes = bytes.subarray(1);
+      const urefResult = URef.fromBytes(urefBytes);
+      if (urefResult.hasError()) {
+        return Result.Err<KeyValue>(urefResult.error);
+      }
+      const key = KeyValue.fromURef(urefResult.value);
+      return Result.Ok(key, urefResult.remainder);
+    } else if (tag === KeyVariant.ACCOUNT_ID) {
+      const accountHashBytes = bytes.subarray(1);
+      const accountHashResult = AccountHash.fromBytes(accountHashBytes);
+      if (accountHashResult.hasError()) {
+        return Result.Err(accountHashResult.error);
+      }
+      const key = KeyValue.fromAccount(accountHashResult.value);
+      return Result.Ok(key, accountHashResult.remainder);
+    } else {
+      return Result.Err(FromBytesError.FormattingError);
     }
   }
 }
