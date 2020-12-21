@@ -88,24 +88,28 @@ Cypress.Commands.add('connectSigner', () => {
     });
     Signer.forceConnection();
 })
+
 Cypress.Commands.add('disconnectSigner', () => {
     Cypress.log({
         name: 'Disconnecting from Signer...'
     });
     Signer.forceDisconnect();
 });
+
 Cypress.Commands.add('checkVaultExists', () => {
     Cypress.log({
         name: 'Checking for existing vault...'
     });
     return Signer.hasCreatedVault();
 })
+
 Cypress.Commands.add('resetExistingVault', () => {
     Cypress.log({
         name: 'Resetting existing vault...'
     });
     Signer.resetExistingVault();
 })
+
 Cypress.Commands.add('createTestVault', (password) => {
     Cypress.log({
         name: 'Creating test vault...',
@@ -117,6 +121,7 @@ Cypress.Commands.add('createTestVault', (password) => {
     });
     Signer.createNewVault(password);
 })
+
 Cypress.Commands.add('createTestAccount', (name, privateKey) => {
     Cypress.log({
         name: 'Creating test account...',
@@ -129,6 +134,7 @@ Cypress.Commands.add('createTestAccount', (name, privateKey) => {
     });
     Signer.createTestAccount(name, privateKey)
 })
+
 Cypress.Commands.add('getMessageID', () => {
     let msgID = Signer.getToSignMessageID();
     Cypress.log({
@@ -141,6 +147,7 @@ Cypress.Commands.add('getMessageID', () => {
     });
     return msgID;
 })
+
 Cypress.Commands.add('signTestDeploy', (msgId) => {
     Cypress.log({
         name: 'Signing test deploy...',

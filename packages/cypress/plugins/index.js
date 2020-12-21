@@ -22,19 +22,19 @@ module.exports = (on, config) => {
     console.log(launchOptions.args) // print all current args
 
     if (browser.family === 'chromium' && browser.name !== 'electron') {
-      
-      // Signer build path goes here
-      launchOptions.extensions.push('~/CasperLabs/signer/build')
+      // auto open devtools
+      //launchOptions.args.push('--auto-open-devtools-for-tabs')
+      launchOptions.extensions.push('packages/signer/build');
 
       // whatever you return here becomes the launchOptions
-      return launchOptions
+      return launchOptions;
     }
 
     if (browser.family === 'firefox') {
       // auto open devtools
-      launchOptions.args.push('-devtools')
+      launchOptions.args.push('-devtools');
 
-      return launchOptions
+      return launchOptions;
     }
   })
 }
