@@ -918,6 +918,20 @@ export class CLTypeHelper {
         // todo(abner) support Result
         throw new Error('Result type is unsupported now');
       case ComplexType.Map:
+        // type of key
+        const keyTypeRes = CLTypeHelper.fromBytes(rem);
+        if (keyTypeRes.hasError()) {
+          return Result.Err(keyTypeRes.error);
+        }
+        const valueTypeRes = CLTypeHelper.fromBytes(keyTypeRes.remainder);
+        if (valueTypeRes.hasError()) {
+          return Result.Err(valueTypeRes.error);
+        }
+        return Result.Ok(
+          CLTypeHelper.map(keyTypeRes.value, valueTypeRes.value),
+          valueTypeRes.remainder
+        );
+
       case ComplexType.Tuple1:
         // 1 inner type
         const innerTypeRes = CLTypeHelper.fromBytes(rem);
