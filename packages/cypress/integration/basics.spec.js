@@ -11,12 +11,12 @@ context('Basic Functionality', () => {
         cy.visit('http://localhost:8000')
 
         cy.disconnectSigner();
-        // cy.checkVaultExists()
-        //     .then((vault) => {
-        //         if(vault) {
-        //             cy.resetExistingVault();
-        //         }
-        //     })
+        cy.checkVaultExists()
+            .then((vault) => {
+                if(vault) {
+                    cy.resetExistingVault();
+                }
+            })
 
         // Aliases for side nav tabs
         sideNavLinks = {
@@ -52,287 +52,287 @@ context('Basic Functionality', () => {
 
     it('Should error if Signer not connected', () => {
         
-        // // Create vault but don't connect
-        // cy.createTestVault('cypress')
-        // .then(() => {
-        //     // This pause is required to allow the vault creation to complete prior to the account creation attempt
-        //     cy.wait(1000);
-        //     cy.createTestAccount(
-        //         'Cypress',
-        //         'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
-        //     );
-        // })
+        // Create vault but don't connect
+        cy.createTestVault('cypress')
+        .then(() => {
+            // This pause is required to allow the vault creation to complete prior to the account creation attempt
+            cy.wait(1000);
+            cy.createTestAccount(
+                'Cypress',
+                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+            );
+        })
 
-        // // Go to deploy contract screen
-        // cy.get(sideNavLinks.DeployContract)
-        //     .click()
+        // Go to deploy contract screen
+        cy.get(sideNavLinks.DeployContract)
+            .click()
 
-        // // Fill out main form
-        // cy.get('#id-contract-type')
-        //     .select('Name')
-        //     .should('have.value', 'Name')
-        //     .then(() => {
-        //         cy.get('#id-contract-hash')
-        //             .type('erc20')
-        //             .should('have.value', 'erc20')
-        //             .then(() => {
-        //                 cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
-        //                     .should('have.value', 'call')
-        //                     .clear()
-        //                     .type('transfer')
-        //                     .should('have.value', 'transfer')
-        //                     .then(() => {
-        //                         cy.get('#id-payment-amount')
-        //                             .clear()
-        //                             // Clearing leaves a 0 in the input box
-        //                             .type('10000')
-        //                             .should('have.value', '100000')
-        //                     })
-        //             })
-        //     })
+        // Fill out main form
+        cy.get('#id-contract-type')
+            .select('Name')
+            .should('have.value', 'Name')
+            .then(() => {
+                cy.get('#id-contract-hash')
+                    .type('erc20')
+                    .should('have.value', 'erc20')
+                    .then(() => {
+                        cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
+                            .should('have.value', 'call')
+                            .clear()
+                            .type('transfer')
+                            .should('have.value', 'transfer')
+                            .then(() => {
+                                cy.get('#id-payment-amount')
+                                    .clear()
+                                    // Clearing leaves a 0 in the input box
+                                    .type('10000')
+                                    .should('have.value', '100000')
+                            })
+                    })
+            })
         
-        // // For type codes inspect the dropdown in the Setting Arguments section
-        // let transferArguments = [
-        //     {
-        //         'name': 'recipient',
-        //         'type': contractArgTypes.KEY,
-        //         'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
-        //     },
-        //     {
-        //         'name': 'amount',
-        //         'type': contractArgTypes.U256,
-        //         'value': '200'
-        //     }
-        // ]
-        // // Enter arguments for contract
-        // for (let row = 0; row < transferArguments.length; row++) {
-        //     let argument = transferArguments[row];
-        //     cy.deployContractAddArgument(
-        //         argument.name,
-        //         argument.type,
-        //         argument.value,
-        //         row
-        //     )
-        // }
-        // // Save arguments
-        // cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
-        //     .should('have.text', 'save')
-        //     .click()
+        // For type codes inspect the dropdown in the Setting Arguments section
+        let transferArguments = [
+            {
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
+            },
+            {
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
+            }
+        ]
+        // Enter arguments for contract
+        for (let row = 0; row < transferArguments.length; row++) {
+            let argument = transferArguments[row];
+            cy.deployContractAddArgument(
+                argument.name,
+                argument.type,
+                argument.value,
+                row
+            )
+        }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
+            .click()
 
-        // // Sign
-        // cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
-        //     .should('have.text', 'Sign')
-        //     .click()
+        // Sign
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
+            .click()
 
-        // // Check warning on prompt
-        // cy.get('#id-sign-modal > div > div > div.modal-body > p')
-        //     .should('contain.text', 'Please connect to the Signer first.')
+        // Check warning on prompt
+        cy.get('#id-sign-modal > div > div > div.modal-body > p')
+            .should('contain.text', 'Please connect to the Signer first.')
 
-        // // Sign & Deploy prompt
-        // cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
-        //     .should('have.text', 'Sign & Deploy')
-        //     .click()
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
+            .click()
 
-        // // Check error
-        // cy.get('#alert-message > div')
-        //     .should('contain.text', 'Please install/connect the CasperLabs Signer extension first!')
+        // Check error
+        cy.get('#alert-message > div')
+            .should('contain.text', 'Please install/connect the CasperLabs Signer extension first!')
     })
 
-    // it('Should error if no account created', () => {
+    it('Should error if no account created', () => {
         
-    //     // Create vault, connect but don't create an account
-    //     cy.createTestVault('cypress');
-    //     cy.connectSigner();
+        // Create vault, connect but don't create an account
+        cy.createTestVault('cypress');
+        cy.connectSigner();
 
-    //     // Go to deploy contract screen
-    //     cy.get(sideNavLinks.DeployContract)
-    //         .click()
+        // Go to deploy contract screen
+        cy.get(sideNavLinks.DeployContract)
+            .click()
 
-    //     // Fill out main form
-    //     cy.get('#id-contract-type')
-    //         .select('Name')
-    //         .should('have.value', 'Name')
-    //         .then(() => {
-    //             cy.get('#id-contract-hash')
-    //                 .type('erc20')
-    //                 .should('have.value', 'erc20')
-    //                 .then(() => {
-    //                     cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
-    //                         .should('have.value', 'call')
-    //                         .clear()
-    //                         .type('transfer')
-    //                         .should('have.value', 'transfer')
-    //                         .then(() => {
-    //                             cy.get('#id-payment-amount')
-    //                                 .clear()
-    //                                 // Clearing leaves a 0 in the input box
-    //                                 .type('10000')
-    //                                 .should('have.value', '100000')
-    //                         })
-    //                 })
-    //         })
+        // Fill out main form
+        cy.get('#id-contract-type')
+            .select('Name')
+            .should('have.value', 'Name')
+            .then(() => {
+                cy.get('#id-contract-hash')
+                    .type('erc20')
+                    .should('have.value', 'erc20')
+                    .then(() => {
+                        cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
+                            .should('have.value', 'call')
+                            .clear()
+                            .type('transfer')
+                            .should('have.value', 'transfer')
+                            .then(() => {
+                                cy.get('#id-payment-amount')
+                                    .clear()
+                                    // Clearing leaves a 0 in the input box
+                                    .type('10000')
+                                    .should('have.value', '100000')
+                            })
+                    })
+            })
         
-    //     // For type codes inspect the dropdown in the Setting Arguments section
-    //     let transferArguments = [
-    //         {
-    //             'name': 'recipient',
-    //             'type': contractArgTypes.KEY,
-    //             'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
-    //         },
-    //         {
-    //             'name': 'amount',
-    //             'type': contractArgTypes.U256,
-    //             'value': '200'
-    //         }
-    //     ]
-    //     // Enter arguments for contract
-    //     for (let row = 0; row < transferArguments.length; row++) {
-    //         let argument = transferArguments[row];
-    //         cy.deployContractAddArgument(
-    //             argument.name,
-    //             argument.type,
-    //             argument.value,
-    //             row
-    //         )
-    //     }
-    //     // Save arguments
-    //     cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
-    //         .should('have.text', 'save')
-    //         .click()
+        // For type codes inspect the dropdown in the Setting Arguments section
+        let transferArguments = [
+            {
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
+            },
+            {
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
+            }
+        ]
+        // Enter arguments for contract
+        for (let row = 0; row < transferArguments.length; row++) {
+            let argument = transferArguments[row];
+            cy.deployContractAddArgument(
+                argument.name,
+                argument.type,
+                argument.value,
+                row
+            )
+        }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
+            .click()
 
-    //     // Sign
-    //     cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
-    //         .should('have.text', 'Sign')
-    //         .click()
+        // Sign
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
+            .click()
 
-    //     // Check warning on prompt
-    //     cy.get('#id-sign-modal > div > div > div.modal-body > p')
-    //         .should('contain.text', ' We will use CasperLabs Signer extension to sign the deploy')
+        // Check warning on prompt
+        cy.get('#id-sign-modal > div > div > div.modal-body > p')
+            .should('contain.text', ' We will use CasperLabs Signer extension to sign the deploy')
 
-    //     // Sign & Deploy prompt
-    //     cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
-    //         .should('have.text', 'Sign & Deploy')
-    //         .click()
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
+            .click()
 
-    //     // Check error
-    //     cy.get('#alert-message > div')
-    //         .should('contain.text', 'Please create an account in the Plugin first!')
-    // })
+        // Check error
+        cy.get('#alert-message > div')
+            .should('contain.text', 'Please create an account in the Plugin first!')
+    })
 
-    // it('Should search for block', () => {
-    //     // Go to Search screen
-    //     cy.get(sideNavLinks.Search)
-    //         .click()
+    it('Should search for block', () => {
+        // Go to Search screen
+        cy.get(sideNavLinks.Search)
+            .click()
 
-    //     // Get block hash from network highlight box
-    //     cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
-    //         .should('not.contain.html', 'null')
-    //         .then(($span) => {
-    //             // Enter block hash into search box
-    //             cy.get('#id-search-hash-base16')
-    //                 .type($span.get(0).innerText)
-    //                 .should('have.value', $span.get(0).innerText)
-    //                 .wait(100)
-    //                 .get('#root > div > main > div > div > div > div > div.card-body > button')
-    //                 .click()
-    //                 .wait('@getBlock')
-    //                 .then(() => {
-    //                     cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > div > table > tbody > tr:nth-child(4) > td > a')
-    //                     .should(($a) => {
-    //                         assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
-    //                     })    
-    //                 })
-    //         })            
-    // })
+        // Get block hash from network highlight box
+        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
+            .should('not.contain.html', 'null')
+            .then(($span) => {
+                // Enter block hash into search box
+                cy.get('#id-search-hash-base16')
+                    .type($span.get(0).innerText)
+                    .should('have.value', $span.get(0).innerText)
+                    .wait(200)
+                    .get('#root > div > main > div > div > div > div > div.card-body > button')
+                    .click()
+                    .wait('@getBlock')
+                    .then(() => {
+                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > div > table > tbody > tr:nth-child(4) > td > a')
+                        .should(($a) => {
+                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
+                        })    
+                    })
+            })            
+    })
 
-    // // BUG: This is resulting in an error: Bad response format - needs investigating
-    // it('Should deploy a contract', () => {
+    // BUG: This is resulting in an error: Bad response format - needs investigating
+    it('Should deploy a contract', () => {
         
-    //     // Create vault and connect
-    //     cy.createTestVault('cypress')
-    //     .then(() => {
-    //         cy.connectSigner();
-    //         // This pause is required to allow the vault creation to complete prior to the account creation attempt
-    //         cy.wait(1000);
-    //         cy.createTestAccount(
-    //             'Cypress',
-    //             'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
-    //         );
-    //     })
+        // Create vault and connect
+        cy.createTestVault('cypress')
+        .then(() => {
+            cy.connectSigner();
+            // This pause is required to allow the vault creation to complete prior to the account creation attempt
+            cy.wait(1000);
+            cy.createTestAccount(
+                'Cypress',
+                'TUM0Q0FRQXdCUVlESzJWd0JDSUVJUEQ3cFR5VEZZNXRJY0YwbDg4MEFCN3ZwZm5YTWdQeVRMWnVGVC9iYzYwTA=='
+            );
+        })
 
-    //     // Go to deploy contract screen
-    //     cy.get(sideNavLinks.DeployContract)
-    //         .click()
+        // Go to deploy contract screen
+        cy.get(sideNavLinks.DeployContract)
+            .click()
 
-    //     // Fill out main form
-    //     cy.get('#id-contract-type')
-    //         .select('Name')
-    //         .should('have.value', 'Name')
-    //         .then(() => {
-    //             cy.get('#id-contract-hash')
-    //                 .type('erc20')
-    //                 .should('have.value', 'erc20')
-    //                 .then(() => {
-    //                     cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
-    //                         .should('have.value', 'call')
-    //                         .clear()
-    //                         .type('transfer')
-    //                         .should('have.value', 'transfer')
-    //                         .then(() => {
-    //                             cy.get('#id-payment-amount')
-    //                                 .clear()
-    //                                 // Clearing leaves a 0 in the input box
-    //                                 .type('10000')
-    //                                 .should('have.value', '100000')
-    //                         })
-    //                 })
-    //         })
+        // Fill out main form
+        cy.get('#id-contract-type')
+            .select('Name')
+            .should('have.value', 'Name')
+            .then(() => {
+                cy.get('#id-contract-hash')
+                    .type('erc20')
+                    .should('have.value', 'erc20')
+                    .then(() => {
+                        cy.get('#deploy-table-accordion > div > form > div:nth-child(4) > div:nth-child(2) > input')
+                            .should('have.value', 'call')
+                            .clear()
+                            .type('transfer')
+                            .should('have.value', 'transfer')
+                            .then(() => {
+                                cy.get('#id-payment-amount')
+                                    .clear()
+                                    // Clearing leaves a 0 in the input box
+                                    .type('10000')
+                                    .should('have.value', '100000')
+                            })
+                    })
+            })
         
-    //     // For type codes inspect the dropdown in the Setting Arguments section
-    //     let transferArguments = [
-    //         {
-    //             'name': 'recipient',
-    //             'type': contractArgTypes.KEY,
-    //             'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
-    //         },
-    //         {
-    //             'name': 'amount',
-    //             'type': contractArgTypes.U256,
-    //             'value': '200'
-    //         }
-    //     ]
-    //     // Enter arguments for contract
-    //     for (let row = 0; row < transferArguments.length; row++) {
-    //         let argument = transferArguments[row];
-    //         cy.deployContractAddArgument(
-    //             argument.name,
-    //             argument.type,
-    //             argument.value,
-    //             row
-    //         )
-    //     }
-    //     // Save arguments
-    //     cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
-    //         .should('have.text', 'save')
-    //         .click()
+        // For type codes inspect the dropdown in the Setting Arguments section
+        let transferArguments = [
+            {
+                'name': 'recipient',
+                'type': contractArgTypes.KEY,
+                'value': '"0147f0db236b9b76fcd28f1a20f183adead273fd41bb1b8a0f11f65eae96ae001d"'
+            },
+            {
+                'name': 'amount',
+                'type': contractArgTypes.U256,
+                'value': '200'
+            }
+        ]
+        // Enter arguments for contract
+        for (let row = 0; row < transferArguments.length; row++) {
+            let argument = transferArguments[row];
+            cy.deployContractAddArgument(
+                argument.name,
+                argument.type,
+                argument.value,
+                row
+            )
+        }
+        // Save arguments
+        cy.get('.float-right > .list-inline > :nth-child(2) > .btn')
+            .should('have.text', 'save')
+            .click()
 
-    //     // Sign
-    //     cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
-    //         .should('have.text', 'Sign')
-    //         .click()
+        // Sign
+        cy.get('.mt-5 > .list-inline > :nth-child(1) > .btn')
+            .should('have.text', 'Sign')
+            .click()
 
-    //     // Sign & Deploy prompt
-    //     cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
-    //         .should('have.text', 'Sign & Deploy')
-    //         .click()
+        // Sign & Deploy prompt
+        cy.get('#id-sign-modal > div > div > div.modal-footer > button.btn.btn-primary')
+            .should('have.text', 'Sign & Deploy')
+            .click()
 
-    //     cy.getMessageID()
-    //         .then((msgId) => {
-    //             cy.wait(2000)
-    //             cy.signTestDeploy(msgId);
-    //         });
+        cy.getMessageID()
+            .then((msgId) => {
+                cy.wait(2000)
+                cy.signTestDeploy(msgId);
+            });
 
-    // })
+    })
 
 })
   
