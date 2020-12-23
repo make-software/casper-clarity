@@ -33,11 +33,11 @@ describe(`numbers' toBytes`, () => {
   it('should be able to encode u8', () => {
     let bytesU8 = toBytesU8(10);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0x0a]));
-    expect(U8.fromBytes(bytesU8).val!.value).to.eq(10);
+    expect(U8.fromBytes(bytesU8).value).to.eq(10);
 
     bytesU8 = toBytesU8(255);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0xff]));
-    expect(U8.fromBytes(bytesU8).val!.value).to.eq(255);
+    expect(U8.fromBytes(bytesU8).value).to.eq(255);
 
     expect(() => toBytesU8(256)).to.throws('out');
   });
@@ -45,28 +45,28 @@ describe(`numbers' toBytes`, () => {
   it('should be able to encode u32', () => {
     let bytesU32 = toBytesU32(0xf0e0_d0c0);
     expect(bytesU32).to.deep.eq(Uint8Array.from([0xc0, 0xd0, 0xe0, 0xf0]));
-    expect(U32.fromBytes(bytesU32).val!.value).to.eq(0xf0e0_d0c0);
+    expect(U32.fromBytes(bytesU32).value).to.eq(0xf0e0_d0c0);
     bytesU32 = toBytesU32(100000);
     expect(bytesU32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
-    expect(U32.fromBytes(bytesU32).val!.value).to.eq(100000);
+    expect(U32.fromBytes(bytesU32).value).to.eq(100000);
     bytesU32 = toBytesU32(0);
     expect(bytesU32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
-    expect(U32.fromBytes(bytesU32).val!.value).to.eq(0);
+    expect(U32.fromBytes(bytesU32).value).to.eq(0);
   });
 
   it('should be able to encode i32', () => {
     let bytesI32 = toBytesI32(-100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([96, 121, 254, 255]));
-    expect(I32.fromBytes(bytesI32).val!.value).to.eq(-100000);
+    expect(I32.fromBytes(bytesI32).value).to.eq(-100000);
     bytesI32 = toBytesI32(100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
-    expect(I32.fromBytes(bytesI32).val!.value).to.eq(100000);
+    expect(I32.fromBytes(bytesI32).value).to.eq(100000);
     bytesI32 = toBytesI32(0);
     expect(bytesI32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
-    expect(I32.fromBytes(bytesI32).val!.value).to.eq(0);
+    expect(I32.fromBytes(bytesI32).value).to.eq(0);
     bytesI32 = toBytesI32(-1);
     expect(bytesI32).to.deep.eq(Uint8Array.from([255, 255, 255, 255]));
-    expect(I32.fromBytes(bytesI32).val!.value).to.eq(-1);
+    expect(I32.fromBytes(bytesI32).value).to.eq(-1);
   });
 
   it('should be able to encode i64', () => {
@@ -74,17 +74,16 @@ describe(`numbers' toBytes`, () => {
     expect(bytesI64).to.deep.eq(
       Uint8Array.from([57, 20, 94, 139, 1, 121, 193, 2])
     );
-    expect(I64.fromBytes(bytesI64).val!.value).to.deep.equal(
+    expect(I64.fromBytes(bytesI64).value).to.deep.equal(
       BigNumber.from('198572906121139257')
     );
     bytesI64 = toBytesI64('-4009477689550808');
     expect(bytesI64).to.deep.eq(
       Uint8Array.from([40, 88, 148, 186, 102, 193, 241, 255])
     );
-
-    expect(
-      BigNumber.from('-4009477689550808').eq(I64.fromBytes(bytesI64).val!.value)
-    ).to.equal(true);
+    expect(I64.fromBytes(bytesI64).value).to.deep.equal(
+      BigNumber.from('-4009477689550808')
+    );
   });
 
   it('should be able to encode u64', () => {
@@ -92,14 +91,14 @@ describe(`numbers' toBytes`, () => {
     expect(bytesU64).to.deep.eq(
       Uint8Array.from([57, 20, 214, 178, 212, 118, 11, 197])
     );
-    expect(U64.fromBytes(bytesU64).val!.value).to.deep.equal(
+    expect(U64.fromBytes(bytesU64).value).to.deep.equal(
       BigNumber.from('14198572906121139257')
     );
     bytesU64 = toBytesU64('9834009477689550808');
     expect(bytesU64).to.deep.eq(
       Uint8Array.from([216, 167, 130, 99, 132, 107, 121, 136])
     );
-    expect(U64.fromBytes(bytesU64).val!.value).to.deep.equal(
+    expect(U64.fromBytes(bytesU64).value).to.deep.equal(
       BigNumber.from('9834009477689550808')
     );
   });
@@ -107,21 +106,21 @@ describe(`numbers' toBytes`, () => {
   it('should be able to encode u128', () => {
     let bytesU128 = toBytesU128(100000);
     expect(bytesU128).to.deep.eq(Uint8Array.from([3, 160, 134, 1]));
-    expect(U128.fromBytes(bytesU128).val!.value).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value).to.deep.equal(
       BigNumber.from(100000)
     );
     bytesU128 = toBytesU128(0xf0e0_d0c0_0000);
     expect(bytesU128).to.deep.eq(
       Uint8Array.from([6, 0, 0, 0xc0, 0xd0, 0xe0, 0xf0])
     );
-    expect(U128.fromBytes(bytesU128).val!.value).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value).to.deep.equal(
       BigNumber.from(0xf0e0_d0c0_0000)
     );
     bytesU128 = toBytesU128(0x0000_f0e0_d0c0_0000);
     expect(bytesU128).to.deep.eq(
       Uint8Array.from([6, 0, 0, 0xc0, 0xd0, 0xe0, 0xf0])
     );
-    expect(U128.fromBytes(bytesU128).val!.value).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value).to.deep.equal(
       BigNumber.from(0x0000_f0e0_d0c0_0000)
     );
   });
@@ -147,7 +146,7 @@ describe(`numbers' toBytes`, () => {
         149
       ])
     );
-    expect(StringValue.fromBytes(bytesString).val!.str).to.equal('test_测试');
+    expect(StringValue.fromBytes(bytesString).value.str).to.equal('test_测试');
   });
 
   it('should serialize a vector of CLValue correctly', () => {
