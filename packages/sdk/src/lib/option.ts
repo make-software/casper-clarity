@@ -1,5 +1,14 @@
 // copy from https://github.com/CasperLabs/casper-node/blob/master/smart_contracts/contract_as/assembly/option.ts
-import { CLType, CLTypedAndToBytes, CLTypeHelper } from './CLValue';
+import {
+  CLType,
+  CLTypedAndToBytes,
+  CLTypeHelper,
+  fromBytesByCLType,
+  FromBytesError,
+  OptionType,
+  Result,
+  U8
+} from './CLValue';
 import { concat } from '@ethersproject/bytes';
 
 const OPTION_TAG_NONE = 0;
@@ -12,6 +21,7 @@ const OPTION_TAG_SOME = 1;
  */
 export class Option extends CLTypedAndToBytes {
   private innerType: CLType;
+
   /**
    * Constructs a new option containing the value of `CLTypedAndToBytes`. `t` can be `null`, which
    * indicates no value.
@@ -58,5 +68,27 @@ export class Option extends CLTypedAndToBytes {
 
   public clType(): CLType {
     return CLTypeHelper.option(this.innerType!);
+  }
+
+  public static fromBytes(type: OptionType, bytes: ByteArray): Result<Option> {
+    const u8Res = U8.fromBytes(bytes);
+    if (u8Res.hasError()) {
+      return Result.Err(u8Res.error);
+    }
+    const optionTag = u8Res.value.value as number;
+    if (optionTag === OPTION_TAG_NONE) {
+      return Result.Ok(new Option(null, type.innerType), u8Res.remainder);
+    } else if (optionTag === OPTION_TAG_SOME) {
+      const innerValueRes = fromBytesByCLType(type.innerType, u8Res.remainder);
+      if (innerValueRes.hasError()) {
+        return Result.Err(innerValueRes.error);
+      }
+      return Result.Ok(
+        new Option(innerValueRes.value, type.innerType),
+        innerValueRes.remainder
+      );
+    } else {
+      return Result.Err(FromBytesError.FormattingError);
+    }
   }
 }

@@ -443,8 +443,33 @@ export class StringValue extends CLTypedAndToBytes {
   }
 }
 
-// const fromBytesComplexType = (clType: CLTyped,)
-const fromBytesSimpleType = (simpleType: SimpleType, bytes: ByteArray) => {
+export const fromBytesByCLType = (
+  type: CLType,
+  bytes: ByteArray
+): Result<CLTypedAndToBytes> => {
+  if (type instanceof ListType) {
+    return List.fromBytes(type, bytes);
+  } else if (type instanceof Tuple1Type) {
+    return Tuple1.fromBytes(type, bytes);
+  } else if (type instanceof Tuple2Type) {
+    return Tuple2.fromBytes(type, bytes);
+  } else if (type instanceof Tuple3Type) {
+    return Tuple3.fromBytes(type, bytes);
+  } else if (type instanceof ByteArrayType) {
+    return ByteArrayValue.fromBytes(bytes);
+  } else if (type instanceof MapType) {
+    return MapValue.fromByte(type, bytes);
+  } else if (type instanceof OptionType) {
+    return Option.fromBytes(type, bytes);
+  } else {
+    return fromBytesSimpleType(type, bytes);
+  }
+};
+
+const fromBytesSimpleType = (
+  simpleType: SimpleType,
+  bytes: ByteArray
+): Result<CLTypedAndToBytes> => {
   let innerRes: Result<CLTypedAndToBytes>;
   switch (simpleType) {
     case SimpleType.Bool:
@@ -515,6 +540,28 @@ class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   public toBytes(): ByteArray {
     return toBytesVecT(this.vec);
   }
+
+  public static fromBytes(
+    type: ListType,
+    bytes: ByteArray
+  ): Result<List<CLTypedAndToBytes>> {
+    const u32Res = U32.fromBytes(bytes);
+    if (u32Res.hasError()) {
+      return Result.Err(u32Res.error);
+    }
+    const size = u32Res.value.value as number;
+    const vec = [];
+    let remainder = u32Res.remainder;
+    for (let i = 0; i < size; i++) {
+      const v = fromBytesByCLType(type, remainder);
+      if (v.hasError()) {
+        return Result.Err(v.error);
+      }
+      vec.push(v.value);
+      remainder = v.remainder;
+    }
+    return Result.Ok(new List(vec), remainder);
+  }
 }
 
 class Tuple1 extends CLTypedAndToBytes {
@@ -530,10 +577,14 @@ class Tuple1 extends CLTypedAndToBytes {
     return CLTypeHelper.tuple1(this.v0.clType());
   }
 
-  public static fromBytes(
-    innerTypeTag: number,
-    bytes: ByteArray
-  ): Result<Tuple1> {}
+  public static fromBytes(type: Tuple1Type, bytes: ByteArray): Result<Tuple1> {
+    const innerRes = fromBytesByCLType(type.t0, bytes);
+    if (innerRes.hasError()) {
+      return Result.Err(innerRes.error);
+    }
+    const tuple = new Tuple1(innerRes.value);
+    return Result.Ok(tuple, innerRes.remainder);
+  }
 }
 
 class Tuple2 extends CLTypedAndToBytes {
@@ -547,6 +598,19 @@ class Tuple2 extends CLTypedAndToBytes {
 
   public clType(): CLType {
     return CLTypeHelper.tuple2(this.v0.clType(), this.v1.clType());
+  }
+
+  public static fromBytes(type: Tuple2Type, bytes: ByteArray): Result<Tuple2> {
+    const t0Res = fromBytesByCLType(type.t0, bytes);
+    if (t0Res.hasError()) {
+      return Result.Err(t0Res.error);
+    }
+    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder);
+    if (t1Res.hasError()) {
+      return Result.Err(t1Res.error);
+    }
+    const tuple = new Tuple2(t0Res.value, t1Res.value);
+    return Result.Ok(tuple, t1Res.remainder);
   }
 }
 
@@ -569,6 +633,23 @@ class Tuple3 extends CLTypedAndToBytes {
 
   public toBytes(): ByteArray {
     return concat([this.v0.toBytes(), this.v1.toBytes(), this.v2.toBytes()]);
+  }
+
+  public static fromBytes(type: Tuple3Type, bytes: ByteArray): Result<Tuple3> {
+    const t0Res = fromBytesByCLType(type.t0, bytes);
+    if (t0Res.hasError()) {
+      return Result.Err(t0Res.error);
+    }
+    const t1Res = fromBytesByCLType(type.t1, t0Res.remainder);
+    if (t1Res.hasError()) {
+      return Result.Err(t1Res.error);
+    }
+    const t2Res = fromBytesByCLType(type.t2, t1Res.remainder);
+    if (t2Res.hasError()) {
+      return Result.Err(t2Res.error);
+    }
+    const tuple = new Tuple3(t0Res.value, t1Res.value, t2Res.value);
+    return Result.Ok(tuple, t2Res.remainder);
   }
 }
 
@@ -722,9 +803,33 @@ class MapValue extends CLTypedAndToBytes {
   public clType(): CLType {
     return new MapType(this.v[0].key.clType(), this.v[0].value.clType());
   }
+
+  public static fromByte(type: MapType, bytes: ByteArray): Result<MapValue> {
+    const u32Res = U32.fromBytes(bytes);
+    if (u32Res.hasError()) {
+      return Result.Err(u32Res.error);
+    }
+    const size = u32Res.value.value as number;
+    const vec: MapEntry[] = [];
+    let remainder = u32Res.remainder;
+    for (let i = 0; i < size; i++) {
+      const keyRes = fromBytesByCLType(type, remainder);
+      if (keyRes.hasError()) {
+        return Result.Err(keyRes.error);
+      }
+      remainder = keyRes.remainder;
+      const valueRes = fromBytesByCLType(type, remainder);
+      if (valueRes.hasError()) {
+        return Result.Err(valueRes.error);
+      }
+      remainder = valueRes.remainder;
+      vec.push({ key: keyRes.value, value: valueRes.value });
+    }
+    return Result.Ok(new MapValue(vec), remainder);
+  }
 }
 
-class OptionType {
+export class OptionType {
   public tag = ComplexType.Option;
 
   constructor(public innerType: CLType) {}
@@ -1066,16 +1171,16 @@ export class CLTypeHelper {
 
 @staticImplements<BytesDeserializableStatic<ByteArrayValue>>()
 class ByteArrayValue extends CLTypedAndToBytes {
-  constructor(private bytes: ByteArray) {
+  constructor(public rawBytes: ByteArray) {
     super();
   }
 
   public clType(): CLType {
-    return CLTypeHelper.byteArray(this.bytes.length);
+    return CLTypeHelper.byteArray(this.rawBytes.length);
   }
 
   public toBytes(): ByteArray {
-    return toBytesBytesArray(this.bytes);
+    return toBytesBytesArray(this.rawBytes);
   }
 
   public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
@@ -1203,7 +1308,7 @@ export class CLValue implements ToBytes {
     if (clTypeRes.hasError()) {
       return Result.Err(clTypeRes.error);
     }
-    const clValue = new CLValue(bytesRes.value, clTypeRes.value);
+    const clValue = new CLValue(bytesRes.value.rawBytes, clTypeRes.value);
     return Result.Ok(clValue, clTypeRes.remainder);
   }
 
