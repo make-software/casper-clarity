@@ -164,7 +164,9 @@ describe(`numbers' toBytes`, () => {
         149
       ])
     );
-    expect(StringValue.fromBytes(bytesString).value.str).to.equal('test_测试');
+    expect(StringValue.fromBytes(bytesString).value.toBytes()).to.deep.equal(
+      CLTypedAndToBytesHelper.string('test_测试').toBytes()
+    );
   });
 
   it('should serialize a vector of CLValue correctly', () => {
