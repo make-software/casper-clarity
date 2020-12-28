@@ -6,6 +6,7 @@ import {
   decodeBase16,
   I32,
   I64,
+  List,
   StringValue,
   Tuple1,
   Tuple2,
@@ -408,6 +409,24 @@ describe(`numbers' toBytes`, () => {
         expectedBytes
       ).value.toBytes()
     ).to.deep.equal(tuple3.toBytes());
+  });
+
+  it('should serialize/deserialize List correctly', () => {
+    const list = CLTypedAndToBytesHelper.list([
+      CLTypedAndToBytesHelper.u32(1),
+      CLTypedAndToBytesHelper.u32(2),
+      CLTypedAndToBytesHelper.u32(3)
+    ]);
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from([3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0])
+    expect(list.toBytes()).to.deep.eq(expectedBytes);
+
+    expect(
+      List.fromBytes(
+        CLTypeHelper.list(CLTypeHelper.u32()),
+        expectedBytes
+      ).value.toBytes()
+    ).to.deep.eq(list.toBytes());
   });
 
   it('should serialize ByteArray correctly', () => {

@@ -529,7 +529,7 @@ const fromBytesSimpleType = (
   }
 };
 
-class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
+export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   constructor(private vec: T[]) {
     super();
     if (vec.length === 0) {
@@ -557,7 +557,7 @@ class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     const vec = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
-      const v = fromBytesByCLType(type, remainder);
+      const v = fromBytesByCLType(type.innerType, remainder);
       if (v.hasError()) {
         return Result.Err(v.error);
       }
