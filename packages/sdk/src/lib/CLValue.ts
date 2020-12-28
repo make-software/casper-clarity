@@ -1412,10 +1412,7 @@ export class CLValue implements ToBytes {
   }
 
   public static byteArray(bytes: ByteArray) {
-    return new CLValue(
-      toBytesBytesArray(bytes),
-      CLTypeHelper.byteArray(bytes.byteLength)
-    );
+    return CLValue.fromT(new ByteArrayValue(bytes));
   }
 }
 
