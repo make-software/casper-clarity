@@ -286,11 +286,12 @@ export class U64 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U64> {
+    const tmp = Uint8Array.from(bytes);
     if (bytes.length < 8) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const u64Bytes = bytes.subarray(0, 8);
-    const rem = bytes.subarray(8);
+    const u64Bytes = tmp.subarray(0, 8);
+    const rem = tmp.subarray(8);
     return Result.Ok(new U64(BigNumber.from(u64Bytes.reverse())), rem);
   }
 }
@@ -309,8 +310,9 @@ export class I64 extends NumberCoder {
     if (bytes.length < 8) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const i64Bytes = bytes.subarray(0, 8);
-    const rem = bytes.subarray(8);
+    const tmp = Uint8Array.from(bytes);
+    const i64Bytes = tmp.subarray(0, 8);
+    const rem = tmp.subarray(8);
     return Result.Ok(
       new I64(BigNumber.from(i64Bytes.reverse()).fromTwos(64)),
       rem
@@ -332,15 +334,16 @@ export class U128 extends NumberCoder {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const n = bytes[0];
+    const tmp = Uint8Array.from(bytes);
+    const n = tmp[0];
     if (n === 0 || n > 16) {
       return Result.Err(FromBytesError.FormattingError);
     }
     if (n + 1 > bytes.length) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const u128Bytes = bytes.subarray(1, 1 + n);
-    const rem = bytes.subarray(1 + n);
+    const u128Bytes = tmp.subarray(1, 1 + n);
+    const rem = tmp.subarray(1 + n);
     return Result.Ok(new U128(BigNumber.from(u128Bytes.reverse())), rem);
   }
 }
@@ -359,15 +362,16 @@ class U256 extends NumberCoder {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const n = bytes[0];
+    const tmp = Uint8Array.from(bytes);
+    const n = tmp[0];
     if (n === 0 || n > 32) {
       return Result.Err(FromBytesError.FormattingError);
     }
     if (n + 1 > bytes.length) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const u256Bytes = bytes.subarray(1, 1 + n);
-    const rem = bytes.subarray(1 + n);
+    const u256Bytes = tmp.subarray(1, 1 + n);
+    const rem = tmp.subarray(1 + n);
     return Result.Ok(new U256(BigNumber.from(u256Bytes.reverse())), rem);
   }
 }
@@ -386,15 +390,16 @@ class U512 extends NumberCoder {
     if (bytes.length < 1) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const n = bytes[0];
+    const tmp = Uint8Array.from(bytes);
+    const n = tmp[0];
     if (n === 0 || n > 64) {
       return Result.Err(FromBytesError.FormattingError);
     }
     if (n + 1 > bytes.length) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const u512Bytes = bytes.subarray(1, 1 + n);
-    const rem = bytes.subarray(1 + n);
+    const u512Bytes = tmp.subarray(1, 1 + n);
+    const rem = tmp.subarray(1 + n);
     return Result.Ok(new U512(BigNumber.from(u512Bytes.reverse())), rem);
   }
 }
@@ -520,7 +525,7 @@ const fromBytesSimpleType = (
   if (innerRes.hasError()) {
     return Result.Err(innerRes.error);
   } else {
-    return Result.Ok(new Tuple1(innerRes.value), innerRes.remainder);
+    return Result.Ok(innerRes.value, innerRes.remainder);
   }
 };
 
@@ -563,7 +568,7 @@ class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   }
 }
 
-class Tuple1 extends CLTypedAndToBytes {
+export class Tuple1 extends CLTypedAndToBytes {
   constructor(private v0: CLTypedAndToBytes) {
     super();
   }
@@ -586,7 +591,7 @@ class Tuple1 extends CLTypedAndToBytes {
   }
 }
 
-class Tuple2 extends CLTypedAndToBytes {
+export class Tuple2 extends CLTypedAndToBytes {
   constructor(private v0: CLTypedAndToBytes, private v1: CLTypedAndToBytes) {
     super();
   }
@@ -613,7 +618,7 @@ class Tuple2 extends CLTypedAndToBytes {
   }
 }
 
-class Tuple3 extends CLTypedAndToBytes {
+export class Tuple3 extends CLTypedAndToBytes {
   constructor(
     private v0: CLTypedAndToBytes,
     private v1: CLTypedAndToBytes,
@@ -1251,11 +1256,15 @@ export class CLTypedAndToBytesHelper {
     return new Tuple1(t0);
   }
 
-  public static tuple2<T extends CLTypedAndToBytes>(t0: T, t1: T) {
+  public static tuple2(t0: CLTypedAndToBytes, t1: CLTypedAndToBytes) {
     return new Tuple2(t0, t1);
   }
 
-  public static tuple3<T extends CLTypedAndToBytes>(t0: T, t1: T, t2: T) {
+  public static tuple3(
+    t0: CLTypedAndToBytes,
+    t1: CLTypedAndToBytes,
+    t2: CLTypedAndToBytes
+  ) {
     return new Tuple3(t0, t1, t2);
   }
 

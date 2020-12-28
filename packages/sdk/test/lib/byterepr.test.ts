@@ -2,10 +2,14 @@ import { expect } from 'chai';
 import {
   AccountHash,
   CLTypedAndToBytesHelper,
+  CLTypeHelper,
   decodeBase16,
   I32,
   I64,
   StringValue,
+  Tuple1,
+  Tuple2,
+  Tuple3,
   U128,
   U32,
   U64,
@@ -321,9 +325,89 @@ describe(`numbers' toBytes`, () => {
       'uref-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-007'
     );
     // prettier-ignore
-    const expectedBytes = Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 7])
+    const expectedBytes = Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 7]);
     expect(uref.toBytes()).to.deep.equal(expectedBytes);
     expect(URef.fromBytes(expectedBytes).value).to.deep.eq(uref);
+  });
+
+  it('should serialize/deserialize Tuple1 correctly', () => {
+    const value1 = CLTypedAndToBytesHelper.string('hello');
+    const tuple = CLTypedAndToBytesHelper.tuple1(value1);
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from([5, 0, 0, 0, 104, 101, 108, 108, 111]);
+    expect(tuple.toBytes()).to.deep.equal(expectedBytes);
+
+    expect(
+      Tuple1.fromBytes(
+        CLTypeHelper.tuple1(CLTypeHelper.string()),
+        expectedBytes
+      ).value.clType()
+    ).to.deep.equal(tuple.clType());
+
+    expect(
+      Tuple1.fromBytes(
+        CLTypeHelper.tuple1(CLTypeHelper.string()),
+        expectedBytes
+      ).value.toBytes()
+    ).to.deep.equal(tuple.toBytes());
+  });
+
+  it('should serialize/deserialize Tuple2 correctly', () => {
+    const value1 = CLTypedAndToBytesHelper.string('hello');
+    const value2 = CLTypedAndToBytesHelper.u64(123456);
+    const tuple2 = CLTypedAndToBytesHelper.tuple2(value1, value2);
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from(
+      [5, 0, 0, 0, 104, 101, 108, 108, 111, 64, 226, 1, 0, 0, 0, 0, 0]);
+    expect(tuple2.toBytes()).to.deep.equal(expectedBytes);
+
+    expect(
+      Tuple2.fromBytes(
+        CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
+        expectedBytes
+      ).value.clType()
+    ).to.deep.equal(tuple2.clType());
+
+    expect(
+      Tuple2.fromBytes(
+        CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
+        expectedBytes
+      ).value.toBytes()
+    ).to.deep.equal(tuple2.toBytes());
+  });
+
+  it('should serialize/deserialize Tuple3 correctly', () => {
+    const value1 = CLTypedAndToBytesHelper.string('hello');
+    const value2 = CLTypedAndToBytesHelper.u64(123456);
+    const value3 = CLTypedAndToBytesHelper.bool(true);
+    const tuple3 = CLTypedAndToBytesHelper.tuple3(value1, value2, value3);
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from(
+      [5, 0, 0, 0, 104, 101, 108, 108, 111, 64, 226, 1, 0, 0, 0, 0, 0, 1]
+      );
+    expect(tuple3.toBytes()).to.deep.equal(expectedBytes);
+
+    expect(
+      Tuple3.fromBytes(
+        CLTypeHelper.tuple3(
+          CLTypeHelper.string(),
+          CLTypeHelper.u64(),
+          CLTypeHelper.bool()
+        ),
+        expectedBytes
+      ).value.clType()
+    ).to.deep.equal(tuple3.clType());
+
+    expect(
+      Tuple3.fromBytes(
+        CLTypeHelper.tuple3(
+          CLTypeHelper.string(),
+          CLTypeHelper.u64(),
+          CLTypeHelper.bool()
+        ),
+        expectedBytes
+      ).value.toBytes()
+    ).to.deep.equal(tuple3.toBytes());
   });
 
   it('should serialize ByteArray correctly', () => {
