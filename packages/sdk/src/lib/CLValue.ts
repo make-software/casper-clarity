@@ -462,7 +462,7 @@ export const fromBytesByCLType = (
   } else if (type instanceof ByteArrayType) {
     return ByteArrayValue.fromBytes(bytes);
   } else if (type instanceof MapType) {
-    return MapValue.fromByte(type, bytes);
+    return MapValue.fromBytes(type, bytes);
   } else if (type instanceof OptionType) {
     return Option.fromBytes(type, bytes);
   } else {
@@ -791,7 +791,7 @@ export interface MapEntry {
   value: CLTypedAndToBytes;
 }
 
-class MapValue extends CLTypedAndToBytes {
+export class MapValue extends CLTypedAndToBytes {
   constructor(private v: MapEntry[]) {
     super();
   }
@@ -808,7 +808,7 @@ class MapValue extends CLTypedAndToBytes {
     return new MapType(this.v[0].key.clType(), this.v[0].value.clType());
   }
 
-  public static fromByte(type: MapType, bytes: ByteArray): Result<MapValue> {
+  public static fromBytes(type: MapType, bytes: ByteArray): Result<MapValue> {
     const u32Res = U32.fromBytes(bytes);
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
@@ -817,12 +817,12 @@ class MapValue extends CLTypedAndToBytes {
     const vec: MapEntry[] = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
-      const keyRes = fromBytesByCLType(type, remainder);
+      const keyRes = fromBytesByCLType(type.keyType, remainder);
       if (keyRes.hasError()) {
         return Result.Err(keyRes.error);
       }
       remainder = keyRes.remainder;
-      const valueRes = fromBytesByCLType(type, remainder);
+      const valueRes = fromBytesByCLType(type.valueType, remainder);
       if (valueRes.hasError()) {
         return Result.Err(valueRes.error);
       }

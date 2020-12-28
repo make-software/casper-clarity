@@ -7,6 +7,7 @@ import {
   I32,
   I64,
   List,
+  MapValue,
   StringValue,
   Tuple1,
   Tuple2,
@@ -385,7 +386,7 @@ describe(`numbers' toBytes`, () => {
     // prettier-ignore
     const expectedBytes = Uint8Array.from(
       [5, 0, 0, 0, 104, 101, 108, 108, 111, 64, 226, 1, 0, 0, 0, 0, 0, 1]
-      );
+    );
     expect(tuple3.toBytes()).to.deep.equal(expectedBytes);
 
     expect(
@@ -418,7 +419,7 @@ describe(`numbers' toBytes`, () => {
       CLTypedAndToBytesHelper.u32(3)
     ]);
     // prettier-ignore
-    const expectedBytes = Uint8Array.from([3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0])
+    const expectedBytes = Uint8Array.from([3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]);
     expect(list.toBytes()).to.deep.eq(expectedBytes);
 
     expect(
@@ -429,6 +430,38 @@ describe(`numbers' toBytes`, () => {
     ).to.deep.eq(list.toBytes());
   });
 
+  it('should serialze/deserialize Map correctly', () => {
+    const map = new MapValue([
+      {
+        key: CLTypedAndToBytesHelper.string('test1'),
+        value: CLTypedAndToBytesHelper.list([
+          CLTypedAndToBytesHelper.u64(1),
+          CLTypedAndToBytesHelper.u64(2)
+        ])
+      },
+      {
+        key: CLTypedAndToBytesHelper.string('test2'),
+        value: CLTypedAndToBytesHelper.list([
+          CLTypedAndToBytesHelper.u64(3),
+          CLTypedAndToBytesHelper.u64(4)
+        ])
+      }
+    ]);
+    // prettier-ignore
+    const expectBytes = Uint8Array.from([2, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 49, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 116, 101, 115, 116, 50, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
+
+    expect(map.toBytes()).to.deep.eq(expectBytes);
+
+    expect(
+      MapValue.fromBytes(
+        CLTypeHelper.map(
+          CLTypeHelper.string(),
+          CLTypeHelper.list(CLTypeHelper.u64())
+        ),
+        expectBytes
+      ).value.toBytes()
+    ).to.deep.eq(expectBytes);
+  });
   it('should serialize ByteArray correctly', () => {
     const byteArray = Uint8Array.from(Array(32).fill(42));
     const bytes = CLValue.byteArray(byteArray).toBytes();
