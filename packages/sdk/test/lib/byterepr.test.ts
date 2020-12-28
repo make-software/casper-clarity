@@ -6,6 +6,7 @@ import {
   decodeBase16,
   I32,
   I64,
+  Option,
   List,
   MapValue,
   StringValue,
@@ -462,6 +463,22 @@ describe(`numbers' toBytes`, () => {
       ).value.toBytes()
     ).to.deep.eq(expectBytes);
   });
+
+  it('should serialize/deserialize Option correctly', () => {
+    const opt = CLTypedAndToBytesHelper.option(
+      CLTypedAndToBytesHelper.string('test')
+    );
+    const expectBytes = Uint8Array.from([1, 4, 0, 0, 0, 116, 101, 115, 116]);
+    expect(opt.toBytes()).to.deep.eq(expectBytes);
+
+    expect(
+      Option.fromBytes(
+        CLTypeHelper.option(CLTypeHelper.string()),
+        expectBytes
+      ).value.toBytes()
+    ).to.deep.eq(expectBytes);
+  });
+
   it('should serialize ByteArray correctly', () => {
     const byteArray = Uint8Array.from(Array(32).fill(42));
     const bytes = CLValue.byteArray(byteArray).toBytes();

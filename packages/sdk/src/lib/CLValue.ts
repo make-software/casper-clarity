@@ -1268,6 +1268,10 @@ export class CLTypedAndToBytesHelper {
     return new Tuple3(t0, t1, t2);
   }
 
+  public static option(t: CLTypedAndToBytes | null, innerType?: CLType) {
+    return new Option(t, innerType);
+  }
+
   public static map(mapEntries: MapEntry[]) {
     return new MapValue(mapEntries);
   }
