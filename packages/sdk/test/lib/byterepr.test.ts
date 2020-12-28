@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import {
+  AccountHash,
   CLTypedAndToBytesHelper,
   decodeBase16,
   I32,
@@ -8,7 +9,8 @@ import {
   U128,
   U32,
   U64,
-  U8
+  U8,
+  Unit
 } from '../../src';
 import {
   AccessRights,
@@ -30,7 +32,7 @@ import {
 } from '../../src/lib/byterepr';
 
 describe(`numbers' toBytes`, () => {
-  it('should be able to encode u8', () => {
+  it('should be able to serialize/deserialize u8', () => {
     let bytesU8 = toBytesU8(10);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0x0a]));
     expect(U8.fromBytes(bytesU8).value.toBytes()).to.deep.eq(
@@ -46,7 +48,7 @@ describe(`numbers' toBytes`, () => {
     expect(() => toBytesU8(256)).to.throws('out');
   });
 
-  it('should be able to encode u32', () => {
+  it('should be able to serialize/deserialize u32', () => {
     let bytesU32 = toBytesU32(0xf0e0_d0c0);
     expect(bytesU32).to.deep.eq(Uint8Array.from([0xc0, 0xd0, 0xe0, 0xf0]));
     expect(U32.fromBytes(bytesU32).value.toBytes()).to.deep.eq(
@@ -64,7 +66,7 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
-  it('should be able to encode i32', () => {
+  it('should be able to serialize/deserialize i32', () => {
     let bytesI32 = toBytesI32(-100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([96, 121, 254, 255]));
     expect(I32.fromBytes(bytesI32).value.toBytes()).to.deep.eq(
@@ -87,7 +89,7 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
-  it('should be able to encode i64', () => {
+  it('should be able to serialize/deserialize i64', () => {
     let bytesI64 = toBytesI64('198572906121139257');
     expect(bytesI64).to.deep.eq(
       Uint8Array.from([57, 20, 94, 139, 1, 121, 193, 2])
@@ -104,7 +106,7 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
-  it('should be able to encode u64', () => {
+  it('should be able to serialize/deserialize u64', () => {
     let bytesU64 = toBytesU64('14198572906121139257');
     expect(bytesU64).to.deep.eq(
       Uint8Array.from([57, 20, 214, 178, 212, 118, 11, 197])
@@ -121,7 +123,7 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
-  it('should be able to encode u128', () => {
+  it('should be able to serialize/deserialize u128', () => {
     let bytesU128 = toBytesU128(100000);
     expect(bytesU128).to.deep.eq(Uint8Array.from([3, 160, 134, 1]));
     expect(U128.fromBytes(bytesU128).value.toBytes()).to.deep.equal(
@@ -143,7 +145,7 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
-  it('should be able to encode utf8 string', () => {
+  it('should be able to serialize/deserialize utf8 string', () => {
     const bytesString = toBytesString('test_测试');
     expect(bytesString).to.deep.eq(
       Uint8Array.from([
@@ -169,6 +171,15 @@ describe(`numbers' toBytes`, () => {
     );
   });
 
+  it('should be able to serialize/deserialize unit', () => {
+    const unit = CLTypedAndToBytesHelper.unit();
+    const bytesUnit = unit.toBytes();
+    expect(bytesUnit).to.deep.eq(Uint8Array.from([]));
+    expect(Unit.fromBytes(bytesUnit).value.toBytes()).to.deep.equal(
+      CLTypedAndToBytesHelper.unit().toBytes()
+    );
+  });
+
   it('should serialize a vector of CLValue correctly', () => {
     const truth = decodeBase16(
       '0100000015000000110000006765745f7061796d656e745f70757273650a'
@@ -177,16 +188,13 @@ describe(`numbers' toBytes`, () => {
     expect(bytes).to.deep.eq(truth);
   });
 
-  it('should serialize Key of URef variant correctly', () => {
+  it('should serialize/deserialize URef variant of Key correctly', () => {
+    const urefAddr =
+      '2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a';
     const truth = decodeBase16(
       '022a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a07'
     );
-    const uref = new URef(
-      decodeBase16(
-        '2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a'
-      ),
-      AccessRights.READ_ADD_WRITE
-    );
+    const uref = new URef(decodeBase16(urefAddr), AccessRights.READ_ADD_WRITE);
     const bytes = KeyValue.fromURef(uref).toBytes();
     expect(bytes).to.deep.eq(truth);
 
@@ -233,6 +241,36 @@ describe(`numbers' toBytes`, () => {
         7
       ])
     );
+
+    expect(KeyValue.fromBytes(bytes).value?.uRef?.uRefAddr).to.deep.equal(
+      decodeBase16(urefAddr)
+    );
+    expect(KeyValue.fromBytes(bytes).value?.uRef?.accessRights).to.deep.equal(
+      AccessRights.READ_ADD_WRITE
+    );
+  });
+
+  it('should serialize/deserialize Hash variant of Key correctly', () => {
+    const keyHash = KeyValue.fromHash(Uint8Array.from(Array(32).fill(42)));
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from([
+      1, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
+    ]);
+    expect(keyHash.toBytes()).to.deep.eq(expectedBytes);
+    expect(KeyValue.fromBytes(expectedBytes).value).to.deep.eq(keyHash);
+  });
+
+  it('should serialize/deserialize Account variant of Key correctly', () => {
+    const keyAccount = KeyValue.fromAccount(
+      new AccountHash(Uint8Array.from(Array(32).fill(42)))
+    );
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from([
+      0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
+    ]);
+
+    expect(keyAccount.toBytes()).to.deep.eq(expectedBytes);
+    expect(KeyValue.fromBytes(expectedBytes).value).to.deep.eq(keyAccount);
   });
 
   it('should serialize DeployHash correctly', () => {

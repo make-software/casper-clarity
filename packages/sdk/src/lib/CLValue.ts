@@ -1413,6 +1413,12 @@ export enum KeyVariant {
   HASH_ID = 1,
   /** The URef variant */
   UREF_ID = 2
+
+  // todo(abner) support the new introduced variants
+  /**  The Transfer variant */
+  // TRANSFER_ID = 3,
+  // DEPLOY_INFO_ID = 4,
+  // ERA_INFO_ID = 5
 }
 
 /// The length in bytes of a [`AccountHash`].
