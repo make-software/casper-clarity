@@ -315,6 +315,17 @@ describe(`numbers' toBytes`, () => {
       ])
     );
   });
+
+  it('should serialize/deserialize URef correctly', () => {
+    const uref = URef.fromFormattedStr(
+      'uref-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-007'
+    );
+    // prettier-ignore
+    const expectedBytes = Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 7])
+    expect(uref.toBytes()).to.deep.equal(expectedBytes);
+    expect(URef.fromBytes(expectedBytes).value).to.deep.eq(uref);
+  });
+
   it('should serialize ByteArray correctly', () => {
     const byteArray = Uint8Array.from(Array(32).fill(42));
     const bytes = CLValue.byteArray(byteArray).toBytes();
