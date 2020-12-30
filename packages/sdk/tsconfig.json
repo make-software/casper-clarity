@@ -2,10 +2,9 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "alwaysStrict": true,
-    "declaration": false,
+    "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-	"noEmit": true,
     "sourceMap": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
