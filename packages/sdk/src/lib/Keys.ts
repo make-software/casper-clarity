@@ -342,6 +342,14 @@ export class Secp256K1 extends AsymmetricKey {
   }
 
   /**
+   * Generate the accountHex for the Secp256K1 public key
+   * @param publicKey
+   */
+  public static accountHex(publicKey: ByteArray): string {
+    return '02' + encodeBase16(publicKey);
+  }
+
+  /**
    * Construct keyPair from public key and private key
    * @param publicKey
    * @param privateKey

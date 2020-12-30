@@ -27,7 +27,7 @@ import {
 import { RuntimeArgs } from './RuntimeArgs';
 import JSBI from 'jsbi';
 import { Keys, URef } from './index';
-import { AsymmetricKey } from './Keys';
+import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
 
 type ByteArray = Uint8Array;
@@ -481,7 +481,14 @@ export const signDeploy = (
   const approval = new Approval();
   const signature = signingKey.sign(deploy.hash);
   approval.signer = signingKey.accountHex();
-  approval.signature = Keys.Ed25519.accountHex(signature);
+  switch (signingKey.signatureAlgorithm) {
+    case SignatureAlgorithm.Ed25519:
+      approval.signature = Keys.Ed25519.accountHex(signature);
+      break;
+    case SignatureAlgorithm.Secp256K1:
+      approval.signature = Keys.Secp256K1.accountHex(signature);
+      break;
+  }
   deploy.approvals.push(approval);
 
   return deploy;
