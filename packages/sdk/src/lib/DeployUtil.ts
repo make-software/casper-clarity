@@ -504,11 +504,18 @@ export const signDeploy = (
 export const setSignature = (
   deploy: Deploy,
   sig: ByteArray,
-  publicKey: ByteArray
+  publicKey: PublicKey
 ): Deploy => {
   const approval = new Approval();
-  approval.signature = '01' + encodeBase16(sig);
-  approval.signer = '01' + encodeBase16(publicKey);
+  approval.signer = publicKey.toAccountHex();
+  switch (publicKey.signatureAlgorithm()) {
+    case SignatureAlgorithm.Ed25519:
+      approval.signature = Keys.Ed25519.accountHex(sig);
+      break;
+    case SignatureAlgorithm.Secp256K1:
+      approval.signature = Keys.Secp256K1.accountHex(sig);
+      break;
+  }
   deploy.approvals.push(approval);
   return deploy;
 };
