@@ -58,7 +58,7 @@ export class Contract {
       args.toBytes()
     );
     const paymentArgs = RuntimeArgs.fromMap({
-      amount: CLValue.fromU512(paymentAmount.toString())
+      amount: CLValue.u512(paymentAmount.toString())
     });
 
     const payment = new DeployUtil.ModuleBytes(
@@ -110,7 +110,7 @@ export class Faucet {
       new AccountHash(accountPublicKeyHash)
     );
     return RuntimeArgs.fromMap({
-      account: CLValue.fromKey(accountKey)
+      account: CLValue.key(accountKey)
     });
   }
 }
@@ -126,12 +126,12 @@ export class Transfer {
     accountPublicKeyHash: ByteArray,
     amount: bigint
   ): RuntimeArgs {
-    const account = CLValue.fromKey(
+    const account = CLValue.key(
       KeyValue.fromAccount(new AccountHash(accountPublicKeyHash))
     );
     return RuntimeArgs.fromMap({
       account,
-      amount: CLValue.fromU512(amount.toString())
+      amount: CLValue.u512(amount.toString())
     });
   }
 }

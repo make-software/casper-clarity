@@ -146,5 +146,5 @@ export function toBytesVecT<T extends ToBytes>(vec: T[]) {
  * Serializes a list of strings into an array of bytes.
  */
 export function toBytesStringList(arr: string[]) {
-  return toBytesVecT(arr.map(e => CLValue.fromString(e)));
+  return toBytesVecT(arr.map(e => CLValue.string(e)));
 }
