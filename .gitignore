@@ -25,3 +25,8 @@ contracts
 *.njsproj
 *.sln
 *.sw*
+
+# Cypress
+cypress.env.json
+packages/cypress/videos
+packages/cypress/screenshots

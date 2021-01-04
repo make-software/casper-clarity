@@ -212,7 +212,7 @@ export class BlockDAG extends React.Component<Props, {}> {
           if (!isHorizontal) {
             this.yTrans = t.rescaleY(initYTrans);
           }
-          updatePositions();
+          // updatePositions();
         })
         .on('end', () => {
           // reset
@@ -369,6 +369,9 @@ export class BlockDAG extends React.Component<Props, {}> {
     node.on('mouseover', focus).on('mouseout', unfocus);
     node.on('click', select);
 
+    /* 
+    COMMENTING OUT AS UNUSED AND IS PRODUCING ERRORS
+
     const updatePositions = () => {
       const x = this.xTrans ?? initXTrans;
       const y = this.yTrans ?? initYTrans;
@@ -407,6 +410,8 @@ export class BlockDAG extends React.Component<Props, {}> {
     };
 
     updatePositions();
+
+    */
   }
 }
 

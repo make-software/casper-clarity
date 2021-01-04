@@ -15,8 +15,6 @@ export const isConnected: () => Promise<boolean | undefined> = async () => {
 
 /**
  * Attempt connection to Signer
- *
- * @throws Error if already connected.
  */
 export const sendConnectionRequest: () => void = () => {
   return window.casperlabsHelper!.requestConnection();
@@ -49,6 +47,45 @@ export const sign: (
 ) => Promise<string> = (messageBase16: string, publicKeyBase64?: string) => {
   throwIfNotConnected();
   return window.casperlabsHelper!.sign(messageBase16, publicKeyBase64);
+};
+
+export const forceConnection: () => void = () => {
+  return window.signerTestingHelper!.forceConnection();
+};
+
+export const forceDisconnect: () => void = () => {
+  return window.signerTestingHelper!.forceDisconnect();
+};
+
+export const hasCreatedVault: () => Promise<boolean | undefined> = () => {
+  return window.signerTestingHelper!.hasCreatedVault();
+};
+
+export const resetExistingVault: () => Promise<void> = () => {
+  return window.signerTestingHelper!.resetExistingVault();
+};
+
+export const createNewVault: (password: string) => Promise<void> = (
+  password: string
+) => {
+  return window.signerTestingHelper!.createNewVault(password);
+};
+
+export const createTestAccount: (
+  name: string,
+  privateKey: string
+) => Promise<void> = (name: string, privateKey: string) => {
+  return window.signerTestingHelper!.createTestAccount(name, privateKey);
+};
+
+export const getToSignMessageID: () => Promise<number | null> = () => {
+  return window.signerTestingHelper!.getToSignMessageID();
+};
+
+export const signTestDeploy: (msgId: number) => Promise<void> = (
+  msgId: number
+) => {
+  return window.signerTestingHelper!.signTestDeploy(msgId);
 };
 
 const throwIfNotConnected = () => {
