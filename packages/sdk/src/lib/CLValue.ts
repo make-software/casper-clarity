@@ -4,7 +4,6 @@ import {
   toBytesBytesArray,
   toBytesNumber,
   toBytesString,
-  toBytesStringList,
   toBytesU32,
   toBytesVecT
 } from './byterepr';
@@ -1295,10 +1294,14 @@ export class CLValue implements ToBytes {
   /**
    * Please use static methods to constructs a new `CLValue`
    */
-  private constructor(private bytes: ByteArray, private clType: CLType) {}
+  private constructor(public value: CLTypedAndToBytes, public clType: CLType) {}
+
+  public get clValueBytes() {
+    return this.value.toBytes();
+  }
 
   public static fromT<T extends CLTypedAndToBytes>(v: T) {
-    return new CLValue(v.toBytes(), v.clType());
+    return new CLValue(v, v.clType());
   }
 
   /**
@@ -1306,7 +1309,7 @@ export class CLValue implements ToBytes {
    */
   public toBytes() {
     return concat([
-      toBytesArrayU8(this.bytes),
+      toBytesArrayU8(this.clValueBytes),
       CLTypeHelper.toBytesHelper(this.clType)
     ]);
   }
@@ -1320,7 +1323,8 @@ export class CLValue implements ToBytes {
     if (clTypeRes.hasError()) {
       return Result.Err(clTypeRes.error);
     }
-    const clValue = new CLValue(bytesRes.value.rawBytes, clTypeRes.value);
+    const v = fromBytesByCLType(clTypeRes.value, bytesRes.value.rawBytes);
+    const clValue = new CLValue(v.value, clTypeRes.value);
     return Result.Ok(clValue, clTypeRes.remainder);
   }
 
@@ -1377,10 +1381,10 @@ export class CLValue implements ToBytes {
   };
 
   public static stringList = (strings: string[]) => {
-    return new CLValue(
-      toBytesStringList(strings),
-      CLTypeHelper.list(SimpleType.String)
+    const v = CLTypedAndToBytesHelper.list(
+      strings.map(s => CLTypedAndToBytesHelper.string(s))
     );
+    return new CLValue(v, CLTypeHelper.list(SimpleType.String));
   };
 
   public static list<T extends CLTypedAndToBytes>(vec: T[]) {
