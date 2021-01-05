@@ -1,5 +1,6 @@
 import { jsonArrayMember, jsonMember, jsonObject } from 'typedjson';
 import { CLValue } from './CLValue';
+import { decodeBase16 } from './Conversions';
 
 @jsonObject
 class NamedKey {
@@ -50,19 +51,26 @@ class AccountJson {
 @jsonObject
 class CLValueJson {
   @jsonMember({ name: 'cl_type', constructor: String })
-  public clTypeStr: string;
+  public typeStr: string;
 
-  @jsonMember({ name: 'serialized_bytes', constructor: String })
-  public serializedBytes: string;
-
-  public clValue?: CLValue;
+  @jsonMember({
+    name: 'serialized_bytes',
+    deserializer: (b: string) => {
+      const res = CLValue.fromBytes(decodeBase16(b));
+      if (res.hasError()) {
+        throw res.error;
+      }
+      return res.value;
+    }
+  })
+  public value: CLValue;
 
   @jsonMember({
     name: 'parsed_to_json',
-    constructor: String,
+    deserializer: v => v,
     preserveNull: true
   })
-  public parsedToJson: string | null;
+  public parsedToJson: string | number | null;
 }
 
 @jsonObject

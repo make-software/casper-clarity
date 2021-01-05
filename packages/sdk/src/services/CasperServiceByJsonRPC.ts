@@ -1,5 +1,5 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
-import { CLValue, decodeBase16, DeployUtil, encodeBase16, PublicKey } from '..';
+import { DeployUtil, encodeBase16, PublicKey } from '..';
 import { deployToJson } from '../lib/DeployUtil';
 import { TypedJSON } from 'typedjson';
 import { StoredValue } from '../lib/StoredValue';
@@ -216,8 +216,8 @@ export class CasperServiceByJsonRPC {
       stateRootHash,
       'account-hash-' + accountHash,
       []
-    ).then(res => res.stored_value.Account);
-    return account.main_purse;
+    ).then(res => res.Account!);
+    return account.mainPurse;
   }
 
   /**
@@ -271,7 +271,7 @@ export class CasperServiceByJsonRPC {
     stateRootHash: string,
     key: string,
     path: string[]
-  ) {
+  ): Promise<StoredValue> {
     const res = await this.client.request({
       method: 'state_get_item',
       params: {
@@ -283,19 +283,10 @@ export class CasperServiceByJsonRPC {
     if (res.error) {
       return res;
     } else {
-      const storedValueJson = res.result.stored_value;
+      const storedValueJson = res.stored_value;
       const serializer = new TypedJSON(StoredValue);
-      const storedValue = serializer.parse(storedValueJson);
-
-      if (storedValue!.CLValue) {
-        const clValue = CLValue.fromBytes(
-          decodeBase16(storedValue!.CLValue.serializedBytes)
-        );
-        storedValue!.CLValue.clValue = clValue.value;
-        return storedValue;
-      } else {
-        return storedValue;
-      }
+      const storedValue = serializer.parse(storedValueJson)!;
+      return storedValue;
     }
   }
 
