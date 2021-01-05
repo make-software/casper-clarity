@@ -376,7 +376,7 @@ class U256 extends NumberCoder {
 }
 
 @staticImplements<BytesDeserializableStatic<U512>>()
-class U512 extends NumberCoder {
+export class U512 extends NumberCoder {
   constructor(n: BigNumberish) {
     super(512, false, n);
   }
@@ -1195,8 +1195,8 @@ class ByteArrayValue extends CLTypedAndToBytes {
     if (u32Res.remainder.length < size) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
-    const b = new ByteArrayValue(u32Res.remainder.subarray(0, length));
-    const rem = u32Res.remainder.subarray(length);
+    const b = new ByteArrayValue(u32Res.remainder.subarray(0, size));
+    const rem = u32Res.remainder.subarray(size);
     return Result.Ok(b, rem);
   }
 }
