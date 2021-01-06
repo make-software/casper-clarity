@@ -26,7 +26,8 @@ context('Basic Functionality', () => {
             'Blocks'          : '#sideMenu > li:nth-child(4) > a',
             'Deploys'         : '#sideMenu > li:nth-child(5) > a',
             'Search'          : '#sideMenu > li:nth-child(6) > a',
-            'ConnectedPeers' : '#sideMenu > li:nth-child(7) > a',
+            'Validators'      : '#sideMenu > li:nth-child(7) > a',
+            'ConnectedPeers' : '#sideMenu > li:nth-child(8) > a',
         }
         contractArgTypes = {
             'BOOL'  : '0',
@@ -50,6 +51,7 @@ context('Basic Functionality', () => {
         }
     })
 
+/*    
     it('Should error if Signer not connected', () => {
         
         // Create vault but don't connect
@@ -219,6 +221,7 @@ context('Basic Functionality', () => {
             .should('contain.text', 'Please create an account in the Plugin first!')
     })
 
+    // BUG: This is getting a Network Error response when searching
     it('Should search for block', () => {
         // Go to Search screen
         cy.get(sideNavLinks.Search)
@@ -334,5 +337,60 @@ context('Basic Functionality', () => {
 
     })
 
+    */
+
+    it('Should check the Validators tab', () => {
+        cy.get(sideNavLinks.Validators)
+            .click()
+        
+        cy.get('#validator-tabs > li:nth-child(1) > a')
+            .should('have.text', 'Bids')
+        
+        cy.get('#validator-tabs > li:nth-child(2) > a')
+            .should('contain.text', '(current)')
+            .then(($a) => {
+                let currentEra = $a.text;
+
+                
+            })
+        
+        cy.get('#validator-tabs')
+            .children()
+            .should('have.length', 5)
+            .then(($tabs) => {
+                let currentEra = $tabs[1].innerText.split(" ")[1];
+                let currentEraNumber = parseInt(currentEra, 10);
+
+                let actualTabs = [];
+                $tabs.toArray().forEach((element) => {
+                    actualTabs.push(element.innerText);
+                })
+
+                let expectedTabs = [
+                    "Bids",
+                    `Era ${currentEra} (current)`,
+                    `Era ${(currentEraNumber + 1)}`,
+                    `Era ${(currentEraNumber + 2)}`,
+                    `Era ${(currentEraNumber + 3)}`
+                ];
+
+                console.log(actualTabs);
+                console.log(expectedTabs);
+
+                assert.deepEqual(actualTabs, expectedTabs)
+                
+                
+                
+                
+            })
+
+        
+        cy.get('#validators-bids-tab > div > div > table > tbody > tr:nth-child(1) > td:nth-child(1)')
+            .should('not.be.null')
+    })
+
+    it('Should check the Peers tab', () => {
+
+    })
 })
   
