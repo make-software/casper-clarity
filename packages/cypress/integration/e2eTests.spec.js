@@ -1,13 +1,12 @@
 /// <reference types='cypress' />
 
-context('Basic Functionality', () => {
+context('Signer', () => {
 
     let sideNavLinks;
     let contractArgTypes;
 
     beforeEach(() => {
         // Alias block request to allow wait command to target the response
-        cy.intercept('GET', '/block').as('getBlock')
         cy.visit('http://localhost:8000')
 
         cy.disconnectSigner();
@@ -220,34 +219,9 @@ context('Basic Functionality', () => {
             .should('contain.text', 'Please create an account in the Plugin first!')
     })
 
-    // BUG: This is getting a Network Error response when searching
-    it('Should search for block', () => {
-        // Go to Search screen
-        cy.get(sideNavLinks.Search)
-            .click()
-
-        // Get block hash from network highlight box
-        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
-            .should('not.contain.html', 'null')
-            .then(($span) => {
-                // Enter block hash into search box
-                cy.get('#id-search-hash-base16')
-                    .type($span.get(0).innerText)
-                    .should('have.value', $span.get(0).innerText)
-                    .wait(200)
-                    .get('#root > div > main > div > div > div > div > div.card-body > button')
-                    .click()
-                    .wait('@getBlock')
-                    .then(() => {
-                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > div > table > tbody > tr:nth-child(4) > td > a')
-                        .should(($a) => {
-                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
-                        })    
-                    })
-            })            
-    })
 
     // BUG: This is resulting in an error: Bad response format - needs investigating
+    // Produces false positive test pass - although I think the function works when user does it.S
     it('Should deploy a contract', () => {
         
         // Create vault and connect
@@ -334,6 +308,57 @@ context('Basic Functionality', () => {
                 cy.signTestDeploy(msgId);
             });
 
+    })
+
+})
+  
+context('Clarity', () => {
+
+    let sideNavLinks;
+
+    beforeEach(() => {
+        // Alias block request to allow wait command to target the response
+        cy.intercept('GET', '/block').as('getBlock')
+        cy.visit('http://localhost:8000')
+
+        // Aliases for side nav tabs
+        sideNavLinks = {
+            'Accounts'        : '#sideMenu > li:nth-child(1) > a',
+            'Faucet'          : '#sideMenu > li:nth-child(2) > a', 
+            'DeployContract' : '#sideMenu > li:nth-child(3) > a',
+            'Blocks'          : '#sideMenu > li:nth-child(4) > a',
+            'Deploys'         : '#sideMenu > li:nth-child(5) > a',
+            'Search'          : '#sideMenu > li:nth-child(6) > a',
+            'Validators'      : '#sideMenu > li:nth-child(7) > a',
+            'ConnectedPeers' : '#sideMenu > li:nth-child(8) > a',
+        }
+    })
+
+    // BUG: This is getting a Network Error response when searching
+    it('Should search for block', () => {
+        // Go to Search screen
+        cy.get(sideNavLinks.Search)
+            .click()
+
+        // Get block hash from network highlight box
+        cy.get('#mainNav > div.navbar-network-info.d-none.d-md-inline-block > p:nth-child(2) > span')
+            .should('not.contain.html', 'null')
+            .then(($span) => {
+                // Enter block hash into search box
+                cy.get('#id-search-hash-base16')
+                    .type($span.get(0).innerText)
+                    .should('have.value', $span.get(0).innerText)
+                    .wait(200)
+                    .get('#root > div > main > div > div > div > div > div.card-body > button')
+                    .click()
+                    .wait('@getBlock')
+                    .then(() => {
+                        cy.get('#root > div > main > div > div > div > div:nth-child(1) > div.card-body > div > table > tbody > tr:nth-child(4) > td > a')
+                        .should(($a) => {
+                            assert.equal($span.get(0).innerText.trim(), $a.get(0).innerText.trim(), "Block Hashes match")
+                        })    
+                    })
+            })            
     })
 
     it('Should check the Validators tab', () => {
