@@ -10,6 +10,7 @@
     "build": "lerna run build",
     "publish": "lerna publish",
     "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\"",
+    "cypress:dev" : "node_modules/.bin/cypress open",
     "cypress:chrome": "node_modules/.bin/cypress run -b chrome"
   },
   "workspaces": [
