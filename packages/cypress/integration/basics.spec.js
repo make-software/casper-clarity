@@ -51,7 +51,6 @@ context('Basic Functionality', () => {
         }
     })
 
-/*    
     it('Should error if Signer not connected', () => {
         
         // Create vault but don't connect
@@ -337,22 +336,9 @@ context('Basic Functionality', () => {
 
     })
 
-    */
-
     it('Should check the Validators tab', () => {
         cy.get(sideNavLinks.Validators)
             .click()
-        
-        cy.get('#validator-tabs > li:nth-child(1) > a')
-            .should('have.text', 'Bids')
-        
-        cy.get('#validator-tabs > li:nth-child(2) > a')
-            .should('contain.text', '(current)')
-            .then(($a) => {
-                let currentEra = $a.text;
-
-                
-            })
         
         cy.get('#validator-tabs')
             .children()
@@ -379,11 +365,7 @@ context('Basic Functionality', () => {
 
                 assert.deepEqual(actualTabs, expectedTabs)
                 
-                
-                
-                
             })
-
         
         cy.get('#validators-bids-tab > div > div > table > tbody > tr:nth-child(1) > td:nth-child(1)')
             .should('not.be.null')
@@ -391,6 +373,12 @@ context('Basic Functionality', () => {
 
     it('Should check the Peers tab', () => {
 
+        cy.get(sideNavLinks.ConnectedPeers)
+            .click()
+
+        cy.get('#root > div > main > div > div > div > div.card-body > div > table > tbody')
+            .children()
+            .should('not.be.null')
     })
 })
   
