@@ -46,6 +46,7 @@ describe('Storage', async () => {
 
         let block = await storage.findBlockByHash(blockEvent.block_hash);
         assert.strictEqual(block.parentHash, blockEvent.block_header.parent_hash);
+        assert.strictEqual(block.state, blockEvent.block_header.state_root_hash);
         
         // Deploys are updated.
         let deploy1 = await storage.findDeployByHash(blockEvent.block_header.deploy_hashes[0]);

@@ -63,7 +63,7 @@ class Storage {
     async onBlockAdded(event) {
         let deploysStr = event.block_header.deploy_hashes.join(', ');
         console.log(
-            `Processing BlockAdded event. BlockHash: ${event.block_hash}, ` + 
+            `Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
             `Deploys: [${deploysStr}].`
         );
 
@@ -79,6 +79,7 @@ class Storage {
             blockHeight: event.block_header.height,
             parentHash: event.block_header.parent_hash,
             timestamp: event.block_header.timestamp,
+            state: event.block_header.state_root_hash,
             eraId: event.block_header.era_id,
             proposer: event.block_header.proposer,
         });
@@ -104,9 +105,9 @@ class Storage {
 
     async findBlockByHash(blockHash) {
         return this.models.Block.findOne({
-            where: { 
-                blockHash: blockHash 
-            } 
+            where: {
+                blockHash: blockHash
+            }
         });
     }
 
