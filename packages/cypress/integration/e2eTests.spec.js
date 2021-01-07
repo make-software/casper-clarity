@@ -7,7 +7,7 @@ context('Signer', () => {
 
     beforeEach(() => {
         // Alias block request to allow wait command to target the response
-        cy.visit('http://localhost:8000')
+        cy.visit(Cypress.env('clarity'))
 
         cy.disconnectSigner();
         cy.checkVaultExists()
@@ -319,7 +319,7 @@ context('Clarity', () => {
     beforeEach(() => {
         // Alias block request to allow wait command to target the response
         cy.intercept('GET', '/block').as('getBlock')
-        cy.visit('http://localhost:8000')
+        cy.visit(Cypress.env('clarity'))
 
         // Aliases for side nav tabs
         sideNavLinks = {

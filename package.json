@@ -10,8 +10,9 @@
     "build": "lerna run build",
     "publish": "lerna publish",
     "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\"",
-    "cypress:dev" : "node_modules/.bin/cypress open",
-    "cypress:chrome": "node_modules/.bin/cypress run -b chrome"
+    "cypress:dev" : "node_modules/.bin/cypress open --env clarity=http://localhost:8000",
+    "cypress:chrome": "node_modules/.bin/cypress run -b chrome --env clarity=http://localhost:8000",
+    "cypress:ci" : "node_modules/.bin/cypress run -b chrome --env clarity= < TEST CLARITY >"
   },
   "workspaces": [
     "packages/*"
