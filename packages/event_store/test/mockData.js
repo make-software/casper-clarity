@@ -93,7 +93,7 @@ module.exports = {
         "block_hash":"block1_6409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "block_header":{
             "parent_hash":"16815a580c3c1005a7df485e77e31c89e5fb1dec4d57988ffb29f1e699977414",
-            "global_state_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
+            "state_root_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
             "body_hash":"da223b09967c5bd2110743307e0af6d39f61720aa7218a640a08eed12dd575c7",
             "deploy_hashes":[
                 "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
@@ -112,7 +112,7 @@ module.exports = {
         "block_hash":"block2_09191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "block_header":{
             "parent_hash":"aacd466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
-            "global_state_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
+            "state_root_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
             "body_hash":"da223b09967c5bd2110743307e0af6d39f61720aa7218a640a08eed12dd575c7",
             "deploy_hashes":[],
             "random_bit":true,
@@ -128,7 +128,7 @@ module.exports = {
         "block_hash":"block3_09191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
         "block_header":{
             "parent_hash":"aacd466409191316db2ad075bf005cba502e2a46f83102bceb736356a9c51111",
-            "global_state_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
+            "state_root_hash":"cc1b4d3c56f26c63b0683b5d0eb7e165226a05c12e189739c8b477e633582f47",
             "body_hash":"da223b09967c5bd2110743307e0af6d39f61720aa7218a640a08eed12dd575c7",
             "deploy_hashes":[
                 "deploy3_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3"

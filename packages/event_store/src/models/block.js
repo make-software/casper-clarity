@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
                 result["deploys"] = deploys;
             }
             
-            return result; 
+            return result;
         }
     };
 
@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
     // We also can't use the in-built constraints like isDate because if false
     // it throws error which breaks the stream instead of just logging a warning
     Block.init({
-        blockHeight: { 
+        blockHeight: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
@@ -65,7 +65,7 @@ module.exports = (sequelize, DataTypes) => {
                 isTimestampValid() {
                     //console.log(typeof(this.timestamp));
                     // if ( this.timestamp.prototype.toString.call(date) === '[object Date]') {
-                        // console.warn("\n\tWARN: invalid timestamp for block at height: " + this.blockHeight + "\n");                        
+                        // console.warn("\n\tWARN: invalid timestamp for block at height: " + this.blockHeight + "\n");
                     // }
                 }
             }
@@ -76,6 +76,20 @@ module.exports = (sequelize, DataTypes) => {
                 isEraIdValid() {
                     if ( typeof(this.eraId) !== 'number' ) {
                         console.warn("\n\tWARN: invalid eraId for block at height: " + this.blockHeight + "\n");
+                    }
+                }
+            }
+        },
+        state: {
+            type: DataTypes.STRING,
+            validate: {
+                isStateValid() {
+                    if (typeof this.blockHash !== 'string') {
+                        console.warn(
+                          '\n\tWARN: invalid state root hash for block at height: ' +
+                          this.blockHeight +
+                          '\n'
+                        );
                     }
                 }
             }
@@ -93,7 +107,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Block',
-        indexes: [ 
+        indexes: [
             { fields: [ 'blockHeight' ] },
             { fields: [ 'blockHash' ] }
         ]
