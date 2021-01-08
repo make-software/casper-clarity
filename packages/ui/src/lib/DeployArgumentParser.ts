@@ -376,44 +376,44 @@ export class DeployArgumentParser {
     let clValueInstance;
     switch (firstType) {
       case 'Bytes':
-        clValueInstance = CLValue.fromBytes(decodeBase16(argValueInJson));
+        clValueInstance = CLValue.byteArray(decodeBase16(argValueInJson));
         break;
       case 'Bytes (Fixed Length)':
         // fixme: is Fixed Length bytes still needed in node-rs?
-        clValueInstance = CLValue.fromBytes(decodeBase16(argValueInJson));
+        clValueInstance = CLValue.byteArray(decodeBase16(argValueInJson));
         break;
       case SimpleType.Bool:
-        clValueInstance = CLValue.fromBool(argValueInJson);
+        clValueInstance = CLValue.bool(argValueInJson);
         break;
       case SimpleType.I32:
-        clValueInstance = CLValue.fromI32(argValueInJson);
+        clValueInstance = CLValue.i32(argValueInJson);
         break;
       case SimpleType.I64:
-        clValueInstance = CLValue.fromI64(argValueInJson);
+        clValueInstance = CLValue.i64(argValueInJson);
         break;
       case SimpleType.U8:
-        clValueInstance = CLValue.fromU8(argValueInJson);
+        clValueInstance = CLValue.u8(argValueInJson);
         break;
       case SimpleType.U32:
-        clValueInstance = CLValue.fromU32(argValueInJson);
+        clValueInstance = CLValue.u32(argValueInJson);
         break;
       case SimpleType.U64:
-        clValueInstance = CLValue.fromU64(argValueInJson);
+        clValueInstance = CLValue.u64(argValueInJson);
         break;
       case SimpleType.U128:
-        clValueInstance = CLValue.fromU128(argValueInJson);
+        clValueInstance = CLValue.u128(argValueInJson);
         break;
       case SimpleType.U256:
-        clValueInstance = CLValue.fromU256(argValueInJson);
+        clValueInstance = CLValue.u256(argValueInJson);
         break;
       case SimpleType.U512:
-        clValueInstance = CLValue.fromU512(argValueInJson);
+        clValueInstance = CLValue.u512(argValueInJson);
         break;
       case SimpleType.Unit:
-        clValueInstance = CLValue.fromUnit();
+        clValueInstance = CLValue.unit();
         break;
       case SimpleType.String:
-        clValueInstance = CLValue.fromString(argValueInJson);
+        clValueInstance = CLValue.string(argValueInJson);
         break;
       case SimpleType.Key:
       case SimpleType.URef:
@@ -425,7 +425,7 @@ export class DeployArgumentParser {
         );
         break;
       case SimpleType.PublicKey:
-        clValueInstance = CLValue.fromPublicKey(decodeBase16(argValueInJson));
+        clValueInstance = CLValue.publicKey(decodeBase16(argValueInJson));
         break;
     }
     return clValueInstance;
@@ -502,7 +502,7 @@ export class DeployArgumentParser {
       );
     });
     if (argsList.length > 0) {
-      return CLValue.fromList(argsList);
+      return CLValue.list(argsList);
     } else {
       throw new Error("Can't create empty list");
     }
@@ -541,7 +541,7 @@ export class DeployArgumentParser {
       return { key, value };
     });
     if (mapEntries.length > 0) {
-      return CLValue.fromMap(mapEntries);
+      return CLValue.map(mapEntries);
     } else {
       throw new Error("Can't create empty Map");
     }
@@ -569,11 +569,11 @@ export class DeployArgumentParser {
       );
     });
     if (argsTupleList.length === 1) {
-      return CLValue.fromTuple1(argsTupleList[0]);
+      return CLValue.tuple1(argsTupleList[0]);
     } else if (argsTupleList.length === 2) {
-      return CLValue.fromTuple2(argsTupleList[0], argsTupleList[1]);
+      return CLValue.tuple2(argsTupleList[0], argsTupleList[1]);
     } else {
-      return CLValue.fromTuple3(
+      return CLValue.tuple3(
         argsTupleList[0],
         argsTupleList[1],
         argsTupleList[2]
@@ -632,10 +632,10 @@ export class DeployArgumentParser {
           key = KeyValue.fromURef(uRef);
           break;
       }
-      return CLValue.fromKey(key);
+      return CLValue.key(key);
     } else {
       const uRef = new URef(decodeBase16(argValueStr), uRefAccessRight!);
-      return CLValue.fromURef(uRef);
+      return CLValue.uref(uRef);
     }
   }
 }

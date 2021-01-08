@@ -336,7 +336,7 @@ export class DeployContractsContainer {
       let signedDeploy = DeployUtil.setSignature(
         deploy,
         decodeBase64(sigBase64),
-        decodeBase64(publicKeyBase64)
+        PublicKey.fromEd25519(decodeBase64(publicKeyBase64))
       );
       await this.casperService.deploy(signedDeploy);
       const jwtToken = await this.authService.getToken();
