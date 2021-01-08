@@ -52,7 +52,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "blakejs": "^1.1.0",
     "typedjson": "^1.6.0-rc2",
     "reflect-metadata": "^0.1.13",
