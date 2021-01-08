@@ -35,6 +35,5 @@
   },
   "lint-staged": {
     "*.{ts,tsx,scss,md}": "prettier --write"
-  },
-  "dependencies": {}
+  }
 }
