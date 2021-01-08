@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
                 "eraId": this.eraId,
                 "proposer": this.proposer,
                 "state": this.state,
+                "deployCount": this.deployCount,
                 "height": this.blockHeight,
             };
 
@@ -90,6 +91,16 @@ module.exports = (sequelize, DataTypes) => {
                           this.blockHeight +
                           '\n'
                         );
+                    }
+                }
+            }
+        },
+        deployCount: {
+            type: DataTypes.INTEGER,
+            validate: {
+                isDeployCountValid() {
+                    if ( typeof(this.deployCount) !== 'number' ) {
+                        console.warn("\n\tWARN: invalid deployCount for block at height: " + this.blockHeight + "\n");
                     }
                 }
             }
