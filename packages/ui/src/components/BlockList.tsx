@@ -58,7 +58,14 @@ class _BlockList extends React.Component<Props, {}> {
         // refresh={() => this.refresh()}
         filterTtl="Only show blocks"
         filterLbl="Hide Ballots"
-        headers={['Height', 'Era Id', 'Block Hash', 'Timestamp', 'Proposer']}
+        headers={[
+          'Height',
+          'Era Id',
+          'Deploys',
+          'Block Hash',
+          'Timestamp',
+          'Proposer'
+        ]}
         rows={dag.eventStoreBlocks?.data}
         renderRow={(block: BlockResult) => {
           const id = block.blockHash;
@@ -66,6 +73,7 @@ class _BlockList extends React.Component<Props, {}> {
             <tr key={id}>
               <td>{block.height}</td>
               <td>{block.eraId}</td>
+              <td>{block.deployCount || 0}</td>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>

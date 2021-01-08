@@ -7,6 +7,7 @@ export interface BlockResult {
   eraId: number;
   proposer: string;
   state: string;
+  deployCount: number;
   height: number;
   deploys: string[];
 }

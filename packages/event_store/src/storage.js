@@ -62,6 +62,7 @@ class Storage {
 
     async onBlockAdded(event) {
         let deploysStr = event.block_header.deploy_hashes.join(', ');
+        let deployCount = event.block_header.deploy_hashes.length;
         console.log(
             `Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
             `Deploys: [${deploysStr}].`
@@ -80,6 +81,7 @@ class Storage {
             parentHash: event.block_header.parent_hash,
             timestamp: event.block_header.timestamp,
             state: event.block_header.state_root_hash,
+            deployCount: deployCount,
             eraId: event.block_header.era_id,
             proposer: event.block_header.proposer,
         });
