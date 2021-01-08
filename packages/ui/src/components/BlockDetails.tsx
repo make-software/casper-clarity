@@ -142,12 +142,14 @@ const DeploysTable = observer(
 const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
   block: BlockResult
 ) => {
-  const id = block.blockHash;
+  const parent = block.parentHash;
   return [
     ['Height', block.height],
     ['Era ID', block.eraId],
-    ['Block Hash', <Link to={id}>{id}</Link>],
+    ['Block Hash', block.blockHash],
+    ['Parent Hash', <Link to={parent}>{parent}</Link>],
     ['Timestamp', block.timestamp],
+    ['State root hash', block.state],
     ['Proposer', block.proposer]
   ];
 };
