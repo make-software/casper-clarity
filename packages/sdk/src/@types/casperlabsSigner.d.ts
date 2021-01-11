@@ -18,6 +18,43 @@ interface CasperLabsHelper {
   getSelectedPublicKeyBase64: () => Promise<string | undefined>;
 }
 
+interface SignerTestingHelper {
+  /*
+   * Force connection to Signer (for testing)
+   */
+  forceConnection: () => void;
+  /**
+   * Force disconnect from Signer
+   */
+  forceDisconnect: () => void;
+  /**
+   * Check if there is an existing vault
+   */
+  hasCreatedVault: () => Promise<boolean | undefined>;
+  /**
+   * Reset existing vault (for testing) prevents complications
+   * and unlocks in preparation for creating an account
+   */
+  resetExistingVault: () => Promise<void>;
+  /**
+   * Create a vault (for testing)
+   */
+  createNewVault: (password: string) => Promise<void>;
+  /**
+   * Create an account (for testing)
+   */
+  createTestAccount: (name: string, privateKey: string) => Promise<void>;
+  /**
+   * Return message ID so we can sign deploy programatically
+   */
+  getToSignMessageID: () => Promise<number | null>;
+  /**
+   * Sign deploy with given id (provided by above method)
+   */
+  signTestDeploy: (msgId: number) => Promise<void>;
+}
+
 interface Window {
   casperlabsHelper?: CasperLabsHelper;
+  signerTestingHelper?: SignerTestingHelper;
 }

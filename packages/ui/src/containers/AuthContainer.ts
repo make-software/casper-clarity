@@ -109,7 +109,11 @@ export class AuthContainer {
 
   private async fetchUser() {
     const isAuthenticated = await this.authService.isAuthenticated();
-    this.user = isAuthenticated ? await this.authService.getUser() : null;
+    if (isAuthenticated) {
+      this.user = await this.authService.getUser();
+    } else {
+      this.user = null;
+    }
     this.refreshAccounts();
   }
 

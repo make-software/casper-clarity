@@ -9,17 +9,24 @@
     "test:sdk": "npm test --prefix ./packages/sdk",
     "build": "lerna run build",
     "publish": "lerna publish",
-    "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\""
+    "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,scss,md}\"",
+    "cypress:dev": "node_modules/.bin/cypress open --env clarity=http://localhost:8000",
+    "cypress:chrome": "node_modules/.bin/cypress run -b chrome --env clarity=http://localhost:8000",    
+    "NOT_READY_YET": "yarn dev & wait-on http://localhost:8000 && node_modules/.bin/cypress run -b chrome --env clarity=http://localhost:8000",
+    "cypress:ci": "node_modules/.bin/cypress run -b chrome --env clarity= < TEST CLARITY >"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "lerna": "^3.22.1",
     "concurrently": "^3.6.0",
+    "cypress": "6.1.0",
+    "cypress-browser-extension-plugin": "^0.1.0",
     "husky": "^2.7.0",
+    "lerna": "^3.22.1",
     "lint-staged": "^10.2.11",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "wait-on": "^5.2.1"
   },
   "husky": {
     "hooks": {
