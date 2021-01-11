@@ -159,15 +159,25 @@ interface ToJson {
 export abstract class ExecutableDeployItem implements ToBytes, ToJson {
   public abstract tag: number;
 
+  public abstract args: RuntimeArgs;
+
   public abstract toBytes(): ByteArray;
 
   public abstract toJson(): Record<string, any>;
+
+  public isTransfer(): boolean {
+    return this.tag === 5;
+  }
+
+  public getArgByName(argName: string): CLValue | undefined {
+    return this.args.args[argName];
+  }
 }
 
 export class ModuleBytes extends ExecutableDeployItem {
   public tag = 0;
 
-  constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
+  constructor(public moduleBytes: Uint8Array, public args: RuntimeArgs) {
     super();
   }
 
@@ -175,7 +185,7 @@ export class ModuleBytes extends ExecutableDeployItem {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
   }
 
@@ -183,7 +193,7 @@ export class ModuleBytes extends ExecutableDeployItem {
     return {
       ModuleBytes: {
         module_bytes: encodeBase16(this.moduleBytes),
-        args: encodeBase16(this.args)
+        args: encodeBase16(this.args.toBytes())
       }
     };
   }
@@ -193,9 +203,9 @@ export class StoredContractByHash extends ExecutableDeployItem {
   public tag = 1;
 
   constructor(
-    private hash: Uint8Array,
-    private entryPoint: string,
-    private args: Uint8Array
+    public hash: Uint8Array,
+    public entryPoint: string,
+    public args: RuntimeArgs
   ) {
     super();
   }
@@ -205,7 +215,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
   }
 
@@ -214,7 +224,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
       StoredContractByHash: {
         hash: encodeBase16(this.hash),
         entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
+        args: encodeBase16(this.args.toBytes())
       }
     };
   }
@@ -224,9 +234,9 @@ export class StoredContractByName extends ExecutableDeployItem {
   public tag = 2;
 
   constructor(
-    private name: string,
-    private entryPoint: string,
-    private args: Uint8Array
+    public name: string,
+    public entryPoint: string,
+    public args: RuntimeArgs
   ) {
     super();
   }
@@ -236,7 +246,7 @@ export class StoredContractByName extends ExecutableDeployItem {
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
   }
 
@@ -245,7 +255,7 @@ export class StoredContractByName extends ExecutableDeployItem {
       StoredContractByName: {
         name: this.name,
         entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
+        args: encodeBase16(this.args.toBytes())
       }
     };
   }
@@ -255,10 +265,10 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
   public tag = 4;
 
   constructor(
-    private name: string,
-    private version: number | null,
-    private entryPoint: string,
-    private args: Uint8Array
+    public name: string,
+    public version: number | null,
+    public entryPoint: string,
+    public args: RuntimeArgs
   ) {
     super();
   }
@@ -275,7 +285,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
       toBytesString(this.name),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
   }
 
@@ -284,21 +294,27 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
       StoredVersionedContractByName: {
         name: this.name,
         entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
+        args: encodeBase16(this.args.toBytes())
       }
     };
   }
 }
 
 export class StoredVersionedContractByHash extends ExecutableDeployItem {
-  public hash: Uint8Array;
-  public version: number | null;
-  public entryPoint: string;
-  public args: ByteArray;
   public tag = 3;
+
+  constructor(
+    public hash: Uint8Array,
+    public version: number | null,
+    public entryPoint: string,
+    public args: RuntimeArgs
+  ) {
+    super();
+  }
 
   public toBytes(): ByteArray {
     let serializedVersion;
+
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
     } else {
@@ -309,7 +325,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
       toBytesBytesArray(this.hash),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
   }
 
@@ -319,14 +335,14 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
         hash: encodeBase16(this.hash),
         version: this.version,
         entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
+        args: encodeBase16(this.args.toBytes())
       }
     };
   }
 }
 
 export class Transfer extends ExecutableDeployItem {
-  public args: ByteArray;
+  public args: RuntimeArgs;
   public tag = 5;
 
   /**
@@ -344,7 +360,7 @@ export class Transfer extends ExecutableDeployItem {
     id: number | null = null
   ) {
     super();
-    const runtimeArgs = new RuntimeArgs([]);
+    const runtimeArgs = RuntimeArgs.fromMap({});
     runtimeArgs.insert('amount', CLValue.u512(amount));
     if (sourcePurse) {
       runtimeArgs.insert('source', CLValue.uref(sourcePurse));
@@ -364,16 +380,19 @@ export class Transfer extends ExecutableDeployItem {
         CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
       );
     }
-    this.args = runtimeArgs.toBytes();
+    this.args = runtimeArgs;
   }
 
   public toBytes(): ByteArray {
-    return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesArrayU8(this.args.toBytes())
+    ]);
   }
 
   public toJson(): Record<string, any> {
     return {
-      Transfer: { args: encodeBase16(this.args) }
+      Transfer: { args: encodeBase16(this.args.toBytes()) }
     };
   }
 }
@@ -528,7 +547,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
     amount: CLValue.u512(paymentAmount.toString())
   });
 
-  return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());
+  return new ModuleBytes(Uint8Array.from([]), paymentArgs);
 };
 
 /**

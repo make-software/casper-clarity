@@ -14,20 +14,29 @@ export class NamedArg implements ToBytes {
 }
 
 export class RuntimeArgs implements ToBytes {
-  constructor(private args: NamedArg[]) {}
+  constructor(public args: Record<string, CLValue>) {}
 
   public static fromMap(args: Record<string, CLValue>) {
-    const vec = Object.keys(args).map(a => {
-      return new NamedArg(a, args[a]);
-    });
-    return new RuntimeArgs(vec);
+    return new RuntimeArgs(args);
+  }
+
+  public static fromNamedArgs(namedArgs: NamedArg[]) {
+    const args = namedArgs.reduce<Record<string, CLValue>>((pre, cur) => {
+      pre[cur.name] = cur.value;
+      return pre;
+    }, {});
+    return RuntimeArgs.fromMap(args);
   }
 
   public insert(key: string, value: CLValue) {
-    this.args.push(new NamedArg(key, value));
+    this.args[key] = value;
   }
 
   public toBytes() {
-    return toBytesVecT(this.args);
+    const vec = Object.keys(this.args).map(a => {
+      return new NamedArg(a, this.args[a]);
+    });
+
+    return toBytesVecT(vec);
   }
 }
