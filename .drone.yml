@@ -133,6 +133,7 @@ steps:
     - "git checkout $DRONE_TAG"
     - "cd packages/sdk"
     - "npm publish"
+    - "cat /root/.npm/_logs*"
 
 trigger:
   event:
