@@ -128,7 +128,7 @@ steps:
   commands:
     - "echo test"
     - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
-    - "git checkout $tag -b OP-170"
+    - "git checkout $tag -b OP-1707"
     - "git log"
    # - "git describe --tags"
 
