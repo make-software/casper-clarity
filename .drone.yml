@@ -125,6 +125,9 @@ name: echo-test
 steps:
 - name: echo-test
   image: "casperlabs/clarity-build:latest"
+  environment:
+    NPM_TOKEN:
+      from_secret: npm_token  
   commands:
     - "git fetch"
     - "git checkout $DRONE_TAG"
