@@ -129,8 +129,8 @@ steps:
     - "echo test"
     - "git fetch && git checkout -b origin/OP-1707"
     - "git describe --tags"
-   # - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
-   # - "git checkout test-tag7 -b OP-1707"
+    - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
+    - "git checkout $tag"
     - "git log"
    # - "git describe --tags"
 
