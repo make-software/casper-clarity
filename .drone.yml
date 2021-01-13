@@ -131,6 +131,7 @@ steps:
     #- "git describe --tags"
     #- "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
     #- "git checkout $tag"
+    - "git fetch"
     - "git checkout $DRONE_TAG"
     - "git show --summary"
     - "echo '-----------'"
