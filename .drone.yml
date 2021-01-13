@@ -135,8 +135,6 @@ steps:
     - "cd packages/sdk"
     - "npm publish --dry-run"
     - "echo '-----------'"
-    - "echo : ${$NPM_TOKEN} :"
-    - "echo '-----------'"
     - "env | sort"
 
 trigger:
