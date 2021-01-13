@@ -16,7 +16,6 @@ import { SignatureAlgorithm } from './Keys';
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 const SECP256K1_PUBLIC_KEY_LENGTH = 33;
-type ByteArray = Uint8Array;
 
 type Type<T> = new (...args: any[]) => T;
 
@@ -739,6 +738,8 @@ export class PublicKey extends CLTypedAndToBytes {
     switch (publicKeyHexBytes[0]) {
       case 1:
         return PublicKey.fromEd25519(publicKeyHexBytes.subarray(1));
+      case 2:
+        return PublicKey.fromSecp256K1(publicKeyHexBytes.subarray(1));
       default:
         throw new Error('Unsupported type of public key');
     }

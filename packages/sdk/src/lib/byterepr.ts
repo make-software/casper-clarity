@@ -8,8 +8,6 @@ import { MaxUint256, NegativeOne, One, Zero } from '@ethersproject/constants';
 import { arrayify, concat } from '@ethersproject/bytes';
 import { CLValue, ToBytes } from './CLValue';
 
-type ByteArray = Uint8Array;
-
 /**
  * Convert number to bytes
  */

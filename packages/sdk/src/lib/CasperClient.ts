@@ -16,8 +16,6 @@ import {
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { CasperHDKey } from './CasperHDKey';
 
-type ByteArray = Uint8Array;
-
 export class CasperClient {
   private nodeClient: CasperServiceByJsonRPC;
   private eventStoreClient: EventService;
