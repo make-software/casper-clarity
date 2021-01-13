@@ -8,13 +8,25 @@ The purpose of the explorer is to help users interact with the blockchain:
 - Explore the block DAG
 - Deploy contracts
 
-## Install
+## Setup
 
-You could use `yarn run bootstrap` to install all dependencies
+After cloning the repo `cd` to the root of the clarity dir and run:
+```
+  yarn install  // Installs dependencies
+  yarn build    // Builds components from packages
+  yarn dev      // Run Clarity on your localhost
+```
+If you want to run the **Cypress** test suite you will first need to have a local network running. The easiest way to do this is using [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl), follow the docs there to get a simple network going on your local machine to test Clarity against.
+
+Once you have a network running, start Clarity using `yarn dev` and run one of the following:
+```
+  yarn cypress:dev    // Opens the Cypress GUI and holds the test window open on  
+                       completion of the suite.  
+  yarn cypress:chrome // Runs the Cypress tests and closes the browser on completion,  
+                        results are printed to the terminal.   
+```
 
 ## Build
-
-You can use `yarn` in the `ui`, `server` and `sdk` directories to build and interactively develop the components.
 
 To package the whole thing into a docker image, run `docker-build/clarity` in the project root directory.
 
