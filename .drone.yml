@@ -126,7 +126,7 @@ steps:
 - name: echo-test
   image: "casperlabs/clarity-build:latest"
   commands:
-    - "echo "test
+    - "echo test"
 
 trigger:
   event:
