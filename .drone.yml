@@ -131,19 +131,11 @@ steps:
   commands:
     - "git fetch"
     - "git checkout $DRONE_TAG"
-    - "git show --summary"
     - "cd packages/sdk"
-    - "npm publish --dry-run"
-    - "echo '-----------'"
-    - "env | sort"
+    - "npm publish"
 
 trigger:
   event:
   - tag
-#trigger:
-#  event:
-#  - push
-#  branch:
-#  - "OP-1707"
 
 
