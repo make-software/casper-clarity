@@ -8,14 +8,7 @@ import blake from 'blakejs';
 import { Option } from './option';
 import { encodeBase16 } from './Conversions';
 import humanizeDuration from 'humanize-duration';
-import {
-  CLTypedAndToBytesHelper,
-  CLTypeHelper,
-  CLValue,
-  PublicKey,
-  ToBytes,
-  U32
-} from './CLValue';
+import { CLTypedAndToBytesHelper, CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
@@ -95,7 +88,8 @@ export interface DeployHeader {
  * The cryptographic hash of a Deploy.
  */
 class DeployHash implements ToBytes {
-  constructor(private hash: ByteArray) {}
+  constructor(private hash: ByteArray) {
+  }
 
   public toBytes(): ByteArray {
     return toBytesDeployHash(this.hash);
@@ -121,27 +115,34 @@ const toBytesDeployHeader = (deployHeader: DeployHeader) => {
 /**
  * A deploy containing a smart contract along with the requester's signature(s).
  */
-export interface Deploy {
+export class Deploy {
   /**
-   * The DeployHash identifying this Deploy
+   *
+   * @param hash The DeployHash identifying this Deploy
+   * @param header The deployHeader
+   * @param payment The ExecutableDeployItem for payment code.
+   * @param session the ExecutableDeployItem for session code.
+   * @param approvals  An array of signature and public key of the signers, who approve this deploy
    */
-  hash: ByteArray;
-  /**
-   * The deployHeader
-   */
-  header: DeployHeader;
-  /**
-   * The ExecutableDeployItem for payment code.
-   */
-  payment: ExecutableDeployItem;
-  /**
-   * the ExecutableDeployItem for session code.
-   */
-  session: ExecutableDeployItem;
-  /**
-   * An array of signature and public key of the signers, who approve this deploy
-   */
-  approvals: Approval[];
+  constructor(
+    public hash: ByteArray,
+    public header: DeployHeader,
+    public payment: ExecutableDeployItem,
+    public session: ExecutableDeployItem,
+    public approvals: Approval[]) {
+  }
+
+  public isTransfer(): boolean {
+    return this.session.tag === 5;
+  }
+
+  public isStandardPayment(): boolean {
+    if (this.payment.tag === 0) {
+      const paymentModuleBytes = this.payment as ModuleBytes;
+      return paymentModuleBytes.moduleBytes.length === 0;
+    }
+    return false;
+  }
 }
 
 /**
@@ -164,10 +165,6 @@ export abstract class ExecutableDeployItem implements ToBytes, ToJson {
   public abstract toBytes(): ByteArray;
 
   public abstract toJson(): Record<string, any>;
-
-  public isTransfer(): boolean {
-    return this.tag === 5;
-  }
 
   public getArgByName(argName: string): CLValue | undefined {
     return this.args.args[argName];
@@ -476,13 +473,13 @@ export function makeDeploy(
   };
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
-  return {
-    hash: deployHash,
+  return new Deploy(
+    deployHash,
     header,
     payment,
     session,
-    approvals: []
-  };
+    []
+  );
 }
 
 /**
