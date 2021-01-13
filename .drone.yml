@@ -133,7 +133,7 @@ steps:
     - "git checkout $tag"
     - "git show --summary"
     - "echo '-----------'"
-    - "env"
+    - "env | sort"
    # - "git describe --tags"
 
 #trigger:
