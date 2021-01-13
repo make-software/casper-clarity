@@ -37,6 +37,7 @@ import {
   toBytesU8,
   toBytesVecT
 } from '../../src/lib/byterepr';
+import { Ed25519, Secp256K1 } from '../../dist/lib/Keys';
 
 describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize u8', () => {
@@ -568,6 +569,20 @@ describe(`numbers' toBytes`, () => {
         42,
         42
       ])
+    );
+  });
+
+  it('should compute hex from PublicKey correctly', () => {
+    const ed25519Account = Ed25519.new();
+    const ed25519AccountHex = ed25519Account.accountHex();
+    expect(PublicKey.fromHex(ed25519AccountHex)).to.deep.equal(
+      ed25519Account.publicKey
+    );
+
+    const secp256K1Account = Secp256K1.new();
+    const secp256K1AccountHex = secp256K1Account.accountHex();
+    expect(PublicKey.fromHex(secp256K1AccountHex)).to.deep.equal(
+      secp256K1Account.publicKey
     );
   });
 });
