@@ -127,6 +127,8 @@ steps:
   image: "casperlabs/clarity-build:latest"
   commands:
     - "echo test"
+    - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
+    - "git checkout $tag"
     - "git log"
    # - "git describe --tags"
 
