@@ -26,7 +26,7 @@ export class StoredFaucetService {
       const sessionArgs = CallFaucet.args(
         accountPublicKeyHash,
         this.transferAmount
-      ).toBytes();
+      );
       const session = new DeployUtil.StoredContractByName(
         CONTRACT_NAME,
         ENTRY_POINT_NAME,
