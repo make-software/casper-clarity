@@ -132,7 +132,7 @@ steps:
     - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
     - "git checkout $tag"
     - "git show --summary"
-    - "echo '-----------"
+    - "echo '-----------'"
     - "env"
    # - "git describe --tags"
 
