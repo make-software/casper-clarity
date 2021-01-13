@@ -1,7 +1,6 @@
 import { HDKeyT } from 'ethereum-cryptography/pure/hdkey';
 import { HDKey } from 'ethereum-cryptography/hdkey';
 import { sha256 } from 'ethereum-cryptography/sha256';
-import { ByteArray } from '../index';
 import { Secp256K1 } from './Keys';
 
 export class CasperHDKey {

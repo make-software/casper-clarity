@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
 import { SignKeyPair, SignLength } from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
-import { ByteArray, encodeBase16, encodeBase64, PublicKey } from '../index';
+import { encodeBase16, encodeBase64, PublicKey } from '../index';
 import { byteHash } from './Contracts';
 import { ec as EC } from 'elliptic';
 import * as secp256k1 from 'ethereum-cryptography/secp256k1';

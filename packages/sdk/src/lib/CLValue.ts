@@ -16,7 +16,6 @@ import { SignatureAlgorithm } from './Keys';
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 const SECP256K1_PUBLIC_KEY_LENGTH = 33;
-type ByteArray = Uint8Array;
 
 type Type<T> = new (...args: any[]) => T;
 

@@ -1,5 +1,4 @@
 import { decodeBase64 } from 'tweetnacl-util';
-import { ByteArray } from '../index';
 
 // https://nodejs.org/api/buffer.html
 
