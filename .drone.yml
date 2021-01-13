@@ -127,7 +127,8 @@ steps:
   image: "casperlabs/clarity-build:latest"
   commands:
     - "echo test"
-    - "git describe --tags"
+    - "git log"
+   # - "git describe --tags"
 
 #trigger:
 #  event:
