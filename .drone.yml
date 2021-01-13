@@ -115,3 +115,22 @@ trigger:
 
 depends_on:
 - build-publish
+
+
+---
+kind: pipeline
+type: docker
+name: echo-test
+
+steps:
+- name: echo-test
+  image: "casperlabs/clarity-build:latest"
+  commands:
+    - "echo "test
+
+trigger:
+  event:
+  - push
+  branch:
+  - "OP-1707"
+
