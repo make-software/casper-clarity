@@ -131,7 +131,7 @@ steps:
     - "git describe --tags"
    # - "tag=$(git describe --tags `git rev-list --tags --max-count=1`)"
    # - "git checkout test-tag7 -b OP-1707"
-   # "git log"
+    - "git log"
    # - "git describe --tags"
 
 #trigger:
