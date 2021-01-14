@@ -159,8 +159,8 @@ export class CasperClient {
    *
    * @param json
    */
-  public jsonToDeploy(json: any) {
-    return DeployUtil.jsonToDeploy(json);
+  public deployFromJson(json: any) {
+    return DeployUtil.deployFromJson(json);
   };
 
   /**

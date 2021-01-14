@@ -887,7 +887,7 @@ export const deployToJson = (deploy: Deploy) => {
  *
  * @param json
  */
-export const jsonToDeploy = (json: any) => {
+export const deployFromJson = (json: any) => {
   const serializer = new TypedJSON(Deploy);
   return serializer.parse(json);
 };
