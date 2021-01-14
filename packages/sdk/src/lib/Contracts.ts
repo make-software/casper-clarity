@@ -2,7 +2,7 @@ import blake from 'blakejs';
 import * as fs from 'fs';
 import { PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
-import { DeployParams } from './DeployUtil';
+import { DeployParams, ExecutableDeployItemJsonWrapper } from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { AccountHash, CLValue, KeyValue } from './CLValue';
 import { AsymmetricKey } from './Keys';
@@ -53,12 +53,12 @@ export class Contract {
     signingKeyPair: AsymmetricKey,
     chainName: string
   ): DeployUtil.Deploy {
-    const session = new DeployUtil.ModuleBytes(this.sessionWasm, args);
+    const session = ExecutableDeployItemJsonWrapper.newModuleBytes(this.sessionWasm, args);
     const paymentArgs = RuntimeArgs.fromMap({
       amount: CLValue.u512(paymentAmount.toString())
     });
 
-    const payment = new DeployUtil.ModuleBytes(this.paymentWasm, paymentArgs);
+    const payment = ExecutableDeployItemJsonWrapper.newModuleBytes(this.paymentWasm, paymentArgs);
 
     const deploy = DeployUtil.makeDeploy(
       new DeployParams(accountPublicKey, chainName),
@@ -76,7 +76,8 @@ export class BoundContract {
   constructor(
     private contract: Contract,
     private contractKeyPair: AsymmetricKey
-  ) {}
+  ) {
+  }
 
   public deploy(
     args: RuntimeArgs,

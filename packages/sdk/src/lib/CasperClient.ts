@@ -1,18 +1,7 @@
-import {
-  AccountDeploy,
-  CasperServiceByJsonRPC,
-  DeployResult,
-  EventService,
-  TransferResult
-} from '../services';
+import { AccountDeploy, CasperServiceByJsonRPC, DeployResult, EventService, TransferResult } from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
 import { encodeBase16 } from './Conversions';
-import {
-  Deploy,
-  DeployParams,
-  ExecutableDeployItem,
-  Transfer
-} from './DeployUtil';
+import { Deploy, DeployParams, ExecutableDeployItem, ExecutableDeployItemJsonWrapper, Transfer } from './DeployUtil';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { CasperHDKey } from './CasperHDKey';
 
@@ -137,7 +126,7 @@ export class CasperClient {
     session: ExecutableDeployItem,
     payment: ExecutableDeployItem
   ): Deploy {
-    return DeployUtil.makeDeploy(deployParams, session, payment);
+    return DeployUtil.makeDeploy(deployParams, ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(session), ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(payment));
   }
 
   /**
@@ -164,6 +153,15 @@ export class CasperClient {
   public deployToJson(deploy: Deploy) {
     return DeployUtil.deployToJson(deploy);
   }
+
+  /**
+   * Convert the json to deploy object
+   *
+   * @param json
+   */
+  public jsonToDeploy(json: any) {
+    return DeployUtil.jsonToDeploy(json);
+  };
 
   /**
    * Construct the deploy for transfer purpose
