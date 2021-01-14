@@ -30,8 +30,6 @@ import { Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
 
-type ByteArray = Uint8Array;
-
 const shortEnglishHumanizer = humanizeDuration.humanizer({
   spacer: '',
   serialComma: false,

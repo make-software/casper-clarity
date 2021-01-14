@@ -3,8 +3,6 @@
  * @packageDocumentation
  */
 
-import { ByteArray } from '../index';
-
 type Serializer<T> = (arg: T) => ByteArray;
 
 /**

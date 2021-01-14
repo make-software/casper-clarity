@@ -6,8 +6,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "yarn run clean && yarn run build && yarn run test",
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "prepublishOnly": "yarn run build && yarn run test",
+    "prebuild": "yarn run clean && tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "clean": "rm -rf ./dist",
     "~build": "tsc --watch",
