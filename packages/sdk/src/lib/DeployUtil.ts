@@ -23,6 +23,7 @@ import { Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { jsonArrayMember, jsonMember, jsonObject, TypedJSON } from 'typedjson';
+import { ByteArray } from 'tweetnacl-ts';
 
 const shortEnglishHumanizer = humanizeDuration.humanizer({
   spacer: '',
@@ -87,13 +88,10 @@ export class DeployHeader implements ToBytes {
   })
   public bodyHash: ByteArray;
 
-  @jsonArrayMember(
-    () => {
-      // @ts-ignore
-    }, {
-      serializer: byteArrayJsonSerializer,
-      deserializer: byteArrayJsonDeserializer
-    })
+  @jsonArrayMember(ByteArray, {
+    serializer: (value: Array<ByteArray>) => value.map(it => byteArrayJsonSerializer(it)),
+    deserializer: (json: any) => json.map((it: string) => byteArrayJsonDeserializer(it))
+  })
   public dependencies: ByteArray[];
 
   @jsonMember({ name: 'chain_name', constructor: String })
