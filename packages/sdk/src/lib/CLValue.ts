@@ -1,12 +1,5 @@
 import { concat } from '@ethersproject/bytes';
-import {
-  toBytesArrayU8,
-  toBytesBytesArray,
-  toBytesNumber,
-  toBytesString,
-  toBytesU32,
-  toBytesVecT
-} from './byterepr';
+import { toBytesArrayU8, toBytesBytesArray, toBytesNumber, toBytesString, toBytesU32, toBytesVecT } from './byterepr';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { decodeBase16, encodeBase16 } from './Conversions';
 import { Option } from './option';
@@ -25,7 +18,8 @@ export interface BytesDeserializableStatic<T> extends Type<BytesSerializable> {
   fromBytes(bytes: ByteArray): Result<T>;
 }
 
-export interface BytesSerializable extends CLTyped, ToBytes {}
+export interface BytesSerializable extends CLTyped, ToBytes {
+}
 
 export interface CLTyped {
   /**
@@ -121,7 +115,8 @@ export class Result<T> {
     private val: T | null,
     private rem: ByteArray | null,
     public error: FromBytesError
-  ) {}
+  ) {
+  }
 
   public static Err<T>(errorCode: FromBytesError) {
     return new Result<T>(null, null, errorCode);
@@ -133,7 +128,7 @@ export class Result<T> {
 
   get remainder(): ByteArray {
     if (this.rem === null) {
-      throw new Error("Don't have remainder");
+      throw new Error('Don\'t have remainder');
     }
     return this.rem;
   }
@@ -143,7 +138,7 @@ export class Result<T> {
    */
   get value(): T {
     if (!this.hasValue()) {
-      throw new Error("Don't have value");
+      throw new Error('Don\'t have value');
     }
     return this.val!;
   }
@@ -167,12 +162,12 @@ export class Result<T> {
 
 @staticImplements<BytesDeserializableStatic<Bool>>()
 export class Bool extends CLTypedAndToBytes {
-  constructor(private b: boolean) {
+  constructor(public val: boolean) {
     super();
   }
 
   public toBytes(): ByteArray {
-    return new Uint8Array([this.b ? 1 : 0]);
+    return new Uint8Array([this.val ? 1 : 0]);
   }
 
   public clType(): CLType {
@@ -196,7 +191,7 @@ export class Bool extends CLTypedAndToBytes {
 abstract class NumberCoder extends CLTypedAndToBytes {
   public bitSize: number;
   public signed: boolean;
-  public value: BigNumberish;
+  public val: BigNumberish;
   public name: string;
 
   protected constructor(bitSize: number, signed: boolean, value: BigNumberish) {
@@ -204,11 +199,11 @@ abstract class NumberCoder extends CLTypedAndToBytes {
     this.name = (signed ? 'i' : 'u') + bitSize;
     this.bitSize = bitSize;
     this.signed = signed;
-    this.value = value;
+    this.val = value;
   }
 
   public toBytes = (): ByteArray => {
-    return toBytesNumber(this.bitSize, this.signed, this.value);
+    return toBytesNumber(this.bitSize, this.signed, this.val);
   };
 
   public abstract clType(): CLType;
@@ -419,12 +414,12 @@ export class Unit extends CLTypedAndToBytes {
 
 @staticImplements<BytesDeserializableStatic<StringValue>>()
 export class StringValue extends CLTypedAndToBytes {
-  constructor(public str: string) {
+  constructor(public val: string) {
     super();
   }
 
   public toBytes = () => {
-    return toBytesString(this.str);
+    return toBytesString(this.val);
   };
 
   public clType(): CLType {
@@ -436,7 +431,7 @@ export class StringValue extends CLTypedAndToBytes {
     if (res.hasError()) {
       return Result.Err(res.error);
     }
-    const len = res.value.value as number;
+    const len = res.value.val as number;
     const str = Buffer.from(res.remainder.subarray(0, len)).toString('utf8');
     return Result.Ok<StringValue>(
       new StringValue(str),
@@ -531,7 +526,7 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   constructor(private vec: T[]) {
     super();
     if (vec.length === 0) {
-      throw new Error("Can't create instance for empty list");
+      throw new Error('Can\'t create instance for empty list');
     }
   }
 
@@ -551,7 +546,7 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.value as number;
+    const size = u32Res.value.val as number;
     const vec = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
@@ -813,7 +808,7 @@ export class MapValue extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.value as number;
+    const size = u32Res.value.val as number;
     const vec: MapEntry[] = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
@@ -836,7 +831,8 @@ export class MapValue extends CLTypedAndToBytes {
 export class OptionType {
   public tag = ComplexType.Option;
 
-  constructor(public innerType: CLType) {}
+  constructor(public innerType: CLType) {
+  }
 }
 
 class ListType {
@@ -851,31 +847,36 @@ class ListType {
 class ByteArrayType {
   public tag = ComplexType.ByteArray;
 
-  constructor(public size: number) {}
+  constructor(public size: number) {
+  }
 }
 
 class MapType {
   public tag = ComplexType.Map;
 
-  constructor(public keyType: CLType, public valueType: CLType) {}
+  constructor(public keyType: CLType, public valueType: CLType) {
+  }
 }
 
 class Tuple1Type {
   public tag = ComplexType.Tuple1;
 
-  constructor(public t0: CLType) {}
+  constructor(public t0: CLType) {
+  }
 }
 
 class Tuple2Type {
   public tag = ComplexType.Tuple2;
 
-  constructor(public t0: CLType, public t1: CLType) {}
+  constructor(public t0: CLType, public t1: CLType) {
+  }
 }
 
 class Tuple3Type {
   public tag = ComplexType.Tuple3;
 
-  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
+  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {
+  }
 }
 
 export type CLType =
@@ -1025,7 +1026,7 @@ export class CLTypeHelper {
           return Result.Err(sizeRes.error);
         }
         return Result.Ok(
-          CLTypeHelper.byteArray(sizeRes.value.value as number),
+          CLTypeHelper.byteArray(sizeRes.value.val as number),
           sizeRes.remainder
         );
       }
@@ -1192,7 +1193,7 @@ class ByteArrayValue extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.value as number;
+    const size = u32Res.value.val as number;
     if (u32Res.remainder.length < size) {
       return Result.Err(FromBytesError.EarlyEndOfStream);
     }
@@ -1295,7 +1296,8 @@ export class CLValue implements ToBytes {
   /**
    * Please use static methods to constructs a new `CLValue`
    */
-  private constructor(public value: CLTypedAndToBytes, public clType: CLType) {}
+  private constructor(public value: CLTypedAndToBytes, public clType: CLType) {
+  }
 
   public get clValueBytes() {
     return this.value.toBytes();
@@ -1419,6 +1421,77 @@ export class CLValue implements ToBytes {
   public static byteArray(bytes: ByteArray) {
     return CLValue.fromT(new ByteArrayValue(bytes));
   }
+
+  public isBigNumber() {
+    return this.clType === SimpleType.U8 || this.clType === SimpleType.I32 ||
+      this.clType === SimpleType.I64 || this.clType === SimpleType.U32 ||
+      this.clType === SimpleType.U64 || this.clType === SimpleType.U128 ||
+      this.clType === SimpleType.U256 || this.clType === SimpleType.U512;
+  }
+
+  public asBigNumber(): BigNumber {
+    if (this.isBigNumber()) {
+      const numberCoder = this.value as NumberCoder;
+      return BigNumber.from(numberCoder.val);
+    } else {
+      throw new Error('The CLValue can\'t convert to BigNumber');
+    }
+  }
+
+  public isBoolean() {
+    return this.clType === SimpleType.Bool;
+  }
+
+  public asBoolean() {
+    if (!this.isBoolean()) {
+      throw new Error('The CLValue can\'t convert to Boolean');
+    }
+    return (this.value as Bool).val;
+  }
+
+  public isString() {
+    return this.clType === SimpleType.String;
+  }
+
+  public asString() {
+    if (!this.isString()) {
+      throw new Error('The CLValue can\'t convert to String');
+    }
+    return (this.value as StringValue).val;
+  }
+
+  public isPublicKey() {
+    return this.clType === SimpleType.PublicKey;
+  }
+
+  public asPublicKey(): PublicKey {
+    if (!this.isPublicKey()) {
+      throw new Error('The CLValue can\'t convert to PublicKey');
+    }
+    return this.value as PublicKey;
+  }
+
+  public isKey() {
+    return this.clType === SimpleType.Key;
+  }
+
+  public asKey() {
+    if (!this.isKey()) {
+      throw new Error('The CLValue can\'t convert to Key');
+    }
+    return this.value as KeyValue;
+  }
+
+  public isURef() {
+    return this.clType === SimpleType.URef;
+  }
+
+  public asURef() {
+    if (!this.isURef()) {
+      throw new Error('The CLValue can\'t convert to URef');
+    }
+    return this.value as URef;
+  }
 }
 
 export enum KeyVariant {
@@ -1484,6 +1557,18 @@ export class KeyValue extends CLTypedAndToBytes {
   public hash: Uint8Array | null;
   public uRef: URef | null;
   public account: AccountHash | null;
+
+  public isHash() {
+    return this.variant === KeyVariant.HASH_ID;
+  }
+
+  public isURef() {
+    return this.variant === KeyVariant.UREF_ID;
+  }
+
+  public isAccount() {
+    return this.variant === KeyVariant.ACCOUNT_ID;
+  }
 
   /** Creates a `Key` from a given [[URef]]. */
   public static fromURef(uref: URef): KeyValue {
@@ -1612,7 +1697,7 @@ export class URef extends CLTypedAndToBytes {
    */
   public static fromFormattedStr(input: string) {
     if (!input.startsWith(FORMATTED_STRING_PREFIX)) {
-      throw new Error("prefix is not 'uref-'");
+      throw new Error('prefix is not \'uref-\'');
     }
     const parts = input.substring(FORMATTED_STRING_PREFIX.length).split('-', 2);
     if (parts.length !== 2) {
@@ -1623,6 +1708,10 @@ export class URef extends CLTypedAndToBytes {
     const accessRight = parseInt(parts[1], 8) as AccessRights;
 
     return new URef(addr, accessRight);
+  }
+
+  public toFormattedStr() {
+    return [FORMATTED_STRING_PREFIX, encodeBase16(this.uRefAddr), this.accessRights.toString(8)].join('-');
   }
 
   /**

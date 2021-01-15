@@ -22,7 +22,7 @@ export class NamedArg implements ToBytes {
     if (clValueRes.hasError()) {
       return Result.Err(clValueRes.error);
     }
-    return Result.Ok(new NamedArg(nameRes.value.str, clValueRes.value), clValueRes.remainder);
+    return Result.Ok(new NamedArg(nameRes.value.val, clValueRes.value), clValueRes.remainder);
   }
 }
 
@@ -59,7 +59,7 @@ export class RuntimeArgs implements ToBytes {
     if (sizeRes.hasError()) {
       return Result.Err(sizeRes.error);
     }
-    const size = sizeRes.value.value as number;
+    const size = sizeRes.value.val as number;
     let remainBytes = sizeRes.remainder;
     const res: NamedArg[] = [];
     for (let i = 0; i < size; i++) {
