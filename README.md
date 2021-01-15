@@ -14,11 +14,26 @@ After cloning the repo `cd` to the root of the clarity dir and run:
 ```
   yarn install  // Installs dependencies
   yarn build    // Builds components from packages
-  yarn dev      // Run Clarity on your localhost
 ```
-If you want to run the **Cypress** test suite you will first need to have a local network running. The easiest way to do this is using [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl), follow the docs there to get a simple network going on your local machine to test Clarity against.
+You should then spin up an [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl) network of nodes locally to run Clarity against.
 
-Once you have a network running, start Clarity using `yarn dev` and run one of the following:
+Now that the packages and network are ready you will need 3 terminals to get it all working:  
+```
+// Terminal A
+  cd packages/event_store   
+  rm development_sqlite.db    // Wipe old data
+  npm run start-web-server    // Start event-store
+
+// Terminal B
+  npm run start-event-handler // Start processing event-stream
+
+// Terminal C
+  cd ../../
+  yarn dev    // Start local Clarity instance
+```
+
+If you want to run the **Cypress** test suite you will then need one more terminal and run one of the following: 
+
 ```
   yarn cypress:dev    // Opens the Cypress GUI and holds the test window open on  
                        completion of the suite.  
