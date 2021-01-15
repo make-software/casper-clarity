@@ -89,7 +89,7 @@ export class DeployHeader implements ToBytes {
   public bodyHash: ByteArray;
 
   @jsonArrayMember(ByteArray, {
-    serializer: (value: Array<ByteArray>) => value.map(it => byteArrayJsonSerializer(it)),
+    serializer: (value: ByteArray[]) => value.map(it => byteArrayJsonSerializer(it)),
     deserializer: (json: any) => json.map((it: string) => byteArrayJsonDeserializer(it))
   })
   public dependencies: ByteArray[];
@@ -171,7 +171,7 @@ export class Approval {
   public signature: string;
 }
 
-export abstract class ExecutableDeployItem implements ToBytes {
+abstract class ExecutableDeployItemInternal implements ToBytes {
   public abstract tag: number;
 
   public abstract args: RuntimeArgs;
@@ -194,7 +194,7 @@ const argsDeserializer = (byteStr: string) => {
 };
 
 @jsonObject
-export class ModuleBytes extends ExecutableDeployItem {
+export class ModuleBytes extends ExecutableDeployItemInternal {
   public tag = 0;
 
   @jsonMember({
@@ -228,7 +228,7 @@ export class ModuleBytes extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class StoredContractByHash extends ExecutableDeployItem {
+export class StoredContractByHash extends ExecutableDeployItemInternal {
   public tag = 1;
 
   @jsonMember({
@@ -272,7 +272,7 @@ export class StoredContractByHash extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class StoredContractByName extends ExecutableDeployItem {
+export class StoredContractByName extends ExecutableDeployItemInternal {
   public tag = 2;
 
   @jsonMember({ constructor: String })
@@ -313,7 +313,7 @@ export class StoredContractByName extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class StoredVersionedContractByName extends ExecutableDeployItem {
+export class StoredVersionedContractByName extends ExecutableDeployItemInternal {
   public tag = 4;
 
   @jsonMember({ constructor: String })
@@ -362,7 +362,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class StoredVersionedContractByHash extends ExecutableDeployItem {
+export class StoredVersionedContractByHash extends ExecutableDeployItemInternal {
   public tag = 3;
 
   @jsonMember({
@@ -422,7 +422,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class Transfer extends ExecutableDeployItem {
+export class Transfer extends ExecutableDeployItemInternal {
   public tag = 5;
 
   @jsonMember({
@@ -478,7 +478,7 @@ export class Transfer extends ExecutableDeployItem {
 }
 
 @jsonObject
-export class ExecutableDeployItemJsonWrapper implements ToBytes {
+export class ExecutableDeployItem implements ToBytes {
 
   @jsonMember({
     name: 'ModuleBytes',
@@ -532,8 +532,8 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
-  public static fromExecutionDeployItem(item: ExecutableDeployItem) {
-    const res = new ExecutableDeployItemJsonWrapper();
+  public static fromExecutableDeployItemInternal(item: ExecutableDeployItemInternal) {
+    const res = new ExecutableDeployItem();
     switch (item.tag) {
       case 0:
         res.moduleBytes = item as ModuleBytes;
@@ -557,17 +557,16 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     return res;
   }
 
-  public static newModuleBytes(moduleBytes: ByteArray, args: RuntimeArgs): ExecutableDeployItemJsonWrapper {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new ModuleBytes(moduleBytes, args));
+  public static newModuleBytes(moduleBytes: ByteArray, args: RuntimeArgs): ExecutableDeployItem {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new ModuleBytes(moduleBytes, args));
   }
 
   public static newStoredContractByHash(
     hash: Uint8Array,
-    version: number | null,
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new StoredVersionedContractByHash(hash, version, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredContractByHash(hash, entryPoint, args));
   }
 
   public static newStoredContractByName(
@@ -575,7 +574,7 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new StoredContractByName(name, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredContractByName(name, entryPoint, args));
   }
 
   public static newStoredVersionContractByHash(
@@ -584,7 +583,7 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new StoredVersionedContractByHash(hash, version, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredVersionedContractByHash(hash, version, entryPoint, args));
   }
 
   public static newStoredVersionContractByName(
@@ -593,7 +592,7 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new StoredVersionedContractByName(name, version, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredVersionedContractByName(name, version, entryPoint, args));
   }
 
   public static newTransfer(
@@ -602,7 +601,7 @@ export class ExecutableDeployItemJsonWrapper implements ToBytes {
     sourcePurse?: URef,
     id: number | null = null
   ) {
-    return ExecutableDeployItemJsonWrapper.fromExecutionDeployItem(new Transfer(amount, target, sourcePurse, id));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(new Transfer(amount, target, sourcePurse, id));
   }
 
   public isModuleBytes(): boolean {
@@ -669,14 +668,14 @@ export class Deploy {
   public header: DeployHeader;
 
   @jsonMember({
-    constructor: ExecutableDeployItemJsonWrapper
+    constructor: ExecutableDeployItem
   })
-  public payment: ExecutableDeployItemJsonWrapper;
+  public payment: ExecutableDeployItem;
 
   @jsonMember({
-    constructor: ExecutableDeployItemJsonWrapper
+    constructor: ExecutableDeployItem
   })
-  public session: ExecutableDeployItemJsonWrapper;
+  public session: ExecutableDeployItem;
 
   @jsonArrayMember(Approval)
   public approvals: Approval[];
@@ -692,8 +691,8 @@ export class Deploy {
   constructor(
     hash: ByteArray,
     header: DeployHeader,
-    payment: ExecutableDeployItemJsonWrapper,
-    session: ExecutableDeployItemJsonWrapper,
+    payment: ExecutableDeployItem,
+    session: ExecutableDeployItem,
     approvals: Approval[]
   ) {
     this.approvals = approvals;
@@ -729,8 +728,8 @@ export const serializeHeader = (deployHeader: DeployHeader) => {
  * @param session
  */
 export const serializeBody = (
-  payment: ExecutableDeployItemJsonWrapper,
-  session: ExecutableDeployItemJsonWrapper
+  payment: ExecutableDeployItem,
+  session: ExecutableDeployItem
 ) => {
   return concat([payment.toBytes(), session.toBytes()]);
 };
@@ -777,8 +776,8 @@ export class DeployParams {
  */
 export function makeDeploy(
   deployParam: DeployParams,
-  session: ExecutableDeployItemJsonWrapper,
-  payment: ExecutableDeployItemJsonWrapper
+  session: ExecutableDeployItem,
+  payment: ExecutableDeployItem
 ): Deploy {
   const serializedBody = serializeBody(payment, session);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
@@ -865,7 +864,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
     amount: CLValue.u512(paymentAmount.toString())
   });
 
-  return new ModuleBytes(Uint8Array.from([]), paymentArgs);
+  return ExecutableDeployItem.newModuleBytes(Uint8Array.from([]), paymentArgs);
 };
 
 /**

@@ -372,11 +372,11 @@ export class DeployContractsContainer {
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
         session = this.selectedFileContent!;
-        sessionExecutionItem = new DeployUtil.ModuleBytes(session, runtimeArgs);
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newModuleBytes(session, runtimeArgs);
       } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
         session = decodeBase16(config.contractHash.value);
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByHash(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByHash(
           session,
           entryPoint,
           runtimeArgs
@@ -384,7 +384,7 @@ export class DeployContractsContainer {
       } else if (config.contractType.value === DeployUtil.ContractType.Name) {
         session = config.contractName.value;
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByName(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByName(
           session,
           entryPoint,
           runtimeArgs
