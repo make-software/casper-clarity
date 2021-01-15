@@ -7,6 +7,7 @@ class Storage {
     }
 
     async onDeployProcessed(event) {
+
         console.log(`Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
         let deploy = await this.findDeployByHash(event.deploy_hash);
         if (deploy !== null){
@@ -45,6 +46,7 @@ class Storage {
                         transferHash: transferHash,
                         deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
+                        toAccount: transferEvent.to.substring(13),
                         sourcePurse: transferEvent.source,
                         targetPurse: transferEvent.target,
                         amount: transferEvent.amount,
@@ -157,9 +159,9 @@ class Storage {
             where: {
                 [Op.or]: [
                     {
-                        sourcePurse: purseUref
+                        fromAccount: purseUref
                     },{
-                        targetPurse: purseUref
+                        toAccount: purseUref
                     }
                 ]
             }

@@ -10,7 +10,9 @@ module.exports = (sequelize, DataTypes) => {
                 "sourcePurse": this.sourcePurse,
                 "targetPurse": this.targetPurse,
                 "amount": this.amount,
-                "id": this.id
+                "id": this.id,
+                "fromAccount": this.fromAccount,
+                "toAccount": this.toAccount
             }
         }
     };
@@ -22,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         deployHash: DataTypes.STRING,
         fromAccount: DataTypes.STRING,
+        toAccount: DataTypes.STRING,
         sourcePurse: DataTypes.STRING,
         targetPurse: DataTypes.STRING,
         amount: DataTypes.STRING,
@@ -32,7 +35,9 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [ 
             { fields: [ 'deployHash' ] },
             { fields: [ 'sourcePurse' ] },
-            { fields: [ 'targetPurse' ] }
+            { fields: [ 'targetPurse' ] },
+            { fields: [ 'fromAccount' ] },
+            { fields: [ 'toAccount' ] }
         ]
     });
     
