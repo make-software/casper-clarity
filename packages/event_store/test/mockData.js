@@ -18,6 +18,7 @@ module.exports = {
                                 "WriteTransfer": {
                                     "deploy_hash": "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
                                     "from": "account-hash-8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+                                    "to": "account-hash-bbbbbb1be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
                                     "source": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
                                     "target": "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
                                     "amount": "1000000000",
@@ -55,6 +56,7 @@ module.exports = {
                                 "WriteTransfer": {
                                     "deploy_hash": "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
                                     "from": "account-hash-8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+                                    "to": "account-hash-aaaaaa1be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
                                     "source": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
                                     "target": "uref-ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004",
                                     "amount": "40000000",

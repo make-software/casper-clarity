@@ -16,8 +16,6 @@ import {
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { CasperHDKey } from './CasperHDKey';
 
-type ByteArray = Uint8Array;
-
 export class CasperClient {
   private nodeClient: CasperServiceByJsonRPC;
   private eventStoreClient: EventService;
@@ -270,12 +268,14 @@ export class CasperClient {
   }
 
   /**
-   * Get transfers for the specified purseUref, including sending and receiving transactions
-   * @param purseUref
+   * Get transfers to and from the specified public key, including sending and receiving transactions.
+   * @param publicKey
    */
-  public async getTransfersByPurse(
-    purseUref: string
+  public async getTransfersByPublicKey(
+    publicKey: PublicKey
   ): Promise<TransferResult[]> {
-    return await this.eventStoreClient.getTransfersByPurse(purseUref);
+    return await this.eventStoreClient.getTransfersByAccountHash(
+      encodeBase16(publicKey.toAccountHash())
+    );
   }
 }

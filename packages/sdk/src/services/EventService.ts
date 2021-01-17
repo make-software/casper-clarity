@@ -63,6 +63,8 @@ export interface TransferResult {
   targetPurse: string;
   amount: string;
   id: string;
+  fromAccount: string;
+  toAccount: string;
 }
 
 export class EventService {
@@ -100,10 +102,10 @@ export class EventService {
     return response.data;
   }
 
-  public async getTransfersByPurse(
-    purseUref: string
+  public async getTransfersByAccountHash(
+    accountHash: string
   ): Promise<TransferResult[]> {
-    const response = await axios.get(this.url + `/transfers/${purseUref}`);
+    const response = await axios.get(this.url + `/transfers/${accountHash}`);
     return response.data;
   }
 }

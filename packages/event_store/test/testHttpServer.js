@@ -112,7 +112,9 @@ describe('HttpServer', async () => {
                     deployHash: "deploy1_0fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
                     sourcePurse: "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
                     targetPurse: "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
-                    id: "1233"
+                    id: "1233",
+                    fromAccount: "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+                    toAccount: "bbbbbb1be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef"
                 }
             ]
         };
@@ -160,28 +162,33 @@ describe('HttpServer', async () => {
             sourcePurse: "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
             targetPurse: "uref-ab9a01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bb9e04-004",
             amount: "1000000000",
-            id: "1233"
+            id: "1233",
+            toAccount: "bbbbbb1be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+            fromAccount: "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef"
         }
         let transfer2 = {
-            "amount": "40000000",
-            "deployHash": "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
-            "id": null,
-            "sourcePurse": "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
-            "targetPurse": "uref-ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004"
+            amount: "40000000",
+            deployHash: "deploy2_6fb356b6d76d2f64a9500ed2cf1d3062ffcf03bb837003c8208602c5d3",
+            id: null,
+            sourcePurse: "uref-f8f32523da86b93b40adee95a05c8b7229887e0d345641a914b1c09d5052563b-007",
+            targetPurse: "uref-ffff01563bfd412cd63f03fa99de8c1a4bd573a79e0697229e1844fcf7bbffff-004",
+            toAccount: "aaaaaa1be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef",
+            fromAccount: "8338671be1687c522f6ac74c67867a7a042b3bd5c1d00d5c66a71c87f85323ef"
+
        }
 
-       let response = await chai.request(app).get(`/transfers/${transfer1.sourcePurse}`);
+        let response = await chai.request(app).get(`/transfers/${transfer1.fromAccount}`);
         assert.strictEqual(response.statusCode, 200);
         assert.strictEqual(response.body.length, 2);
         assert.deepEqual(response.body[0], transfer1);
         assert.deepEqual(response.body[1], transfer2);
         
-        response = await chai.request(app).get(`/transfers/${transfer1.targetPurse}`);
+        response = await chai.request(app).get(`/transfers/${transfer1.toAccount}`);
         assert.strictEqual(response.body.length, 1);
         assert.strictEqual(response.statusCode, 200);
         assert.deepEqual(response.body[0], transfer1);
         
-        response = await chai.request(app).get(`/transfers/${transfer2.targetPurse}`);
+        response = await chai.request(app).get(`/transfers/${transfer2.toAccount}`);
         assert.strictEqual(response.body.length, 1);
         assert.strictEqual(response.statusCode, 200);
         assert.deepEqual(response.body[0], transfer2);

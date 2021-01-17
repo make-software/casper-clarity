@@ -1,5 +1,4 @@
 import {
-  DeployHash,
   encodeBase16,
   CasperServiceByJsonRPC,
   DeployUtil

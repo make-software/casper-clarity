@@ -1,6 +1,6 @@
 import blake from 'blakejs';
 import * as fs from 'fs';
-import { ByteArray, PublicKey } from '../index';
+import { PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
 import { CLValue, AccountHash, KeyValue } from './CLValue';

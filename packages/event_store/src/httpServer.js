@@ -64,8 +64,8 @@ let httpServer = (models) => {
         res.send(result);
     });
 
-    app.get('/transfers/:purseUref', async (req, res, next) => {
-        let transfers = await storage.findTransfers(req.params.purseUref);
+    app.get('/transfers/:accountHash', async (req, res, next) => {
+        let transfers = await storage.findTransfers(req.params.accountHash);
         if (transfers.length == 0) {
             res.status(404).send("Transferts not found.");
         } else {
