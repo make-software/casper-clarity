@@ -125,6 +125,7 @@ name: npm publish
 steps:
 - name: npm publish
   image: "casperlabs/clarity-build:latest"
+  failure: ignore
   environment:
     NPM_TOKEN:
       from_secret: npm_token  
