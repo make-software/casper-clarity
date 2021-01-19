@@ -135,8 +135,8 @@ steps:
     - "cd packages/sdk"
     - "npm version"
     - "env | sort"
-    - "echo $NPM_TOKEN >> /tmp/npm_token; cat /tmp/npm_token "
-    - "NPM_TOKEN=${NPM_TOKEN} npm whoami"
+    - "npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN"
+    - "npm whoami"
     - "npm publish --verbose; cat /root/.npm/_logs*"
 
 trigger:
