@@ -1,24 +1,32 @@
 # Build Clarity
-yarn install &&         # Install Clarity dependencies
-yarn build &            # Build Clarity packages
+yarn install &> /dev/null &         # Install Clarity dependencies
+install_pid=$!
+echo "[YARN] Installing dependencies..."
+wait $install_pid
+yarn build &> /dev/null &            # Build Clarity packages
 build_pid=$!
+echo "[YARN] Building packages..."
 wait $build_pid
 
 # Start NCTL network
-nctl-compile &&         # Compile node and prep NCTL
-nctl-assets-setup &&    # Create assets for local network
-nctl-start &&           # Start local 5 node network
-echo "\n[NCTL] Network is live...\n"
-sleep 5
+nctl-compile &> /dev/null &&         # Compile node and prep NCTL
+nctl-assets-setup &> /dev/null &&    # Create assets for local network
+nctl-start &> /dev/null &
+nctl_pid=$!                          # Start local 5 node network
+echo "[NCTL] Network is live..."
+wait $nctl_pid
+
 # Start Event Store
 cd packages/event_store &&
 rm developement_sqlite.db &&
 sleep 2
-npm run --silent start-web-server & web_server_pid=$!
-echo "\n[WEB SERVER] Starting up...\n"
+npm run start-web-server &> /dev/null &
+web_server_pid=$!
+echo "[WEB SERVER] Starting up..."
 sleep 2
-npm run --silent start-event-handler & event_handler_pid=$!
-echo "\n[EVENT HANDLER] Starting up...\n"
+npm run start-event-handler &> /dev/null &
+event_handler_pid=$!
+echo "[EVENT HANDLER] Starting up..."
 sleep 2
 
 # Set process trap
@@ -30,5 +38,7 @@ function onexit() {
 }
 
 # Start Clarity
-cd ../.. &&
-yarn dev 
+cd ../..
+echo "[YARN] Starting Clarity..."
+sleep 20
+yarn dev &> /dev/null 
