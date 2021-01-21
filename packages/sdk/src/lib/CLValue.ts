@@ -1,10 +1,18 @@
 import { concat } from '@ethersproject/bytes';
-import { toBytesArrayU8, toBytesBytesArray, toBytesNumber, toBytesString, toBytesU32, toBytesVecT } from './byterepr';
+import {
+  toBytesArrayU8,
+  toBytesBytesArray,
+  toBytesNumber,
+  toBytesString,
+  toBytesU32,
+  toBytesVecT
+} from './byterepr';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { decodeBase16, encodeBase16 } from './Conversions';
 import { Option } from './option';
 import { byteHash } from './Contracts';
 import { SignatureAlgorithm } from './Keys';
+import { jsonMember, jsonObject } from 'typedjson';
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 const SECP256K1_PUBLIC_KEY_LENGTH = 33;
@@ -18,8 +26,7 @@ export interface BytesDeserializableStatic<T> extends Type<BytesSerializable> {
   fromBytes(bytes: ByteArray): Result<T>;
 }
 
-export interface BytesSerializable extends CLTyped, ToBytes {
-}
+export interface BytesSerializable extends CLTyped, ToBytes {}
 
 export interface CLTyped {
   /**
@@ -115,8 +122,7 @@ export class Result<T> {
     private val: T | null,
     private rem: ByteArray | null,
     public error: FromBytesError
-  ) {
-  }
+  ) {}
 
   public static Err<T>(errorCode: FromBytesError) {
     return new Result<T>(null, null, errorCode);
@@ -128,7 +134,7 @@ export class Result<T> {
 
   get remainder(): ByteArray {
     if (this.rem === null) {
-      throw new Error('Don\'t have remainder');
+      throw new Error("Don't have remainder");
     }
     return this.rem;
   }
@@ -138,7 +144,7 @@ export class Result<T> {
    */
   get value(): T {
     if (!this.hasValue()) {
-      throw new Error('Don\'t have value');
+      throw new Error("Don't have value");
     }
     return this.val!;
   }
@@ -526,7 +532,7 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
   constructor(private vec: T[]) {
     super();
     if (vec.length === 0) {
-      throw new Error('Can\'t create instance for empty list');
+      throw new Error("Can't create instance for empty list");
     }
   }
 
@@ -828,54 +834,114 @@ export class MapValue extends CLTypedAndToBytes {
   }
 }
 
-export class OptionType {
+export interface ToJSON {
+  toJSON: () => any;
+}
+
+export class OptionType implements ToJSON {
+  public static TypeId = 'Option';
   public tag = ComplexType.Option;
 
-  constructor(public innerType: CLType) {
+  constructor(public innerType: CLType) {}
+
+  public toJSON(): any {
+    const innerTypeInJSON = clTypeToJSON(this.innerType);
+    return {
+      [OptionType.TypeId]: innerTypeInJSON
+    };
   }
 }
 
-class ListType {
+class ListType implements ToJSON {
+  public static TypeId = 'List';
   public tag = ComplexType.List;
   public innerType: CLType;
 
   constructor(innerType: CLType) {
     this.innerType = innerType;
   }
+
+  public toJSON(): any {
+    const innerTypeInJSON = clTypeToJSON(this.innerType);
+    return {
+      [ListType.TypeId]: innerTypeInJSON
+    };
+  }
 }
 
-class ByteArrayType {
+class ByteArrayType implements ToJSON {
+  public static TypeId = 'ByteArray';
   public tag = ComplexType.ByteArray;
 
-  constructor(public size: number) {
+  constructor(public size: number) {}
+
+  public toJSON() {
+    return {
+      [ByteArrayType.TypeId]: this.size
+    };
   }
 }
 
-class MapType {
+class MapType implements ToJSON {
+  public static TypeId = 'Map';
   public tag = ComplexType.Map;
 
-  constructor(public keyType: CLType, public valueType: CLType) {
+  constructor(public keyType: CLType, public valueType: CLType) {}
+
+  public toJSON(): any {
+    return {
+      [MapType.TypeId]: {
+        key: clTypeToJSON(this.keyType),
+        value: clTypeToJSON(this.valueType)
+      }
+    };
   }
 }
 
-class Tuple1Type {
+class Tuple1Type implements ToJSON {
+  public static TypeId = 'Tuple1';
   public tag = ComplexType.Tuple1;
 
-  constructor(public t0: CLType) {
+  constructor(public t0: CLType) {}
+
+  public toJSON(): any {
+    const t0TypeInJSON = clTypeToJSON(this.t0);
+    return {
+      [Tuple1Type.TypeId]: t0TypeInJSON
+    };
   }
 }
 
-class Tuple2Type {
+class Tuple2Type implements ToJSON {
+  public static TypeId = 'Tuple2';
   public tag = ComplexType.Tuple2;
 
-  constructor(public t0: CLType, public t1: CLType) {
+  constructor(public t0: CLType, public t1: CLType) {}
+
+  public toJSON(): any {
+    const t0TypeInJSON = clTypeToJSON(this.t0);
+    const t1TypeInJSON = clTypeToJSON(this.t1);
+    return {
+      [Tuple2Type.TypeId]: [t0TypeInJSON, t1TypeInJSON]
+    };
   }
 }
 
 class Tuple3Type {
+  public static TypeId = 'Tuple3';
+
   public tag = ComplexType.Tuple3;
 
-  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {
+  constructor(public t0: CLType, public t1: CLType, public t2: CLType) {}
+
+  public toJSON(): any {
+    const t0TypeInJSON = clTypeToJSON(this.t0);
+    const t1TypeInJSON = clTypeToJSON(this.t1);
+    const t2TypeInJSON = clTypeToJSON(this.t2);
+
+    return {
+      [Tuple3Type.TypeId]: [t0TypeInJSON, t1TypeInJSON, t2TypeInJSON]
+    };
   }
 }
 
@@ -1107,7 +1173,6 @@ export class CLTypeHelper {
       case ComplexType.Any:
         // todo(abner) support Any
         throw new Error('Any type is unsupported now');
-        break;
       default:
         return Result.Err(FromBytesError.FormattingError);
     }
@@ -1286,17 +1351,167 @@ export class CLTypedAndToBytesHelper {
   }
 }
 
+function toJSONSimpleType(type: SimpleType) {
+  switch (type) {
+    case SimpleType.Bool:
+      return 'Bool';
+    case SimpleType.I32:
+      return 'I32';
+    case SimpleType.I64:
+      return 'I64';
+    case SimpleType.U8:
+      return 'U8';
+    case SimpleType.U32:
+      return 'U32';
+    case SimpleType.U64:
+      return 'U64';
+    case SimpleType.U128:
+      return 'U128';
+    case SimpleType.U256:
+      return 'U256';
+    case SimpleType.U512:
+      return 'U512';
+    case SimpleType.Unit:
+      return 'Unit';
+    case SimpleType.String:
+      return 'String';
+    case SimpleType.Key:
+      return 'Key';
+    case SimpleType.URef:
+      return 'URef';
+    case SimpleType.PublicKey:
+      return 'PublicKey';
+  }
+}
+
+function jsonToSimpleType(str: string): CLType {
+  switch (str) {
+    case 'Bool':
+      return SimpleType.Bool;
+    case 'I32':
+      return SimpleType.I32;
+    case 'I64':
+      return SimpleType.I64;
+    case 'U8':
+      return SimpleType.U8;
+    case 'U32':
+      return SimpleType.U32;
+    case 'U64':
+      return SimpleType.U64;
+    case 'U128':
+      return SimpleType.U128;
+    case 'U256':
+      return SimpleType.U256;
+    case 'U512':
+      return SimpleType.U512;
+    case 'Unit':
+      return SimpleType.Unit;
+    case 'String':
+      return SimpleType.String;
+    case 'Key':
+      return SimpleType.Key;
+    case 'URef':
+      return SimpleType.URef;
+    case 'PublicKey':
+      return SimpleType.PublicKey;
+    default:
+      throw new Error(`The type ${str} is not supported`);
+  }
+}
+
+const clTypeToJSON = (type: CLType) => {
+  if (
+    type instanceof ListType ||
+    type instanceof Tuple1Type ||
+    type instanceof Tuple2Type ||
+    type instanceof Tuple3Type ||
+    type instanceof ByteArrayType ||
+    type instanceof MapType ||
+    type instanceof OptionType
+  ) {
+    return type.toJSON();
+  } else {
+    return toJSONSimpleType(type);
+  }
+};
+
+const jsonToCLType = (json: any): CLType => {
+  if (typeof json === typeof 'str') {
+    return jsonToSimpleType(json);
+  } else if (typeof json === typeof {}) {
+    if (ListType.TypeId in json) {
+      const innerType = jsonToCLType(json[ListType.TypeId]);
+      return CLTypeHelper.list(innerType);
+    } else if (Tuple1Type.TypeId in json) {
+      const t0Type = jsonToCLType(json[Tuple1Type.TypeId][0]);
+      return CLTypeHelper.tuple1(t0Type);
+    } else if (Tuple2Type.TypeId in json) {
+      const innerTypes = json[Tuple2Type.TypeId];
+      const t0Type = jsonToCLType(innerTypes[0]);
+      const t1Type = jsonToCLType(innerTypes[1]);
+      return CLTypeHelper.tuple2(t0Type, t1Type);
+    } else if (Tuple3Type.TypeId in json) {
+      const innerTypes = json[Tuple2Type.TypeId];
+      const t0Type = jsonToCLType(innerTypes[0]);
+      const t1Type = jsonToCLType(innerTypes[1]);
+      const t2Type = jsonToCLType(innerTypes[2]);
+      return CLTypeHelper.tuple3(t0Type, t1Type, t2Type);
+    } else if (ByteArrayType.TypeId in json) {
+      const size = json[ByteArrayType.TypeId];
+      return CLTypeHelper.byteArray(size);
+    } else if (OptionType.TypeId in json) {
+      const innerType = jsonToCLType(json[OptionType.TypeId]);
+      return CLTypeHelper.option(innerType);
+    } else if (MapType.TypeId in json) {
+      const keyType = jsonToCLType(json[MapType.TypeId].key);
+      const valueType = jsonToCLType(json[MapType.TypeId].value);
+      return CLTypeHelper.map(keyType, valueType);
+    } else {
+      throw new Error(`The type ${json} is not supported`);
+    }
+  } else {
+    throw new Error(`The type ${json} is not supported`);
+  }
+};
+
 /**
  * A Casper value, i.e. a value which can be stored and manipulated by smart contracts.
  *
  * It holds the underlying data as a type-erased, serialized array of bytes and also holds the
  * [[CLType]] of the underlying data as a separate member.
  */
+@jsonObject({
+  onDeserialized: 'reconstruct'
+})
 export class CLValue implements ToBytes {
+  @jsonMember({
+    name: 'cl_type',
+    serializer: clTypeToJSON,
+    deserializer: jsonToCLType
+  })
+  public clType: CLType;
+
+  @jsonMember({
+    constructor: String
+  })
+  public bytes: string;
+
+  @jsonMember({
+    name: 'parsed_to_json',
+    deserializer: v => v,
+    preserveNull: true
+  })
+  public parsedToJson: any;
+
+  private value: CLTypedAndToBytes;
+
   /**
-   * Please use static methods to constructs a new `CLValue`
+   * Please use static methodsto constructs a new `CLValue`
    */
-  private constructor(public value: CLTypedAndToBytes, public clType: CLType) {
+  private constructor(value: CLTypedAndToBytes, clType: CLType) {
+    this.value = value;
+    this.clType = clType;
+    this.bytes = encodeBase16(this.value.toBytes());
   }
 
   public get clValueBytes() {
@@ -1329,6 +1544,14 @@ export class CLValue implements ToBytes {
     const v = fromBytesByCLType(clTypeRes.value, bytesRes.value.rawBytes);
     const clValue = new CLValue(v.value, clTypeRes.value);
     return Result.Ok(clValue, clTypeRes.remainder);
+  }
+
+  protected reconstruct() {
+    const v = fromBytesByCLType(this.clType, decodeBase16(this.bytes));
+    if (v.hasError()) {
+      throw new Error('Failed to deserialize CLValue');
+    }
+    this.value = v.value;
   }
 
   public static bool = (b: boolean) => {
@@ -1423,10 +1646,16 @@ export class CLValue implements ToBytes {
   }
 
   public isBigNumber() {
-    return this.clType === SimpleType.U8 || this.clType === SimpleType.I32 ||
-      this.clType === SimpleType.I64 || this.clType === SimpleType.U32 ||
-      this.clType === SimpleType.U64 || this.clType === SimpleType.U128 ||
-      this.clType === SimpleType.U256 || this.clType === SimpleType.U512;
+    return (
+      this.clType === SimpleType.U8 ||
+      this.clType === SimpleType.I32 ||
+      this.clType === SimpleType.I64 ||
+      this.clType === SimpleType.U32 ||
+      this.clType === SimpleType.U64 ||
+      this.clType === SimpleType.U128 ||
+      this.clType === SimpleType.U256 ||
+      this.clType === SimpleType.U512
+    );
   }
 
   public asBigNumber(): BigNumber {
@@ -1434,7 +1663,7 @@ export class CLValue implements ToBytes {
       const numberCoder = this.value as NumberCoder;
       return BigNumber.from(numberCoder.val);
     } else {
-      throw new Error('The CLValue can\'t convert to BigNumber');
+      throw new Error("The CLValue can't convert to BigNumber");
     }
   }
 
@@ -1444,7 +1673,7 @@ export class CLValue implements ToBytes {
 
   public asBoolean() {
     if (!this.isBoolean()) {
-      throw new Error('The CLValue can\'t convert to Boolean');
+      throw new Error("The CLValue can't convert to Boolean");
     }
     return (this.value as Bool).val;
   }
@@ -1455,7 +1684,7 @@ export class CLValue implements ToBytes {
 
   public asString() {
     if (!this.isString()) {
-      throw new Error('The CLValue can\'t convert to String');
+      throw new Error("The CLValue can't convert to String");
     }
     return (this.value as StringValue).val;
   }
@@ -1466,7 +1695,7 @@ export class CLValue implements ToBytes {
 
   public asPublicKey(): PublicKey {
     if (!this.isPublicKey()) {
-      throw new Error('The CLValue can\'t convert to PublicKey');
+      throw new Error("The CLValue can't convert to PublicKey");
     }
     return this.value as PublicKey;
   }
@@ -1477,7 +1706,7 @@ export class CLValue implements ToBytes {
 
   public asKey() {
     if (!this.isKey()) {
-      throw new Error('The CLValue can\'t convert to Key');
+      throw new Error("The CLValue can't convert to Key");
     }
     return this.value as KeyValue;
   }
@@ -1488,7 +1717,7 @@ export class CLValue implements ToBytes {
 
   public asURef() {
     if (!this.isURef()) {
-      throw new Error('The CLValue can\'t convert to URef');
+      throw new Error("The CLValue can't convert to URef");
     }
     return this.value as URef;
   }
@@ -1697,7 +1926,7 @@ export class URef extends CLTypedAndToBytes {
    */
   public static fromFormattedStr(input: string) {
     if (!input.startsWith(FORMATTED_STRING_PREFIX)) {
-      throw new Error('prefix is not \'uref-\'');
+      throw new Error("prefix is not 'uref-'");
     }
     const parts = input.substring(FORMATTED_STRING_PREFIX.length).split('-', 2);
     if (parts.length !== 2) {
@@ -1711,7 +1940,11 @@ export class URef extends CLTypedAndToBytes {
   }
 
   public toFormattedStr() {
-    return [FORMATTED_STRING_PREFIX, encodeBase16(this.uRefAddr), this.accessRights.toString(8)].join('-');
+    return [
+      FORMATTED_STRING_PREFIX,
+      encodeBase16(this.uRefAddr),
+      this.accessRights.toString(8)
+    ].join('-');
   }
 
   /**

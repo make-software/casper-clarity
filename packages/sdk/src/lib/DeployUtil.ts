@@ -8,7 +8,14 @@ import blake from 'blakejs';
 import { Option } from './option';
 import { decodeBase16, encodeBase16 } from './Conversions';
 import humanizeDuration from 'humanize-duration';
-import { CLTypedAndToBytesHelper, CLTypeHelper, CLValue, PublicKey, ToBytes, U32 } from './CLValue';
+import {
+  CLTypedAndToBytesHelper,
+  CLTypeHelper,
+  CLValue,
+  PublicKey,
+  ToBytes,
+  U32
+} from './CLValue';
 import {
   toBytesArrayU8,
   toBytesBytesArray,
@@ -44,7 +51,9 @@ const shortEnglishHumanizer = humanizeDuration.humanizer({
   }
 });
 
-const byteArrayJsonSerializer: (bytes: ByteArray) => string = (bytes: ByteArray) => {
+const byteArrayJsonSerializer: (bytes: ByteArray) => string = (
+  bytes: ByteArray
+) => {
   return encodeBase16(bytes);
 };
 
@@ -89,8 +98,10 @@ export class DeployHeader implements ToBytes {
   public bodyHash: ByteArray;
 
   @jsonArrayMember(ByteArray, {
-    serializer: (value: ByteArray[]) => value.map(it => byteArrayJsonSerializer(it)),
-    deserializer: (json: any) => json.map((it: string) => byteArrayJsonDeserializer(it))
+    serializer: (value: ByteArray[]) =>
+      value.map(it => byteArrayJsonSerializer(it)),
+    deserializer: (json: any) =>
+      json.map((it: string) => byteArrayJsonDeserializer(it))
   })
   public dependencies: ByteArray[];
 
@@ -143,8 +154,7 @@ export class DeployHeader implements ToBytes {
  * The cryptographic hash of a Deploy.
  */
 class DeployHash implements ToBytes {
-  constructor(private hash: ByteArray) {
-  }
+  constructor(private hash: ByteArray) {}
 
   public toBytes(): ByteArray {
     return toBytesDeployHash(this.hash);
@@ -156,9 +166,8 @@ export interface DeployJson {
   approvals: { signature: string; signer: string }[];
   header: DeployHeader;
   payment: Record<string, any>;
-  hash: string
+  hash: string;
 }
-
 
 /**
  * A struct containing a signature and the public key of the signer.
@@ -179,19 +188,9 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
   public abstract toBytes(): ByteArray;
 
   public getArgByName(argName: string): CLValue | undefined {
-    return this.args.args[argName];
+    return this.args.args.get(argName);
   }
 }
-
-const argsSerializer = (args: RuntimeArgs) => encodeBase16(args.toBytes());
-
-const argsDeserializer = (byteStr: string) => {
-  const argsRes = RuntimeArgs.fromBytes(decodeBase16(byteStr));
-  if (argsRes.hasError()) {
-    throw new Error('Failed to deserialized RuntimeArgs');
-  }
-  return argsRes.value;
-};
 
 @jsonObject
 export class ModuleBytes extends ExecutableDeployItemInternal {
@@ -205,10 +204,8 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
   public moduleBytes: Uint8Array;
 
   @jsonMember({
-      serializer: argsSerializer,
-      deserializer: argsDeserializer
-    }
-  )
+    constructor: RuntimeArgs
+  })
   public args: RuntimeArgs;
 
   constructor(moduleBytes: Uint8Array, args: RuntimeArgs) {
@@ -244,16 +241,11 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
   public entryPoint: string;
 
   @jsonMember({
-    serializer: argsSerializer,
-    deserializer: argsDeserializer
+    constructor: RuntimeArgs
   })
   public args: RuntimeArgs;
 
-  constructor(
-    hash: ByteArray,
-    entryPoint: string,
-    args: RuntimeArgs
-  ) {
+  constructor(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
     super();
 
     this.entryPoint = entryPoint;
@@ -285,16 +277,11 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
   public entryPoint: string;
 
   @jsonMember({
-    serializer: argsSerializer,
-    deserializer: argsDeserializer
+    constructor: RuntimeArgs
   })
   public args: RuntimeArgs;
 
-  constructor(
-    name: string,
-    entryPoint: string,
-    args: RuntimeArgs
-  ) {
+  constructor(name: string, entryPoint: string, args: RuntimeArgs) {
     super();
 
     this.name = name;
@@ -326,8 +313,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
   public entryPoint: string;
 
   @jsonMember({
-    serializer: argsSerializer,
-    deserializer: argsDeserializer
+    constructor: RuntimeArgs
   })
   public args: RuntimeArgs;
 
@@ -371,7 +357,6 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
   })
   public hash: Uint8Array;
 
-
   @jsonMember({
     constructor: Number,
     preserveNull: true
@@ -385,8 +370,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
   public entryPoint: string;
 
   @jsonMember({
-    serializer: argsSerializer,
-    deserializer: argsDeserializer
+    constructor: RuntimeArgs
   })
   public args: RuntimeArgs;
 
@@ -426,8 +410,7 @@ export class Transfer extends ExecutableDeployItemInternal {
   public tag = 5;
 
   @jsonMember({
-    serializer: argsSerializer,
-    deserializer: argsDeserializer
+    constructor: RuntimeArgs
   })
   public args: RuntimeArgs;
 
@@ -479,7 +462,6 @@ export class Transfer extends ExecutableDeployItemInternal {
 
 @jsonObject
 export class ExecutableDeployItem implements ToBytes {
-
   @jsonMember({
     name: 'ModuleBytes',
     constructor: ModuleBytes
@@ -532,7 +514,9 @@ export class ExecutableDeployItem implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
-  public static fromExecutableDeployItemInternal(item: ExecutableDeployItemInternal) {
+  public static fromExecutableDeployItemInternal(
+    item: ExecutableDeployItemInternal
+  ) {
     const res = new ExecutableDeployItem();
     switch (item.tag) {
       case 0:
@@ -557,8 +541,13 @@ export class ExecutableDeployItem implements ToBytes {
     return res;
   }
 
-  public static newModuleBytes(moduleBytes: ByteArray, args: RuntimeArgs): ExecutableDeployItem {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new ModuleBytes(moduleBytes, args));
+  public static newModuleBytes(
+    moduleBytes: ByteArray,
+    args: RuntimeArgs
+  ): ExecutableDeployItem {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new ModuleBytes(moduleBytes, args)
+    );
   }
 
   public static newStoredContractByHash(
@@ -566,7 +555,9 @@ export class ExecutableDeployItem implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredContractByHash(hash, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredContractByHash(hash, entryPoint, args)
+    );
   }
 
   public static newStoredContractByName(
@@ -574,7 +565,9 @@ export class ExecutableDeployItem implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredContractByName(name, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredContractByName(name, entryPoint, args)
+    );
   }
 
   public static newStoredVersionContractByHash(
@@ -583,7 +576,9 @@ export class ExecutableDeployItem implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredVersionedContractByHash(hash, version, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredVersionedContractByHash(hash, version, entryPoint, args)
+    );
   }
 
   public static newStoredVersionContractByName(
@@ -592,7 +587,9 @@ export class ExecutableDeployItem implements ToBytes {
     entryPoint: string,
     args: RuntimeArgs
   ) {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new StoredVersionedContractByName(name, version, entryPoint, args));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredVersionedContractByName(name, version, entryPoint, args)
+    );
   }
 
   public static newTransfer(
@@ -601,7 +598,9 @@ export class ExecutableDeployItem implements ToBytes {
     sourcePurse?: URef,
     id: number | null = null
   ) {
-    return ExecutableDeployItem.fromExecutableDeployItemInternal(new Transfer(amount, target, sourcePurse, id));
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new Transfer(amount, target, sourcePurse, id)
+    );
   }
 
   public isModuleBytes(): boolean {
@@ -632,7 +631,9 @@ export class ExecutableDeployItem implements ToBytes {
     return !!this.storedVersionedContractByName;
   }
 
-  public asStoredVersionContractByName(): StoredVersionedContractByName | undefined {
+  public asStoredVersionContractByName():
+    | StoredVersionedContractByName
+    | undefined {
     return this.storedVersionedContractByName;
   }
 
@@ -640,7 +641,9 @@ export class ExecutableDeployItem implements ToBytes {
     return !!this.storedVersionedContractByHash;
   }
 
-  public asStoredVersionContractByHash(): StoredVersionedContractByHash | undefined {
+  public asStoredVersionContractByHash():
+    | StoredVersionedContractByHash
+    | undefined {
     return this.storedVersionedContractByHash;
   }
 
@@ -793,13 +796,7 @@ export function makeDeploy(
   );
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
-  return new Deploy(
-    deployHash,
-    header,
-    payment,
-    session,
-    []
-  );
+  return new Deploy(deployHash, header, payment, session, []);
 }
 
 /**

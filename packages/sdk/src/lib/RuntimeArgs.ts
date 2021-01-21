@@ -4,10 +4,10 @@
 import { toBytesString, toBytesVecT } from './byterepr';
 import { CLValue, Result, StringValue, ToBytes, U32 } from './CLValue';
 import { concat } from '@ethersproject/bytes';
+import { jsonMapMember, jsonObject } from 'typedjson';
 
 export class NamedArg implements ToBytes {
-  constructor(public name: string, public value: CLValue) {
-  }
+  constructor(public name: string, public value: CLValue) {}
 
   public toBytes(): ByteArray {
     return concat([toBytesString(this.name), this.value.toBytes()]);
@@ -22,16 +22,27 @@ export class NamedArg implements ToBytes {
     if (clValueRes.hasError()) {
       return Result.Err(clValueRes.error);
     }
-    return Result.Ok(new NamedArg(nameRes.value.val, clValueRes.value), clValueRes.remainder);
+    return Result.Ok(
+      new NamedArg(nameRes.value.val, clValueRes.value),
+      clValueRes.remainder
+    );
   }
 }
 
+@jsonObject
 export class RuntimeArgs implements ToBytes {
-  constructor(public args: Record<string, CLValue>) {
+  @jsonMapMember(String, CLValue)
+  public args: Map<string, CLValue>;
+
+  constructor(args: Map<string, CLValue>) {
+    this.args = args;
   }
 
   public static fromMap(args: Record<string, CLValue>) {
-    return new RuntimeArgs(args);
+    const map: Map<string, CLValue> = new Map(
+      Object.keys(args).map(k => [k, args[k]])
+    );
+    return new RuntimeArgs(map);
   }
 
   public static fromNamedArgs(namedArgs: NamedArg[]) {
@@ -43,12 +54,12 @@ export class RuntimeArgs implements ToBytes {
   }
 
   public insert(key: string, value: CLValue) {
-    this.args[key] = value;
+    this.args.set(key, value);
   }
 
   public toBytes() {
-    const vec = Object.keys(this.args).map(a => {
-      return new NamedArg(a, this.args[a]);
+    const vec = Array.from(this.args.entries()).map((a: [string, CLValue]) => {
+      return new NamedArg(a[0], a[1]);
     });
 
     return toBytesVecT(vec);
