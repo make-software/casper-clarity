@@ -362,7 +362,7 @@ export class DeployContractsContainer {
       const args = deployArguments.value;
       let session: ByteArray | string;
 
-      let runtimeArgs = new RuntimeArgs(
+      let runtimeArgs = RuntimeArgs.fromNamedArgs(
         args.map((arg: FormState<DeployArgument>) => {
           return DeployArgumentParser.buildArgument(arg);
         })
@@ -372,25 +372,22 @@ export class DeployContractsContainer {
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
         session = this.selectedFileContent!;
-        sessionExecutionItem = new DeployUtil.ModuleBytes(
-          session,
-          runtimeArgs.toBytes()
-        );
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newModuleBytes(session, runtimeArgs);
       } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
         session = decodeBase16(config.contractHash.value);
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByHash(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByHash(
           session,
           entryPoint,
-          runtimeArgs.toBytes()
+          runtimeArgs
         );
       } else if (config.contractType.value === DeployUtil.ContractType.Name) {
         session = config.contractName.value;
         const entryPoint = config.entryPoint.value;
-        sessionExecutionItem = new DeployUtil.StoredContractByName(
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newStoredContractByName(
           session,
           entryPoint,
-          runtimeArgs.toBytes()
+          runtimeArgs
         );
       }
 

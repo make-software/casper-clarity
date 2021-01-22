@@ -6,7 +6,7 @@
 import { concat } from '@ethersproject/bytes';
 import blake from 'blakejs';
 import { Option } from './option';
-import { encodeBase16 } from './Conversions';
+import { decodeBase16, encodeBase16 } from './Conversions';
 import humanizeDuration from 'humanize-duration';
 import {
   CLTypedAndToBytesHelper,
@@ -29,6 +29,8 @@ import JSBI from 'jsbi';
 import { Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
+import { jsonArrayMember, jsonMember, jsonObject, TypedJSON } from 'typedjson';
+import { ByteArray } from 'tweetnacl-ts';
 
 const shortEnglishHumanizer = humanizeDuration.humanizer({
   spacer: '',
@@ -49,6 +51,16 @@ const shortEnglishHumanizer = humanizeDuration.humanizer({
   }
 });
 
+const byteArrayJsonSerializer: (bytes: ByteArray) => string = (
+  bytes: ByteArray
+) => {
+  return encodeBase16(bytes);
+};
+
+const byteArrayJsonDeserializer: (str: string) => ByteArray = (str: string) => {
+  return decodeBase16(str);
+};
+
 /**
  * Return a humanizer duration
  * @param ttl in milliseconds
@@ -57,38 +69,85 @@ export const humanizerTTL = (ttl: number) => {
   return shortEnglishHumanizer(ttl);
 };
 
-/**
- * The header portion of a Deploy
- */
-export interface DeployHeader {
+@jsonObject
+export class DeployHeader implements ToBytes {
+  @jsonMember({
+    serializer: (account: PublicKey) => {
+      return account.toAccountHex();
+    },
+    deserializer: (hexStr: string) => {
+      return PublicKey.fromHex(hexStr);
+    }
+  })
+  public account: PublicKey;
+
+  @jsonMember({ constructor: Number })
+  public timestamp: number;
+
+  @jsonMember({ constructor: Number })
+  public ttl: number;
+
+  @jsonMember({ constructor: Number, name: 'gas_price' })
+  public gasPrice: number;
+
+  @jsonMember({
+    name: 'body_hash',
+    serializer: byteArrayJsonSerializer,
+    deserializer: byteArrayJsonDeserializer
+  })
+  public bodyHash: ByteArray;
+
+  @jsonArrayMember(ByteArray, {
+    serializer: (value: ByteArray[]) =>
+      value.map(it => byteArrayJsonSerializer(it)),
+    deserializer: (json: any) =>
+      json.map((it: string) => byteArrayJsonDeserializer(it))
+  })
+  public dependencies: ByteArray[];
+
+  @jsonMember({ name: 'chain_name', constructor: String })
+  public chainName: string;
+
   /**
-   * The account within which the deploy will be run.
+   * The header portion of a Deploy
+   *
+   * @param account The account within which the deploy will be run.
+   * @param timestamp When the deploy was created.
+   * @param ttl How long the deploy will stay valid.
+   * @param gasPrice Price per gas unit for this deploy.
+   * @param bodyHash  Hash of the Wasm code.
+   * @param dependencies Other deploys that have to be run before this one.
+   * @param chainName Which chain the deploy is supposed to be run on.
    */
-  account: PublicKey;
-  /**
-   * When the deploy was created.
-   */
-  timestamp: number;
-  /**
-   * How long the deploy will stay valid.
-   */
-  ttl: number;
-  /**
-   * Price per gas unit for this deploy.
-   */
-  gasPrice: number;
-  /**
-   * Hash of the Wasm code.
-   */
-  bodyHash: ByteArray;
-  /**
-   * Other deploys that have to be run before this one.
-   */
-  dependencies: ByteArray[];
-  /**
-   * Which chain the deploy is supposed to be run on.
-   */
-  chainName: string;
+  constructor(
+    account: PublicKey,
+    timestamp: number,
+    ttl: number,
+    gasPrice: number,
+    bodyHash: ByteArray,
+    dependencies: ByteArray[],
+    chainName: string
+  ) {
+    this.account = account;
+    this.timestamp = timestamp;
+    this.ttl = ttl;
+    this.gasPrice = gasPrice;
+    this.bodyHash = bodyHash;
+    this.dependencies = dependencies;
+    this.chainName = chainName;
+  }
+
+  public toBytes(): ByteArray {
+    return concat([
+      this.account.toBytes(),
+      toBytesU64(this.timestamp),
+      toBytesU64(this.ttl),
+      toBytesU64(this.gasPrice),
+      toBytesDeployHash(this.bodyHash),
+      toBytesVecT(this.dependencies.map(d => new DeployHash(d))),
+      toBytesString(this.chainName)
+    ]);
+  }
 }
 
 /**
@@ -102,102 +161,96 @@ class DeployHash implements ToBytes {
   }
 }
 
-/**
- * Serialized DeployHeader to an array of bytes
- * @param deployHeader
- */
-const toBytesDeployHeader = (deployHeader: DeployHeader) => {
-  return concat([
-    deployHeader.account.toBytes(),
-    toBytesU64(deployHeader.timestamp),
-    toBytesU64(deployHeader.ttl),
-    toBytesU64(deployHeader.gasPrice),
-    toBytesDeployHash(deployHeader.bodyHash),
-    toBytesVecT(deployHeader.dependencies.map(d => new DeployHash(d))),
-    toBytesString(deployHeader.chainName)
-  ]);
-};
-
-/**
- * A deploy containing a smart contract along with the requester's signature(s).
- */
-export interface Deploy {
-  /**
-   * The DeployHash identifying this Deploy
-   */
-  hash: ByteArray;
-  /**
-   * The deployHeader
-   */
+export interface DeployJson {
+  session: Record<string, any>;
+  approvals: { signature: string; signer: string }[];
   header: DeployHeader;
-  /**
-   * The ExecutableDeployItem for payment code.
-   */
-  payment: ExecutableDeployItem;
-  /**
-   * the ExecutableDeployItem for session code.
-   */
-  session: ExecutableDeployItem;
-  /**
-   * An array of signature and public key of the signers, who approve this deploy
-   */
-  approvals: Approval[];
+  payment: Record<string, any>;
+  hash: string;
 }
 
 /**
  * A struct containing a signature and the public key of the signer.
  */
+@jsonObject
 export class Approval {
+  @jsonMember({ constructor: String })
   public signer: string;
+  @jsonMember({ constructor: String })
   public signature: string;
 }
 
-interface ToJson {
-  toJson(): Record<string, any>;
-}
-
-export abstract class ExecutableDeployItem implements ToBytes, ToJson {
+abstract class ExecutableDeployItemInternal implements ToBytes {
   public abstract tag: number;
+
+  public abstract args: RuntimeArgs;
 
   public abstract toBytes(): ByteArray;
 
-  public abstract toJson(): Record<string, any>;
+  public getArgByName(argName: string): CLValue | undefined {
+    return this.args.args.get(argName);
+  }
 }
 
-export class ModuleBytes extends ExecutableDeployItem {
+@jsonObject
+export class ModuleBytes extends ExecutableDeployItemInternal {
   public tag = 0;
 
-  constructor(private moduleBytes: Uint8Array, private args: Uint8Array) {
+  @jsonMember({
+    name: 'module_bytes',
+    serializer: byteArrayJsonSerializer,
+    deserializer: byteArrayJsonDeserializer
+  })
+  public moduleBytes: Uint8Array;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
+
+  constructor(moduleBytes: Uint8Array, args: RuntimeArgs) {
     super();
+
+    this.moduleBytes = moduleBytes;
+    this.args = args;
   }
 
   public toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
-  }
-
-  public toJson(): Record<string, any> {
-    return {
-      ModuleBytes: {
-        module_bytes: encodeBase16(this.moduleBytes),
-        args: encodeBase16(this.args)
-      }
-    };
   }
 }
 
-export class StoredContractByHash extends ExecutableDeployItem {
+@jsonObject
+export class StoredContractByHash extends ExecutableDeployItemInternal {
   public tag = 1;
 
-  constructor(
-    private hash: Uint8Array,
-    private entryPoint: string,
-    private args: Uint8Array
-  ) {
+  @jsonMember({
+    serializer: byteArrayJsonSerializer,
+    deserializer: byteArrayJsonDeserializer
+  })
+  public hash: ByteArray;
+
+  @jsonMember({
+    name: 'entry_point',
+    constructor: String
+  })
+  public entryPoint: string;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
+
+  constructor(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
     super();
+
+    this.entryPoint = entryPoint;
+    this.args = args;
+    this.hash = hash;
   }
 
   public toBytes(): ByteArray {
@@ -205,30 +258,35 @@ export class StoredContractByHash extends ExecutableDeployItem {
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
-  }
-
-  public toJson(): Record<string, any> {
-    return {
-      StoredContractByHash: {
-        hash: encodeBase16(this.hash),
-        entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
-      }
-    };
   }
 }
 
-export class StoredContractByName extends ExecutableDeployItem {
+@jsonObject
+export class StoredContractByName extends ExecutableDeployItemInternal {
   public tag = 2;
 
-  constructor(
-    private name: string,
-    private entryPoint: string,
-    private args: Uint8Array
-  ) {
+  @jsonMember({ constructor: String })
+  public name: string;
+
+  @jsonMember({
+    name: 'entry_point',
+    constructor: String
+  })
+  public entryPoint: string;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
+
+  constructor(name: string, entryPoint: string, args: RuntimeArgs) {
     super();
+
+    this.name = name;
+    this.entryPoint = entryPoint;
+    this.args = args;
   }
 
   public toBytes(): ByteArray {
@@ -236,31 +294,40 @@ export class StoredContractByName extends ExecutableDeployItem {
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
-  }
-
-  public toJson(): Record<string, any> {
-    return {
-      StoredContractByName: {
-        name: this.name,
-        entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
-      }
-    };
   }
 }
 
-export class StoredVersionedContractByName extends ExecutableDeployItem {
+@jsonObject
+export class StoredVersionedContractByName extends ExecutableDeployItemInternal {
   public tag = 4;
 
+  @jsonMember({ constructor: String })
+  public name: string;
+
+  @jsonMember({ constructor: Number, preserveNull: true })
+  public version: number | null;
+
+  @jsonMember({ name: 'entry_point', constructor: String })
+  public entryPoint: string;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
+
   constructor(
-    private name: string,
-    private version: number | null,
-    private entryPoint: string,
-    private args: Uint8Array
+    name: string,
+    version: number | null,
+    entryPoint: string,
+    args: RuntimeArgs
   ) {
     super();
+    this.name = name;
+    this.version = version;
+    this.entryPoint = entryPoint;
+    this.args = args;
   }
 
   public toBytes(): ByteArray {
@@ -275,30 +342,54 @@ export class StoredVersionedContractByName extends ExecutableDeployItem {
       toBytesString(this.name),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
-  }
-
-  public toJson(): Record<string, any> {
-    return {
-      StoredVersionedContractByName: {
-        name: this.name,
-        entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
-      }
-    };
   }
 }
 
-export class StoredVersionedContractByHash extends ExecutableDeployItem {
-  public hash: Uint8Array;
-  public version: number | null;
-  public entryPoint: string;
-  public args: ByteArray;
+@jsonObject
+export class StoredVersionedContractByHash extends ExecutableDeployItemInternal {
   public tag = 3;
+
+  @jsonMember({
+    serializer: byteArrayJsonSerializer,
+    deserializer: byteArrayJsonDeserializer
+  })
+  public hash: Uint8Array;
+
+  @jsonMember({
+    constructor: Number,
+    preserveNull: true
+  })
+  public version: number | null;
+
+  @jsonMember({
+    name: 'entry_point',
+    constructor: String
+  })
+  public entryPoint: string;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
+
+  constructor(
+    hash: Uint8Array,
+    version: number | null,
+    entryPoint: string,
+    args: RuntimeArgs
+  ) {
+    super();
+    this.hash = hash;
+    this.version = version;
+    this.entryPoint = entryPoint;
+    this.args = args;
+  }
 
   public toBytes(): ByteArray {
     let serializedVersion;
+
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
     } else {
@@ -309,25 +400,19 @@ export class StoredVersionedContractByHash extends ExecutableDeployItem {
       toBytesBytesArray(this.hash),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args)
+      toBytesArrayU8(this.args.toBytes())
     ]);
-  }
-
-  public toJson(): Record<string, any> {
-    return {
-      StoredVersionedContractByHash: {
-        hash: encodeBase16(this.hash),
-        version: this.version,
-        entry_point: this.entryPoint,
-        args: encodeBase16(this.args)
-      }
-    };
   }
 }
 
-export class Transfer extends ExecutableDeployItem {
-  public args: ByteArray;
+@jsonObject
+export class Transfer extends ExecutableDeployItemInternal {
   public tag = 5;
+
+  @jsonMember({
+    constructor: RuntimeArgs
+  })
+  public args: RuntimeArgs;
 
   /**
    * Constructor for Transfer deploy item.
@@ -344,7 +429,7 @@ export class Transfer extends ExecutableDeployItem {
     id: number | null = null
   ) {
     super();
-    const runtimeArgs = new RuntimeArgs([]);
+    const runtimeArgs = RuntimeArgs.fromMap({});
     runtimeArgs.insert('amount', CLValue.u512(amount));
     if (sourcePurse) {
       runtimeArgs.insert('source', CLValue.uref(sourcePurse));
@@ -364,17 +449,271 @@ export class Transfer extends ExecutableDeployItem {
         CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
       );
     }
-    this.args = runtimeArgs.toBytes();
+    this.args = runtimeArgs;
   }
 
   public toBytes(): ByteArray {
-    return concat([Uint8Array.from([this.tag]), toBytesArrayU8(this.args)]);
+    return concat([
+      Uint8Array.from([this.tag]),
+      toBytesArrayU8(this.args.toBytes())
+    ]);
+  }
+}
+
+@jsonObject
+export class ExecutableDeployItem implements ToBytes {
+  @jsonMember({
+    name: 'ModuleBytes',
+    constructor: ModuleBytes
+  })
+  public moduleBytes?: ModuleBytes;
+
+  @jsonMember({
+    name: 'StoredVersionedContractByHash',
+    constructor: StoredContractByHash
+  })
+  public storedContractByHash?: StoredContractByHash;
+
+  @jsonMember({
+    name: 'StoredContractByName',
+    constructor: StoredContractByName
+  })
+  public storedContractByName?: StoredContractByName;
+
+  @jsonMember({
+    name: 'StoredVersionedContractByHash',
+    constructor: StoredVersionedContractByHash
+  })
+  public storedVersionedContractByHash?: StoredVersionedContractByHash;
+
+  @jsonMember({
+    name: 'StoredVersionedContractByName',
+    constructor: StoredVersionedContractByName
+  })
+  public storedVersionedContractByName?: StoredVersionedContractByName;
+  @jsonMember({
+    name: 'Transfer',
+    constructor: Transfer
+  })
+  public transfer?: Transfer;
+
+  public toBytes(): ByteArray {
+    if (this.isModuleBytes()) {
+      return this.moduleBytes!.toBytes();
+    } else if (this.isStoredContractByHash()) {
+      return this.storedContractByHash!.toBytes();
+    } else if (this.isStoredContractByName()) {
+      return this.storedContractByName!.toBytes();
+    } else if (this.isStoredVersionContractByHash()) {
+      return this.storedVersionedContractByHash!.toBytes();
+    } else if (this.isStoredVersionContractByName()) {
+      return this.storedVersionedContractByName!.toBytes();
+    } else if (this.isTransfer()) {
+      return this.transfer!.toBytes();
+    }
+    throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
-  public toJson(): Record<string, any> {
-    return {
-      Transfer: { args: encodeBase16(this.args) }
-    };
+  public static fromExecutableDeployItemInternal(
+    item: ExecutableDeployItemInternal
+  ) {
+    const res = new ExecutableDeployItem();
+    switch (item.tag) {
+      case 0:
+        res.moduleBytes = item as ModuleBytes;
+        break;
+      case 1:
+        res.storedContractByHash = item as StoredContractByHash;
+        break;
+      case 2:
+        res.storedContractByName = item as StoredContractByName;
+        break;
+      case 3:
+        res.storedVersionedContractByHash = item as StoredVersionedContractByHash;
+        break;
+      case 4:
+        res.storedVersionedContractByName = item as StoredVersionedContractByName;
+        break;
+      case 5:
+        res.transfer = item as Transfer;
+        break;
+    }
+    return res;
+  }
+
+  public static newModuleBytes(
+    moduleBytes: ByteArray,
+    args: RuntimeArgs
+  ): ExecutableDeployItem {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new ModuleBytes(moduleBytes, args)
+    );
+  }
+
+  public static newStoredContractByHash(
+    hash: Uint8Array,
+    entryPoint: string,
+    args: RuntimeArgs
+  ) {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredContractByHash(hash, entryPoint, args)
+    );
+  }
+
+  public static newStoredContractByName(
+    name: string,
+    entryPoint: string,
+    args: RuntimeArgs
+  ) {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredContractByName(name, entryPoint, args)
+    );
+  }
+
+  public static newStoredVersionContractByHash(
+    hash: Uint8Array,
+    version: number | null,
+    entryPoint: string,
+    args: RuntimeArgs
+  ) {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredVersionedContractByHash(hash, version, entryPoint, args)
+    );
+  }
+
+  public static newStoredVersionContractByName(
+    name: string,
+    version: number | null,
+    entryPoint: string,
+    args: RuntimeArgs
+  ) {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new StoredVersionedContractByName(name, version, entryPoint, args)
+    );
+  }
+
+  public static newTransfer(
+    amount: BigNumberish,
+    target: URef | PublicKey,
+    sourcePurse?: URef,
+    id: number | null = null
+  ) {
+    return ExecutableDeployItem.fromExecutableDeployItemInternal(
+      new Transfer(amount, target, sourcePurse, id)
+    );
+  }
+
+  public isModuleBytes(): boolean {
+    return !!this.moduleBytes;
+  }
+
+  public asModuleBytes(): ModuleBytes | undefined {
+    return this.moduleBytes;
+  }
+
+  public isStoredContractByHash(): boolean {
+    return !!this.storedContractByHash;
+  }
+
+  public asStoredContractByHash(): StoredContractByHash | undefined {
+    return this.storedContractByHash;
+  }
+
+  public isStoredContractByName(): boolean {
+    return !!this.storedContractByName;
+  }
+
+  public asStoredContractByName(): StoredContractByName | undefined {
+    return this.storedContractByName;
+  }
+
+  public isStoredVersionContractByName(): boolean {
+    return !!this.storedVersionedContractByName;
+  }
+
+  public asStoredVersionContractByName():
+    | StoredVersionedContractByName
+    | undefined {
+    return this.storedVersionedContractByName;
+  }
+
+  public isStoredVersionContractByHash(): boolean {
+    return !!this.storedVersionedContractByHash;
+  }
+
+  public asStoredVersionContractByHash():
+    | StoredVersionedContractByHash
+    | undefined {
+    return this.storedVersionedContractByHash;
+  }
+
+  public isTransfer() {
+    return !!this.transfer;
+  }
+
+  public asTransfer(): Transfer | undefined {
+    return this.transfer;
+  }
+}
+
+/**
+ * A deploy containing a smart contract along with the requester's signature(s).
+ */
+@jsonObject
+export class Deploy {
+  @jsonMember({
+    serializer: byteArrayJsonSerializer,
+    deserializer: byteArrayJsonDeserializer
+  })
+  public hash: ByteArray;
+
+  @jsonMember({ constructor: DeployHeader })
+  public header: DeployHeader;
+
+  @jsonMember({
+    constructor: ExecutableDeployItem
+  })
+  public payment: ExecutableDeployItem;
+
+  @jsonMember({
+    constructor: ExecutableDeployItem
+  })
+  public session: ExecutableDeployItem;
+
+  @jsonArrayMember(Approval)
+  public approvals: Approval[];
+
+  /**
+   *
+   * @param hash The DeployHash identifying this Deploy
+   * @param header The deployHeader
+   * @param payment The ExecutableDeployItem for payment code.
+   * @param session the ExecutableDeployItem for session code.
+   * @param approvals  An array of signature and public key of the signers, who approve this deploy
+   */
+  constructor(
+    hash: ByteArray,
+    header: DeployHeader,
+    payment: ExecutableDeployItem,
+    session: ExecutableDeployItem,
+    approvals: Approval[]
+  ) {
+    this.approvals = approvals;
+    this.session = session;
+    this.payment = payment;
+    this.header = header;
+    this.hash = hash;
+  }
+
+  public isTransfer(): boolean {
+    return this.session.isTransfer();
+  }
+
+  public isStandardPayment(): boolean {
+    if (this.payment.isModuleBytes()) {
+      return this.payment.asModuleBytes()?.moduleBytes.length === 0;
+    }
+    return false;
   }
 }
 
@@ -383,7 +722,7 @@ export class Transfer extends ExecutableDeployItem {
  * @param deployHeader
  */
 export const serializeHeader = (deployHeader: DeployHeader) => {
-  return toBytesDeployHeader(deployHeader);
+  return deployHeader.toBytes();
 };
 
 /**
@@ -446,24 +785,18 @@ export function makeDeploy(
   const serializedBody = serializeBody(payment, session);
   const bodyHash = blake.blake2b(serializedBody, null, 32);
 
-  const header: DeployHeader = {
-    account: deployParam.accountPublicKey,
+  const header: DeployHeader = new DeployHeader(
+    deployParam.accountPublicKey,
+    deployParam.timestamp!,
+    deployParam.ttl,
+    deployParam.gasPrice,
     bodyHash,
-    chainName: deployParam.chainName,
-    dependencies: deployParam.dependencies,
-    gasPrice: deployParam.gasPrice,
-    timestamp: deployParam.timestamp!,
-    ttl: deployParam.ttl
-  };
+    deployParam.dependencies,
+    deployParam.chainName
+  );
   const serializedHeader = serializeHeader(header);
   const deployHash = blake.blake2b(serializedHeader, null, 32);
-  return {
-    hash: deployHash,
-    header,
-    payment,
-    session,
-    approvals: []
-  };
+  return new Deploy(deployHash, header, payment, session, []);
 }
 
 /**
@@ -528,7 +861,7 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
     amount: CLValue.u512(paymentAmount.toString())
   });
 
-  return new ModuleBytes(Uint8Array.from([]), paymentArgs.toBytes());
+  return ExecutableDeployItem.newModuleBytes(Uint8Array.from([]), paymentArgs);
 };
 
 /**
@@ -537,27 +870,18 @@ export const standardPayment = (paymentAmount: bigint | JSBI) => {
  * @param deploy
  */
 export const deployToJson = (deploy: Deploy) => {
-  const header = deploy.header;
-  const headerJson = {
-    account: header.account.toAccountHex(),
-    timestamp: new Date(header.timestamp).toISOString(),
-    ttl: humanizerTTL(deploy.header.ttl),
-    gas_price: header.gasPrice,
-    body_hash: encodeBase16(header.bodyHash),
-    dependencies: header.dependencies.map(it => encodeBase16(it)),
-    chain_name: header.chainName
+  const serializer = new TypedJSON(Deploy);
+  return {
+    deploy: serializer.stringify(deploy)
   };
-  const json = {
-    hash: encodeBase16(deploy.hash),
-    header: headerJson,
-    payment: deploy.payment.toJson(),
-    session: deploy.session.toJson(),
-    approvals: deploy.approvals.map(it => {
-      return {
-        signer: it.signer,
-        signature: it.signature
-      };
-    })
-  };
-  return { deploy: json };
+};
+
+/**
+ * Convert the json to deploy object
+ *
+ * @param json
+ */
+export const deployFromJson = (json: any) => {
+  const serializer = new TypedJSON(Deploy);
+  return serializer.parse(json);
 };

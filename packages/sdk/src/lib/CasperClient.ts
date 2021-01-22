@@ -1,18 +1,7 @@
-import {
-  AccountDeploy,
-  CasperServiceByJsonRPC,
-  DeployResult,
-  EventService,
-  TransferResult
-} from '../services';
+import { AccountDeploy, CasperServiceByJsonRPC, DeployResult, EventService, TransferResult } from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
 import { encodeBase16 } from './Conversions';
-import {
-  Deploy,
-  DeployParams,
-  ExecutableDeployItem,
-  Transfer
-} from './DeployUtil';
+import { Deploy, DeployParams, ExecutableDeployItem } from './DeployUtil';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { CasperHDKey } from './CasperHDKey';
 
@@ -166,6 +155,15 @@ export class CasperClient {
   }
 
   /**
+   * Convert the json to deploy object
+   *
+   * @param json
+   */
+  public deployFromJson(json: any) {
+    return DeployUtil.deployFromJson(json);
+  };
+
+  /**
    * Construct the deploy for transfer purpose
    *
    * @param deployParams
@@ -174,9 +172,12 @@ export class CasperClient {
    */
   public makeTransferDeploy(
     deployParams: DeployParams,
-    session: Transfer,
+    session: ExecutableDeployItem,
     payment: ExecutableDeployItem
   ): Deploy {
+    if (!session.isTransfer()) {
+      throw new Error('The session is not a Transfer ExecutableDeployItem');
+    }
     return this.makeDeploy(deployParams, session, payment);
   }
 

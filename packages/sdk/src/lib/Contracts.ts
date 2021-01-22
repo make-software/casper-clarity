@@ -2,10 +2,10 @@ import blake from 'blakejs';
 import * as fs from 'fs';
 import { PublicKey } from '../index';
 import * as DeployUtil from './DeployUtil';
+import { DeployParams, ExecutableDeployItem } from './DeployUtil';
 import { RuntimeArgs } from './RuntimeArgs';
-import { CLValue, AccountHash, KeyValue } from './CLValue';
+import { AccountHash, CLValue, KeyValue } from './CLValue';
 import { AsymmetricKey } from './Keys';
-import { DeployParams } from './DeployUtil';
 
 // https://www.npmjs.com/package/tweetnacl-ts
 // https://github.com/dcposch/blakejs
@@ -53,18 +53,12 @@ export class Contract {
     signingKeyPair: AsymmetricKey,
     chainName: string
   ): DeployUtil.Deploy {
-    const session = new DeployUtil.ModuleBytes(
-      this.sessionWasm,
-      args.toBytes()
-    );
+    const session = ExecutableDeployItem.newModuleBytes(this.sessionWasm, args);
     const paymentArgs = RuntimeArgs.fromMap({
       amount: CLValue.u512(paymentAmount.toString())
     });
 
-    const payment = new DeployUtil.ModuleBytes(
-      this.paymentWasm,
-      paymentArgs.toBytes()
-    );
+    const payment = ExecutableDeployItem.newModuleBytes(this.paymentWasm, paymentArgs);
 
     const deploy = DeployUtil.makeDeploy(
       new DeployParams(accountPublicKey, chainName),
@@ -82,7 +76,8 @@ export class BoundContract {
   constructor(
     private contract: Contract,
     private contractKeyPair: AsymmetricKey
-  ) {}
+  ) {
+  }
 
   public deploy(
     args: RuntimeArgs,

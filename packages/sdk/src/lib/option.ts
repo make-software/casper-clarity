@@ -75,7 +75,7 @@ export class Option extends CLTypedAndToBytes {
     if (u8Res.hasError()) {
       return Result.Err(u8Res.error);
     }
-    const optionTag = u8Res.value.value as number;
+    const optionTag = u8Res.value.val as number;
     if (optionTag === OPTION_TAG_NONE) {
       return Result.Ok(new Option(null, type.innerType), u8Res.remainder);
     } else if (optionTag === OPTION_TAG_SOME) {
