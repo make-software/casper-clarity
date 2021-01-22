@@ -115,3 +115,30 @@ trigger:
 
 depends_on:
 - build-publish
+
+
+---
+kind: pipeline
+type: docker
+name: npm publish
+
+steps:
+- name: npm publish
+  image: "casperlabs/clarity-build:latest"
+  environment:
+    NPM_TOKEN:
+      from_secret: npm_token  
+  commands:
+    - "git fetch"
+    - "git checkout $DRONE_TAG"
+    - "cd packages/sdk"
+    - "npm version"
+    - "npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN"
+    - "npm whoami"
+    - "npm publish --verbose"
+
+trigger:
+  event:
+  - tag
+
+
