@@ -3,6 +3,7 @@ import {
   CLType,
   CLTypedAndToBytes,
   CLTypeHelper,
+  CLValue,
   fromBytesByCLType,
   FromBytesError,
   OptionType,
@@ -54,6 +55,18 @@ export class Option extends CLTypedAndToBytes {
    */
   public isSome(): boolean {
     return this.t !== null;
+  }
+
+  /**
+   * Extract value.
+   *
+   * @returns CLValue if the `Option` has some value.
+   */
+  public getSome(): CLValue {
+    if (!this.isSome()){
+      throw new Error('Value is None');
+    };
+    return CLValue.fromT(this.t!);
   }
 
   /**

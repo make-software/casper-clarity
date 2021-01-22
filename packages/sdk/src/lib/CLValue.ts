@@ -834,6 +834,35 @@ export class MapValue extends CLTypedAndToBytes {
   }
 }
 
+@staticImplements<BytesDeserializableStatic<ByteArrayValue>>()
+class ByteArrayValue extends CLTypedAndToBytes {
+  constructor(public rawBytes: ByteArray) {
+    super();
+  }
+
+  public clType(): CLType {
+    return CLTypeHelper.byteArray(this.rawBytes.length);
+  }
+
+  public toBytes(): ByteArray {
+    return toBytesBytesArray(this.rawBytes);
+  }
+
+  public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
+    const u32Res = U32.fromBytes(bytes);
+    if (u32Res.hasError()) {
+      return Result.Err(u32Res.error);
+    }
+    const size = u32Res.value.val as number;
+    if (u32Res.remainder.length < size) {
+      return Result.Err(FromBytesError.EarlyEndOfStream);
+    }
+    const b = new ByteArrayValue(u32Res.remainder.subarray(0, size));
+    const rem = u32Res.remainder.subarray(size);
+    return Result.Ok(b, rem);
+  }
+}
+
 export interface ToJSON {
   toJSON: () => any;
 }
@@ -1239,35 +1268,6 @@ export class CLTypeHelper {
   }
 }
 
-@staticImplements<BytesDeserializableStatic<ByteArrayValue>>()
-class ByteArrayValue extends CLTypedAndToBytes {
-  constructor(public rawBytes: ByteArray) {
-    super();
-  }
-
-  public clType(): CLType {
-    return CLTypeHelper.byteArray(this.rawBytes.length);
-  }
-
-  public toBytes(): ByteArray {
-    return toBytesBytesArray(this.rawBytes);
-  }
-
-  public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
-    const u32Res = U32.fromBytes(bytes);
-    if (u32Res.hasError()) {
-      return Result.Err(u32Res.error);
-    }
-    const size = u32Res.value.val as number;
-    if (u32Res.remainder.length < size) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const b = new ByteArrayValue(u32Res.remainder.subarray(0, size));
-    const rem = u32Res.remainder.subarray(size);
-    return Result.Ok(b, rem);
-  }
-}
-
 export class CLTypedAndToBytesHelper {
   public static bool = (b: boolean) => {
     return new Bool(b);
@@ -1499,7 +1499,7 @@ export class CLValue implements ToBytes {
   @jsonMember({
     name: 'parsed_to_json',
     deserializer: v => v,
-    preserveNull: true
+    serializer: v => v
   })
   public parsedToJson: any;
 
@@ -1721,6 +1721,29 @@ export class CLValue implements ToBytes {
     }
     return this.value as URef;
   }
+
+  public isBytesArray() {
+    return this.clType instanceof ByteArrayType;
+  }
+
+  public asBytesArray() {
+    if (!this.isBytesArray()) {
+      throw new Error("The CLValue can't convert to BytesArray");
+    }
+    return (this.value as ByteArrayValue).toBytes();
+  }
+
+  public isOption() {
+    return this.clType instanceof OptionType;
+  }
+
+  public asOption() {
+    if (!this.isOption()) {
+      throw new Error("The CLValue can't convert to Option");
+    }
+    return this.value as Option;
+  }
+
 }
 
 export enum KeyVariant {

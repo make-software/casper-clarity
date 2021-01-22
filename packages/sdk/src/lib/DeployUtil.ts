@@ -25,7 +25,7 @@ import {
   toBytesVecT
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
-import JSBI from 'jsbi';
+// import JSBI from 'jsbi';
 import { Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
@@ -514,6 +514,23 @@ export class ExecutableDeployItem implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
+  public getArgByName(name: string): CLValue | undefined {
+    if (this.isModuleBytes()) {
+      return this.moduleBytes!.getArgByName(name);
+    } else if (this.isStoredContractByHash()) {
+      return this.storedContractByHash!.getArgByName(name);
+    } else if (this.isStoredContractByName()) {
+      return this.storedContractByName!.getArgByName(name);
+    } else if (this.isStoredVersionContractByHash()) {
+      return this.storedVersionedContractByHash!.getArgByName(name);
+    } else if (this.isStoredVersionContractByName()) {
+      return this.storedVersionedContractByName!.getArgByName(name);
+    } else if (this.isTransfer()) {
+      return this.transfer!.getArgByName(name);
+    }
+    throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
+  }
+
   public static fromExecutableDeployItemInternal(
     item: ExecutableDeployItemInternal
   ) {
@@ -856,7 +873,7 @@ export const setSignature = (
  *
  * @param paymentAmount the number of motes paying to execution engine
  */
-export const standardPayment = (paymentAmount: bigint | JSBI) => {
+export const standardPayment = (paymentAmount: BigNumberish) => {
   const paymentArgs = RuntimeArgs.fromMap({
     amount: CLValue.u512(paymentAmount.toString())
   });
@@ -883,5 +900,5 @@ export const deployToJson = (deploy: Deploy) => {
  */
 export const deployFromJson = (json: any) => {
   const serializer = new TypedJSON(Deploy);
-  return serializer.parse(json);
+  return serializer.parse(json.deploy);
 };
