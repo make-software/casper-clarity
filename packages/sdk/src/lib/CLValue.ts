@@ -13,6 +13,7 @@ import { Option } from './option';
 import { byteHash } from './Contracts';
 import { SignatureAlgorithm } from './Keys';
 import { jsonMember, jsonObject } from 'typedjson';
+import { ByteArray } from 'tweetnacl-ts';
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 const SECP256K1_PUBLIC_KEY_LENGTH = 33;
@@ -197,7 +198,7 @@ export class Bool extends CLTypedAndToBytes {
 abstract class NumberCoder extends CLTypedAndToBytes {
   public bitSize: number;
   public signed: boolean;
-  public val: BigNumberish;
+  public val: BigNumber;
   public name: string;
 
   protected constructor(bitSize: number, signed: boolean, value: BigNumberish) {
@@ -205,7 +206,7 @@ abstract class NumberCoder extends CLTypedAndToBytes {
     this.name = (signed ? 'i' : 'u') + bitSize;
     this.bitSize = bitSize;
     this.signed = signed;
-    this.val = value;
+    this.val = BigNumber.from(value);
   }
 
   public toBytes = (): ByteArray => {
@@ -330,20 +331,7 @@ export class U128 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U128> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 16) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u128Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U128(BigNumber.from(u128Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 128);
   }
 }
 
@@ -358,20 +346,7 @@ class U256 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U128> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 32) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u256Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U256(BigNumber.from(u256Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 256);
   }
 }
 
@@ -386,20 +361,7 @@ export class U512 extends NumberCoder {
   }
 
   public static fromBytes(bytes: ByteArray): Result<U512> {
-    if (bytes.length < 1) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const tmp = Uint8Array.from(bytes);
-    const n = tmp[0];
-    if (n === 0 || n > 64) {
-      return Result.Err(FromBytesError.FormattingError);
-    }
-    if (n + 1 > bytes.length) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const u512Bytes = tmp.subarray(1, 1 + n);
-    const rem = tmp.subarray(1 + n);
-    return Result.Ok(new U512(BigNumber.from(u512Bytes.reverse())), rem);
+    return fromBytesBigInt(bytes, 512);
   }
 }
 
@@ -437,7 +399,7 @@ export class StringValue extends CLTypedAndToBytes {
     if (res.hasError()) {
       return Result.Err(res.error);
     }
-    const len = res.value.val as number;
+    const len = res.value.val.toNumber();
     const str = Buffer.from(res.remainder.subarray(0, len)).toString('utf8');
     return Result.Ok<StringValue>(
       new StringValue(str),
@@ -552,7 +514,7 @@ export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.val as number;
+    const size = u32Res.value.val.toNumber();
     const vec = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
@@ -814,7 +776,7 @@ export class MapValue extends CLTypedAndToBytes {
     if (u32Res.hasError()) {
       return Result.Err(u32Res.error);
     }
-    const size = u32Res.value.val as number;
+    const size = u32Res.value.val.toNumber();
     const vec: MapEntry[] = [];
     let remainder = u32Res.remainder;
     for (let i = 0; i < size; i++) {
@@ -849,19 +811,44 @@ class ByteArrayValue extends CLTypedAndToBytes {
   }
 
   public static fromBytes(bytes: ByteArray): Result<ByteArrayValue> {
-    const u32Res = U32.fromBytes(bytes);
-    if (u32Res.hasError()) {
-      return Result.Err(u32Res.error);
-    }
-    const size = u32Res.value.val as number;
-    if (u32Res.remainder.length < size) {
-      return Result.Err(FromBytesError.EarlyEndOfStream);
-    }
-    const b = new ByteArrayValue(u32Res.remainder.subarray(0, size));
-    const rem = u32Res.remainder.subarray(size);
-    return Result.Ok(b, rem);
+    const b = new ByteArrayValue(bytes);
+    return Result.Ok(b, bytes.subarray(32));
   }
 }
+
+const fromBytesBigInt: (
+  bytes: ByteArray,
+  bitSize: number
+) => Result<U128 | U256 | U512> = (bytes: ByteArray, bitSize: number) => {
+  const byteSize = bitSize / 8;
+  if (bytes.length < 1) {
+    return Result.Err(FromBytesError.EarlyEndOfStream);
+  }
+  const tmp = Uint8Array.from(bytes);
+  const n = tmp[0];
+  if (n > byteSize) {
+    return Result.Err(FromBytesError.FormattingError);
+  }
+  if (n + 1 > bytes.length) {
+    return Result.Err(FromBytesError.EarlyEndOfStream);
+  }
+  let bigIntBytes;
+  if (n === 0) {
+    bigIntBytes = [0];
+  } else {
+    bigIntBytes = tmp.subarray(1, 1 + n);
+  }
+  const rem = tmp.subarray(1 + n);
+  if (bitSize === 128) {
+    return Result.Ok(new U128(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else if (bitSize === 256) {
+    return Result.Ok(new U256(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else if (bitSize === 512) {
+    return Result.Ok(new U512(BigNumber.from(bigIntBytes.reverse())), rem);
+  } else {
+    return Result.Err(FromBytesError.FormattingError);
+  }
+};
 
 export interface ToJSON {
   toJSON: () => any;
@@ -1121,7 +1108,7 @@ export class CLTypeHelper {
           return Result.Err(sizeRes.error);
         }
         return Result.Ok(
-          CLTypeHelper.byteArray(sizeRes.value.val as number),
+          CLTypeHelper.byteArray(sizeRes.value.val.toNumber()),
           sizeRes.remainder
         );
       }
@@ -1480,8 +1467,15 @@ const jsonToCLType = (json: any): CLType => {
  * It holds the underlying data as a type-erased, serialized array of bytes and also holds the
  * [[CLType]] of the underlying data as a separate member.
  */
+
+function deserializeCLValue(_a: any, _b: any) {
+  let v = fromBytesByCLType(_a.clType, decodeBase16(_a.bytes));
+  let ret = CLValue.fromT(v.value);
+  return ret;
+}
+
 @jsonObject({
-  onDeserialized: 'reconstruct'
+  initializer: (a, b) => deserializeCLValue(a, b)
 })
 export class CLValue implements ToBytes {
   @jsonMember({
@@ -1496,11 +1490,6 @@ export class CLValue implements ToBytes {
   })
   public bytes: string;
 
-  @jsonMember({
-    name: 'parsed_to_json',
-    deserializer: v => v,
-    serializer: v => v
-  })
   public parsedToJson: any;
 
   private value: CLTypedAndToBytes;
@@ -1743,7 +1732,6 @@ export class CLValue implements ToBytes {
     }
     return this.value as Option;
   }
-
 }
 
 export enum KeyVariant {

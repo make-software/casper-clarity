@@ -70,7 +70,7 @@ export class RuntimeArgs implements ToBytes {
     if (sizeRes.hasError()) {
       return Result.Err(sizeRes.error);
     }
-    const size = sizeRes.value.val as number;
+    const size = sizeRes.value.val.toNumber();
     let remainBytes = sizeRes.remainder;
     const res: NamedArg[] = [];
     for (let i = 0; i < size; i++) {

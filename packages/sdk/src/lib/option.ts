@@ -63,9 +63,9 @@ export class Option extends CLTypedAndToBytes {
    * @returns CLValue if the `Option` has some value.
    */
   public getSome(): CLValue {
-    if (!this.isSome()){
+    if (!this.isSome()) {
       throw new Error('Value is None');
-    };
+    }
     return CLValue.fromT(this.t!);
   }
 
@@ -88,7 +88,7 @@ export class Option extends CLTypedAndToBytes {
     if (u8Res.hasError()) {
       return Result.Err(u8Res.error);
     }
-    const optionTag = u8Res.value.val as number;
+    const optionTag = u8Res.value.val.toNumber();
     if (optionTag === OPTION_TAG_NONE) {
       return Result.Ok(new Option(null, type.innerType), u8Res.remainder);
     } else if (optionTag === OPTION_TAG_SOME) {

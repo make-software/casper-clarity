@@ -423,33 +423,10 @@ export class Transfer extends ExecutableDeployItemInternal {
    * @param id user-defined transfer id
    */
   constructor(
-    amount: BigNumberish,
-    target: URef | PublicKey,
-    sourcePurse?: URef,
-    id: number | null = null
+    args: RuntimeArgs
   ) {
     super();
-    const runtimeArgs = RuntimeArgs.fromMap({});
-    runtimeArgs.insert('amount', CLValue.u512(amount));
-    if (sourcePurse) {
-      runtimeArgs.insert('source', CLValue.uref(sourcePurse));
-    }
-    if (target instanceof URef) {
-      runtimeArgs.insert('target', CLValue.uref(target));
-    } else if (target instanceof PublicKey) {
-      runtimeArgs.insert('target', CLValue.byteArray(target.toAccountHash()));
-    } else {
-      throw new Error('Please specify target');
-    }
-    if (!id) {
-      runtimeArgs.insert('id', CLValue.option(null, CLTypeHelper.u64()));
-    } else {
-      runtimeArgs.insert(
-        'id',
-        CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
-      );
-    }
-    this.args = runtimeArgs;
+    this.args = args;
   }
 
   public toBytes(): ByteArray {
@@ -609,14 +586,42 @@ export class ExecutableDeployItem implements ToBytes {
     );
   }
 
+  /**
+   * Constructor for Transfer deploy item.
+   * @param amount The number of motes to transfer
+   * @param target URef of the target purse or the public key of target account. You could generate this public key from accountHex by PublicKey.fromHex
+   * @param sourcePurse URef of the source purse. If this is omitted, the main purse of the account creating this \
+   * transfer will be used as the source purse
+   * @param id user-defined transfer id
+   */
   public static newTransfer(
     amount: BigNumberish,
     target: URef | PublicKey,
     sourcePurse?: URef,
     id: number | null = null
   ) {
+    const runtimeArgs = RuntimeArgs.fromMap({});
+    runtimeArgs.insert('amount', CLValue.u512(amount));
+    if (sourcePurse) {
+      runtimeArgs.insert('source', CLValue.uref(sourcePurse));
+    }
+    if (target instanceof URef) {
+      runtimeArgs.insert('target', CLValue.uref(target));
+    } else if (target instanceof PublicKey) {
+      runtimeArgs.insert('target', CLValue.byteArray(target.toAccountHash()));
+    } else {
+      throw new Error('Please specify target');
+    }
+    if (!id) {
+      runtimeArgs.insert('id', CLValue.option(null, CLTypeHelper.u64()));
+    } else {
+      runtimeArgs.insert(
+        'id',
+        CLValue.option(CLTypedAndToBytesHelper.u64(id), CLTypeHelper.u64())
+      );
+    }
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
-      new Transfer(amount, target, sourcePurse, id)
+      new Transfer(runtimeArgs)
     );
   }
 

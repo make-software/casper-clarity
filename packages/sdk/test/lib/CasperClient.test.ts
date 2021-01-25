@@ -3,9 +3,8 @@ import { CasperClient } from '../../src/lib/CasperClient';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { DeployUtil, Keys, PublicKey } from '../../src/lib';
-import { Ed25519, Secp256K1, SignatureAlgorithm } from '../../src/lib/Keys';
-import JSBI from 'jsbi';
+import { Keys } from '../../src/lib';
+import { Secp256K1, SignatureAlgorithm } from '../../src/lib/Keys';
 import { decodeBase16 } from '../../src';
 
 let casperClient: CasperClient;
@@ -116,28 +115,6 @@ describe('CasperClient', () => {
       edKeyPair.publicKey.rawPublicKey
     );
     expect(loadedKeyPair.privateKey).to.deep.equal(edKeyPair.privateKey);
-  });
-
-  // todo move it to example once we publish transfer feature
-  describe.skip('transfer', async () => {
-    const transfer = new DeployUtil.Transfer(
-      100000000000000,
-      PublicKey.fromHex(
-        '01a72eb5ba13e243d40e56b0547536e3ad1584eee5a386c7be5d5a1f94c09a6592'
-      )
-    );
-    const keyPair = Ed25519.parseKeyFiles(
-      '../server/test.public.key',
-      '../server/test.private.key'
-    );
-    const deploy = casperClient.makeTransferDeploy(
-      new DeployUtil.DeployParams(keyPair.publicKey, 'casper-net-1'),
-      transfer,
-      DeployUtil.standardPayment(JSBI.BigInt(100000000000000))
-    );
-    const signedDeploy = casperClient.signDeploy(deploy, keyPair);
-    const deployHash = await casperClient.putDeploy(signedDeploy);
-    console.log(deployHash);
   });
 
   it('should create a HK wallet and derive child account correctly', function () {

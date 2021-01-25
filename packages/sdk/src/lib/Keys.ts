@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as nacl from 'tweetnacl-ts';
 import { SignKeyPair, SignLength } from 'tweetnacl-ts';
 import { decodeBase64 } from 'tweetnacl-util';
-import { encodeBase16, encodeBase64} from '../index';
+import { encodeBase16, encodeBase64 } from '../index';
 import { PublicKey } from '../lib/index';
 import { byteHash } from './Contracts';
 import { ec as EC } from 'elliptic';

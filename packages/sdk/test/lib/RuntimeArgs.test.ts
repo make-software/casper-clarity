@@ -1,7 +1,7 @@
-import { expect } from 'chai';
-import { CLValue, RuntimeArgs } from '../../src/lib';
+import { expect, assert } from 'chai';
+import { CLValue, RuntimeArgs, CLTypedAndToBytesHelper } from '../../src/lib';
 import { decodeBase16 } from '../../src';
-import { toBytesU32 } from '../../src/lib/byterepr';
+import { TypedJSON } from 'typedjson';
 
 describe(`RuntimeArgs`, () => {
   it('should serialize RuntimeArgs correctly', () => {
@@ -38,8 +38,38 @@ describe(`RuntimeArgs`, () => {
   it('should serialize empty NamedArgs correctly', () => {
     const truth = decodeBase16('00000000');
     const runtimeArgs = RuntimeArgs.fromMap({});
-    console.log(toBytesU32(0));
     const bytes = runtimeArgs.toBytes();
     expect(bytes).to.deep.eq(truth);
+  });
+
+  it('should deserialize U512', () => {
+    let value = CLValue.u512(43000000000);
+    let serializer = new TypedJSON(CLValue);
+    let str = serializer.stringify(value);
+    assert.deepEqual(value.asBigNumber(), serializer.parse(str)!.asBigNumber());
+  });
+
+  it('should deserialize Option of U512', () => {
+    let a = CLTypedAndToBytesHelper.u512(123);
+    let value = CLValue.option(a, a.clType());
+    let serializer = new TypedJSON(CLValue);
+    let str = serializer.stringify(value);
+    let parsed = serializer.parse(str)!;
+    assert.deepEqual(
+      value.asOption().getSome().asBigNumber(), 
+      parsed.asOption().getSome().asBigNumber());
+  });
+
+  it('should deserialize RuntimeArgs', () => {
+    let a = CLTypedAndToBytesHelper.u512(123);
+    const runtimeArgs = RuntimeArgs.fromMap({
+      a: CLValue.option(null, a.clType())
+    });
+    let serializer = new TypedJSON(RuntimeArgs);
+    let str = serializer.stringify(runtimeArgs);
+    let value = serializer.parse(str)!;
+    assert.isTrue(
+      value.args.get('a')!.asOption().isNone() 
+    );
   });
 });
