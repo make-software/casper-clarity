@@ -1461,19 +1461,18 @@ const jsonToCLType = (json: any): CLType => {
   }
 };
 
+function deserializeCLValue(_a: any, _b: any) {
+  const v = fromBytesByCLType(_a.clType, decodeBase16(_a.bytes));
+  const ret = CLValue.fromT(v.value);
+  return ret;
+}
+
 /**
  * A Casper value, i.e. a value which can be stored and manipulated by smart contracts.
  *
  * It holds the underlying data as a type-erased, serialized array of bytes and also holds the
  * [[CLType]] of the underlying data as a separate member.
  */
-
-function deserializeCLValue(_a: any, _b: any) {
-  let v = fromBytesByCLType(_a.clType, decodeBase16(_a.bytes));
-  let ret = CLValue.fromT(v.value);
-  return ret;
-}
-
 @jsonObject({
   initializer: (a, b) => deserializeCLValue(a, b)
 })
