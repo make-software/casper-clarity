@@ -30,7 +30,7 @@ export class StoredFaucetService {
         sessionArgs
       );
 
-      const payment = DeployUtil.standardPayment(this.paymentAmount);
+      const payment = DeployUtil.standardPayment(this.paymentAmount.toString());
       const deployByName = DeployUtil.makeDeploy(
         new DeployUtil.DeployParams(
           this.contractKeys.publicKey,

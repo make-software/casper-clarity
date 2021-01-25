@@ -367,7 +367,6 @@ export class DeployContractsContainer {
           return DeployArgumentParser.buildArgument(arg);
         })
       );
-      const paymentAmount = JSBI.BigInt(config.paymentAmount.value);
       let sessionExecutionItem: DeployUtil.ExecutableDeployItem | null = null;
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
@@ -398,7 +397,7 @@ export class DeployContractsContainer {
             window.config.network?.chainName || ''
           ),
           sessionExecutionItem,
-          DeployUtil.standardPayment(paymentAmount)
+          DeployUtil.standardPayment(config.paymentAmount.value)
         );
       }
       return Promise.resolve(null);
