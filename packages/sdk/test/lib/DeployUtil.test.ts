@@ -42,17 +42,40 @@ describe('DeployUtil', () => {
     let deploy = DeployUtil.makeDeploy(deployParams, session, payment);
     deploy = DeployUtil.signDeploy(deploy, senderKey);
     deploy = DeployUtil.signDeploy(deploy, recipientKey);
-    
+
     let json = DeployUtil.deployToJson(deploy);
     deploy = DeployUtil.deployFromJson(json)!;
 
     assert.isTrue(deploy.isTransfer());
     assert.isTrue(deploy.isStandardPayment());
     assert.deepEqual(deploy.header.account, senderKey.publicKey);
-    assert.deepEqual(deploy.payment.getArgByName('amount')!.asBigNumber().toNumber(), paymentAmount);
-    assert.deepEqual(deploy.session.getArgByName('amount')!.asBigNumber().toNumber(), transferAmount);
-    assert.deepEqual(deploy.session.getArgByName('target')!.asBytesArray(), recipientKey.accountHash());
-    assert.deepEqual(deploy.session.getArgByName('id')!.asOption().getSome().asBigNumber().toNumber(), id);
+    assert.deepEqual(
+      deploy.payment
+        .getArgByName('amount')!
+        .asBigNumber()
+        .toNumber(),
+      paymentAmount
+    );
+    assert.deepEqual(
+      deploy.session
+        .getArgByName('amount')!
+        .asBigNumber()
+        .toNumber(),
+      transferAmount
+    );
+    assert.deepEqual(
+      deploy.session.getArgByName('target')!.asBytesArray(),
+      recipientKey.accountHash()
+    );
+    assert.deepEqual(
+      deploy.session
+        .getArgByName('id')!
+        .asOption()
+        .getSome()
+        .asBigNumber()
+        .toNumber(),
+      id
+    );
     assert.deepEqual(deploy.approvals[0].signer, senderKey.accountHex());
     assert.deepEqual(deploy.approvals[1].signer, recipientKey.accountHex());
   });

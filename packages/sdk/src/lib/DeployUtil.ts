@@ -422,9 +422,7 @@ export class Transfer extends ExecutableDeployItemInternal {
    * transfer will be used as the source purse
    * @param id user-defined transfer id
    */
-  constructor(
-    args: RuntimeArgs
-  ) {
+  constructor(args: RuntimeArgs) {
     super();
     this.args = args;
   }

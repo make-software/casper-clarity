@@ -56,8 +56,15 @@ describe(`RuntimeArgs`, () => {
     let str = serializer.stringify(value);
     let parsed = serializer.parse(str)!;
     assert.deepEqual(
-      value.asOption().getSome().asBigNumber(), 
-      parsed.asOption().getSome().asBigNumber());
+      value
+        .asOption()
+        .getSome()
+        .asBigNumber(),
+      parsed
+        .asOption()
+        .getSome()
+        .asBigNumber()
+    );
   });
 
   it('should deserialize RuntimeArgs', () => {
@@ -69,7 +76,10 @@ describe(`RuntimeArgs`, () => {
     let str = serializer.stringify(runtimeArgs);
     let value = serializer.parse(str)!;
     assert.isTrue(
-      value.args.get('a')!.asOption().isNone() 
+      value.args
+        .get('a')!
+        .asOption()
+        .isNone()
     );
   });
 });
