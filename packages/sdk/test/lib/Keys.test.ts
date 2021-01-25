@@ -166,7 +166,6 @@ describe('Secp256K1', () => {
     // expect we could sign the message and verify the signature later.
     const message = Buffer.from('hello world');
     const signature = signKeyPair.sign(Buffer.from(message));
-    console.log(encodeBase16(signature));
     // expect we could verify the signature created by ourself
     expect(signKeyPair.verfiy(signature, message)).to.equal(true);
   });

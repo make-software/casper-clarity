@@ -1,6 +1,8 @@
 import Client, { HTTPTransport, RequestManager } from 'rpc-client-js';
 import { DeployUtil, encodeBase16, PublicKey } from '..';
 import { deployToJson } from '../lib/DeployUtil';
+import { TypedJSON } from 'typedjson';
+import { StoredValue } from '../lib/StoredValue';
 
 interface RpcResult {
   api_version: string;
@@ -214,8 +216,8 @@ export class CasperServiceByJsonRPC {
       stateRootHash,
       'account-hash-' + accountHash,
       []
-    ).then(res => res.stored_value.Account);
-    return account.main_purse;
+    ).then(res => res.Account!);
+    return account.mainPurse;
   }
 
   /**
@@ -269,8 +271,8 @@ export class CasperServiceByJsonRPC {
     stateRootHash: string,
     key: string,
     path: string[]
-  ) {
-    return await this.client.request({
+  ): Promise<StoredValue> {
+    const res = await this.client.request({
       method: 'state_get_item',
       params: {
         state_root_hash: stateRootHash,
@@ -278,6 +280,14 @@ export class CasperServiceByJsonRPC {
         path
       }
     });
+    if (res.error) {
+      return res;
+    } else {
+      const storedValueJson = res.stored_value;
+      const serializer = new TypedJSON(StoredValue);
+      const storedValue = serializer.parse(storedValueJson)!;
+      return storedValue;
+    }
   }
 
   public async deploy(signedDeploy: DeployUtil.Deploy) {

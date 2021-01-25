@@ -1,8 +1,4 @@
-import {
-  encodeBase16,
-  CasperServiceByJsonRPC,
-  DeployUtil
-} from 'casper-client-sdk';
+import { CasperServiceByJsonRPC, DeployUtil, encodeBase16 } from 'casper-client-sdk';
 import { ByteArray } from 'tweetnacl-ts';
 import { CallFaucet } from './lib/Contracts';
 import { AsymmetricKey } from 'casper-client-sdk/dist/lib/Keys';
@@ -18,7 +14,8 @@ export class StoredFaucetService {
     private transferAmount: bigint,
     private casperService: CasperServiceByJsonRPC,
     private chainName: string
-  ) {}
+  ) {
+  }
 
   async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<DeployHash> {
     const state = await this.checkState();
@@ -26,14 +23,14 @@ export class StoredFaucetService {
       const sessionArgs = CallFaucet.args(
         accountPublicKeyHash,
         this.transferAmount
-      ).toBytes();
-      const session = new DeployUtil.StoredContractByName(
+      );
+      const session = DeployUtil.ExecutableDeployItem.newStoredContractByName(
         CONTRACT_NAME,
         ENTRY_POINT_NAME,
         sessionArgs
       );
 
-      const payment = DeployUtil.standardPayment(this.paymentAmount);
+      const payment = DeployUtil.standardPayment(this.paymentAmount.toString());
       const deployByName = DeployUtil.makeDeploy(
         new DeployUtil.DeployParams(
           this.contractKeys.publicKey,
@@ -49,7 +46,7 @@ export class StoredFaucetService {
       await this.casperService.deploy(signedDeploy);
       return signedDeploy.hash;
     } else {
-      throw new Error("Can't do faucet now");
+      throw new Error('Can\'t do faucet now');
     }
   }
 

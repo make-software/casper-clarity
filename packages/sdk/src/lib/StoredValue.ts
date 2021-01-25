@@ -1,4 +1,5 @@
 import { jsonArrayMember, jsonMember, jsonObject } from 'typedjson';
+import { CLValue } from './CLValue';
 
 @jsonObject
 class NamedKey {
@@ -29,7 +30,7 @@ class ActionThresholds {
  * Structure representing a user's account, stored in global state.
  */
 @jsonObject
-class SAccount {
+class AccountJson {
   get accountHash(): string {
     return this._accountHash;
   }
@@ -47,7 +48,7 @@ class SAccount {
 }
 
 @jsonObject
-export class STransfer {
+export class TransferJson {
   // Deploy that created the transfer
   @jsonMember({ name: 'deploy_hash', constructor: String })
   public deployHash: string;
@@ -78,7 +79,7 @@ export class STransfer {
 }
 
 @jsonObject
-export class SDeployInfo {
+export class DeployInfoJson {
   // The relevant Deploy.
   @jsonMember({ name: 'deploy_hash', constructor: String })
   public deployHash: string;
@@ -147,18 +148,19 @@ export class SeigniorageAllocation {
  * Auction metdata.  Intended to be recorded at each era.
  */
 @jsonObject
-export class EraInfo {
+export class EraInfoJson {
   @jsonArrayMember(SeigniorageAllocation, { name: 'seigniorage_allocations' })
   public seigniorageAllocations: SeigniorageAllocation[];
 }
 
 @jsonObject
 export class StoredValue {
-  // todo SCLValue;
-
+  // StoredVale
+  @jsonMember({ constructor: CLValue })
+  public CLValue?: CLValue;
   // An account
-  @jsonMember({ constructor: SAccount })
-  public Account?: SAccount;
+  @jsonMember({ constructor: AccountJson })
+  public Account?: AccountJson;
 
   // A contract's Wasm
   @jsonMember({ constructor: String })
@@ -173,13 +175,13 @@ export class StoredValue {
   public ContractPackage?: string;
 
   // A record of a transfer
-  @jsonMember({ constructor: STransfer })
-  public Transfer?: STransfer;
+  @jsonMember({ constructor: TransferJson })
+  public Transfer?: TransferJson;
 
   // A record of a deploy
-  @jsonMember({ constructor: SDeployInfo })
-  public DeployInfo?: SDeployInfo;
+  @jsonMember({ constructor: DeployInfoJson })
+  public DeployInfo?: DeployInfoJson;
 
-  @jsonMember({ constructor: EraInfo })
-  public EraInfo?: EraInfo;
+  @jsonMember({ constructor: EraInfoJson })
+  public EraInfo?: EraInfoJson;
 }
