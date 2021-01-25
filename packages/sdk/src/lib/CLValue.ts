@@ -345,7 +345,7 @@ class U256 extends NumberCoder {
     return SimpleType.U256;
   }
 
-  public static fromBytes(bytes: ByteArray): Result<U128> {
+  public static fromBytes(bytes: ByteArray): Result<U256> {
     return fromBytesBigInt(bytes, 256);
   }
 }
