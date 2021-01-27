@@ -1488,9 +1488,9 @@ export class CLValue implements ToBytes {
     constructor: String
   })
   public bytes: string;
-  
+
   @jsonMember({
-    serializer: _ => "null",
+    serializer: _ => 'null',
     deserializer: _ => null
   })
   public parsed: any;

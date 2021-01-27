@@ -1,5 +1,5 @@
 import { expect, assert } from 'chai';
-import { Keys, DeployUtil, PublicKey } from '../../src/lib';
+import { Keys, DeployUtil } from '../../src/lib';
 import { TypedJSON } from 'typedjson';
 
 describe('DeployUtil', () => {

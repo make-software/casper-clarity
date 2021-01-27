@@ -33,21 +33,26 @@ export class NamedArg implements ToBytes {
 
 const desRA = (_arr: any) => {
   const clValueSerializer = new TypedJSON(CLValue);
-  return new Map(Array.from(_arr, ([key, value]) => {
-    return [key, clValueSerializer.parse(value)];
-  }));
-}
+  return new Map(
+    Array.from(_arr, ([key, value]) => {
+      return [key, clValueSerializer.parse(value)];
+    })
+  );
+};
 
 const serRA = (map: Map<string, CLValue>) => {
   const clValueSerializer = new TypedJSON(CLValue);
-  return Array.from(map, ([key, value]) => [key, clValueSerializer.toPlainJson(value)]);
-}
+  return Array.from(map, ([key, value]) => [
+    key,
+    clValueSerializer.toPlainJson(value)
+  ]);
+};
 
 @jsonObject()
 export class RuntimeArgs implements ToBytes {
   @jsonMember({
     serializer: serRA,
-    deserializer: desRA,
+    deserializer: desRA
   })
   public args: Map<string, CLValue>;
 
@@ -100,4 +105,3 @@ export class RuntimeArgs implements ToBytes {
     return Result.Ok(RuntimeArgs.fromNamedArgs(res), remainBytes);
   }
 }
-

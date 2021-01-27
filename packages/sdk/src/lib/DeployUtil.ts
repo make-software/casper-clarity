@@ -82,7 +82,7 @@ export class DeployHeader implements ToBytes {
   public account: PublicKey;
 
   @jsonMember({
-    serializer: (n: number) => (new Date(n)).toISOString(),
+    serializer: (n: number) => new Date(n).toISOString(),
     deserializer: (s: string) => Date.parse(s)
   })
   public timestamp: number;
@@ -198,20 +198,19 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
   }
 }
 
-
 const desRA = (arr: any) => {
   const raSerializer = new TypedJSON(RuntimeArgs);
   const value = {
     args: arr
   };
   return raSerializer.parse(value);
-}
+};
 
 const serRA = (ra: RuntimeArgs) => {
   const raSerializer = new TypedJSON(RuntimeArgs);
   const json = raSerializer.toPlainJson(ra);
   return Object.values(json as any)[0];
-}
+};
 
 @jsonObject
 export class ModuleBytes extends ExecutableDeployItemInternal {
