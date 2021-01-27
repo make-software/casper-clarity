@@ -98,21 +98,22 @@ interface UserInputPersistent {
 }
 
 export class DeployContractsContainer {
-  @observable deployConfiguration: FormDeployConfiguration = new FormState<
-    DeployConfiguration
-  >({
-    contractType: new FieldState<DeployUtil.ContractType | null>(
-      null
-    ).validators(valueRequired),
-    contractHash: new FieldState('').disableAutoValidation(),
-    paymentAmount: new FieldState<number>(10000000).validators(
-      numberGreaterThan(0),
-      validateInt
-    ),
-    fromAddress: new FieldState<string>(''),
-    contractName: new FieldState<string>(''),
-    entryPoint: new FieldState<string>('call')
-  })
+  @observable
+  deployConfiguration: FormDeployConfiguration = new FormState<DeployConfiguration>(
+    {
+      contractType: new FieldState<DeployUtil.ContractType | null>(
+        null
+      ).validators(valueRequired),
+      contractHash: new FieldState('').disableAutoValidation(),
+      paymentAmount: new FieldState<number>(10000000).validators(
+        numberGreaterThan(0),
+        validateInt
+      ),
+      fromAddress: new FieldState<string>(''),
+      contractName: new FieldState<string>(''),
+      entryPoint: new FieldState<string>('call')
+    }
+  )
     .compose()
     .validators(deployConfiguration => {
       if (deployConfiguration.contractType.$ === DeployUtil.ContractType.Hash) {
@@ -371,7 +372,10 @@ export class DeployContractsContainer {
 
       if (config.contractType.value === DeployUtil.ContractType.WASM) {
         session = this.selectedFileContent!;
-        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newModuleBytes(session, runtimeArgs);
+        sessionExecutionItem = DeployUtil.ExecutableDeployItem.newModuleBytes(
+          session,
+          runtimeArgs
+        );
       } else if (config.contractType.value === DeployUtil.ContractType.Hash) {
         session = decodeBase16(config.contractHash.value);
         const entryPoint = config.entryPoint.value;

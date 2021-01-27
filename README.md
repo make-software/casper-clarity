@@ -11,16 +11,19 @@ The purpose of the explorer is to help users interact with the blockchain:
 ## Setup
 
 After cloning the repo `cd` to the root of the clarity dir and run:
+
 ```
   yarn install  // Installs dependencies
   yarn build    // Builds components from packages
 ```
+
 You should then spin up an [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl) network of nodes locally to run Clarity against.
 
-Now that the packages and network are ready you will need 3 terminals to get it all working:  
+Now that the packages and network are ready you will need 3 terminals to get it all working:
+
 ```
 // Terminal A
-  cd packages/event_store   
+  cd packages/event_store
   rm development_sqlite.db    // Wipe old data
   npm run start-web-server    // Start event-store
 
@@ -32,13 +35,13 @@ Now that the packages and network are ready you will need 3 terminals to get it 
   yarn dev    // Start local Clarity instance
 ```
 
-If you want to run the **Cypress** test suite you will then need one more terminal and run one of the following: 
+If you want to run the **Cypress** test suite you will then need one more terminal and run one of the following:
 
 ```
-  yarn cypress:dev    // Opens the Cypress GUI and holds the test window open on  
-                       completion of the suite.  
-  yarn cypress:chrome // Runs the Cypress tests and closes the browser on completion,  
-                        results are printed to the terminal.   
+  yarn cypress:dev    // Opens the Cypress GUI and holds the test window open on
+                       completion of the suite.
+  yarn cypress:chrome // Runs the Cypress tests and closes the browser on completion,
+                        results are printed to the terminal.
 ```
 
 ## Build

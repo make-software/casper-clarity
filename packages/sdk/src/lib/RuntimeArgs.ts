@@ -4,13 +4,15 @@
 import { toBytesString, toBytesVecT } from './byterepr';
 import { CLValue, Result, StringValue, ToBytes, U32 } from './CLValue';
 import { concat } from '@ethersproject/bytes';
-import { jsonMapMember, jsonObject } from 'typedjson';
+import { jsonMember, jsonObject, TypedJSON } from 'typedjson';
 
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}
 
   public toBytes(): ByteArray {
-    return concat([toBytesString(this.name), this.value.toBytes()]);
+    const name = toBytesString(this.name);
+    const value = this.value.toBytes();
+    return concat([name, value]);
   }
 
   public static fromBytes(bytes: Uint8Array): Result<NamedArg> {
@@ -29,9 +31,29 @@ export class NamedArg implements ToBytes {
   }
 }
 
-@jsonObject
+const desRA = (_arr: any) => {
+  const clValueSerializer = new TypedJSON(CLValue);
+  return new Map(
+    Array.from(_arr, ([key, value]) => {
+      return [key, clValueSerializer.parse(value)];
+    })
+  );
+};
+
+const serRA = (map: Map<string, CLValue>) => {
+  const clValueSerializer = new TypedJSON(CLValue);
+  return Array.from(map, ([key, value]) => [
+    key,
+    clValueSerializer.toPlainJson(value)
+  ]);
+};
+
+@jsonObject()
 export class RuntimeArgs implements ToBytes {
-  @jsonMapMember(String, CLValue)
+  @jsonMember({
+    serializer: serRA,
+    deserializer: desRA
+  })
   public args: Map<string, CLValue>;
 
   constructor(args: Map<string, CLValue>) {
@@ -61,7 +83,6 @@ export class RuntimeArgs implements ToBytes {
     const vec = Array.from(this.args.entries()).map((a: [string, CLValue]) => {
       return new NamedArg(a[0], a[1]);
     });
-
     return toBytesVecT(vec);
   }
 

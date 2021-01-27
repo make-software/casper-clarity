@@ -1489,7 +1489,11 @@ export class CLValue implements ToBytes {
   })
   public bytes: string;
 
-  public parsedToJson: any;
+  @jsonMember({
+    serializer: _ => 'null',
+    deserializer: _ => null
+  })
+  public parsed: any;
 
   private value: CLTypedAndToBytes;
 

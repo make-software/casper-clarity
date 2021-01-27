@@ -3,7 +3,7 @@ import { Keys, DeployUtil } from '../../src/lib';
 import { TypedJSON } from 'typedjson';
 
 describe('DeployUtil', () => {
-  it('should stringify/parse DeployHeader correctly', function() {
+  it('should stringify/parse DeployHeader correctly', function () {
     const ed25519Key = Keys.Ed25519.new();
     const deployHeader = new DeployUtil.DeployHeader(
       ed25519Key.publicKey,
@@ -20,7 +20,7 @@ describe('DeployUtil', () => {
     expect(deployHeader1).to.deep.equal(deployHeader);
   });
 
-  it('should allow to extract data from Transfer', function() {
+  it('should allow to extract data from Transfer', function () {
     const senderKey = Keys.Ed25519.new();
     const recipientKey = Keys.Ed25519.new();
     const networkName = 'test-network';
@@ -44,23 +44,18 @@ describe('DeployUtil', () => {
     deploy = DeployUtil.signDeploy(deploy, recipientKey);
 
     let json = DeployUtil.deployToJson(deploy);
+    // console.log(json);
     deploy = DeployUtil.deployFromJson(json)!;
 
     assert.isTrue(deploy.isTransfer());
     assert.isTrue(deploy.isStandardPayment());
     assert.deepEqual(deploy.header.account, senderKey.publicKey);
     assert.deepEqual(
-      deploy.payment
-        .getArgByName('amount')!
-        .asBigNumber()
-        .toNumber(),
+      deploy.payment.getArgByName('amount')!.asBigNumber().toNumber(),
       paymentAmount
     );
     assert.deepEqual(
-      deploy.session
-        .getArgByName('amount')!
-        .asBigNumber()
-        .toNumber(),
+      deploy.session.getArgByName('amount')!.asBigNumber().toNumber(),
       transferAmount
     );
     assert.deepEqual(
