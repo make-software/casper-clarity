@@ -136,7 +136,6 @@ export function toBytesBytesArray(arr: ByteArray): ByteArray {
 export function toBytesVecT<T extends ToBytes>(vec: T[]) {
   const valueByteList = vec.map(e => e.toBytes());
   valueByteList.splice(0, 0, toBytesU32(vec.length));
-
   return concat(valueByteList);
 }
 

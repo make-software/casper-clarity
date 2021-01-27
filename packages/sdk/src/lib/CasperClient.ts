@@ -1,4 +1,10 @@
-import { AccountDeploy, CasperServiceByJsonRPC, DeployResult, EventService, TransferResult } from '../services';
+import {
+  AccountDeploy,
+  CasperServiceByJsonRPC,
+  DeployResult,
+  EventService,
+  TransferResult
+} from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
 import { encodeBase16 } from './Conversions';
 import { Deploy, DeployParams, ExecutableDeployItem } from './DeployUtil';
@@ -161,7 +167,7 @@ export class CasperClient {
    */
   public deployFromJson(json: any) {
     return DeployUtil.deployFromJson(json);
-  };
+  }
 
   /**
    * Construct the deploy for transfer purpose

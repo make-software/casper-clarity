@@ -58,7 +58,10 @@ export class Contract {
       amount: CLValue.u512(paymentAmount.toString())
     });
 
-    const payment = ExecutableDeployItem.newModuleBytes(this.paymentWasm, paymentArgs);
+    const payment = ExecutableDeployItem.newModuleBytes(
+      this.paymentWasm,
+      paymentArgs
+    );
 
     const deploy = DeployUtil.makeDeploy(
       new DeployParams(accountPublicKey, chainName),
@@ -76,8 +79,7 @@ export class BoundContract {
   constructor(
     private contract: Contract,
     private contractKeyPair: AsymmetricKey
-  ) {
-  }
+  ) {}
 
   public deploy(
     args: RuntimeArgs,

@@ -30,3 +30,6 @@ contracts
 cypress.env.json
 packages/cypress/videos
 packages/cypress/screenshots
+
+# SDK
+packages/sdk/package-lock.json

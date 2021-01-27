@@ -96,12 +96,8 @@ export class MetricsFromAuth0 {
 
   private async userStats() {
     return await this.managementClient.getDailyStats({
-      from: moment()
-        .subtract(1, 'days')
-        .format('YYYYMMDD'),
-      to: moment()
-        .subtract(1, 'days')
-        .format('YYYYMMDD')
+      from: moment().subtract(1, 'days').format('YYYYMMDD'),
+      to: moment().subtract(1, 'days').format('YYYYMMDD')
     });
   }
 

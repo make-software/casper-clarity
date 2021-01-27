@@ -81,10 +81,16 @@ export class DeployHeader implements ToBytes {
   })
   public account: PublicKey;
 
-  @jsonMember({ constructor: Number })
+  @jsonMember({
+    serializer: (n: number) => (new Date(n)).toISOString(),
+    deserializer: (s: string) => Date.parse(s)
+  })
   public timestamp: number;
 
-  @jsonMember({ constructor: Number })
+  @jsonMember({
+    serializer: (n: number) => String(n) + 'ms',
+    deserializer: (s: string) => Number(s.replace('ms', ''))
+  })
   public ttl: number;
 
   @jsonMember({ constructor: Number, name: 'gas_price' })
@@ -192,6 +198,21 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
   }
 }
 
+
+const desRA = (arr: any) => {
+  const raSerializer = new TypedJSON(RuntimeArgs);
+  const value = {
+    args: arr
+  };
+  return raSerializer.parse(value);
+}
+
+const serRA = (ra: RuntimeArgs) => {
+  const raSerializer = new TypedJSON(RuntimeArgs);
+  const json = raSerializer.toPlainJson(ra);
+  return Object.values(json as any)[0];
+}
+
 @jsonObject
 export class ModuleBytes extends ExecutableDeployItemInternal {
   public tag = 0;
@@ -204,7 +225,8 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
   public moduleBytes: Uint8Array;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -219,7 +241,7 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }
@@ -241,7 +263,8 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
   public entryPoint: string;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -277,7 +300,8 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
   public entryPoint: string;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -313,7 +337,8 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
   public entryPoint: string;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -370,7 +395,8 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
   public entryPoint: string;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -410,7 +436,8 @@ export class Transfer extends ExecutableDeployItemInternal {
   public tag = 5;
 
   @jsonMember({
-    constructor: RuntimeArgs
+    deserializer: desRA,
+    serializer: serRA
   })
   public args: RuntimeArgs;
 
@@ -430,7 +457,7 @@ export class Transfer extends ExecutableDeployItemInternal {
   public toBytes(): ByteArray {
     return concat([
       Uint8Array.from([this.tag]),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }
@@ -892,7 +919,7 @@ export const standardPayment = (paymentAmount: BigNumberish) => {
 export const deployToJson = (deploy: Deploy) => {
   const serializer = new TypedJSON(Deploy);
   return {
-    deploy: serializer.stringify(deploy)
+    deploy: serializer.toPlainJson(deploy)
   };
 };
 

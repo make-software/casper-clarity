@@ -95,9 +95,7 @@ export const TextField = observer((props: TextProps) => {
       }}
       onBlur={() => {
         if (!(props.readonly || props.fieldState instanceof String)) {
-          (props.fieldState as FieldState<
-            string
-          >).enableAutoValidationAndValidate();
+          (props.fieldState as FieldState<string>).enableAutoValidationAndValidate();
         }
       }}
     />
