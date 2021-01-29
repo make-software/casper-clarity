@@ -1,9 +1,13 @@
 {
-    "development": {
+    "local": {
         "HOST": "localhost",
         "PORT": 3000
     },
     "test": {
+        "HOST": "localhost",
+        "PORT": 3000
+    },
+    "development": {
         "HOST": "localhost",
         "PORT": 3000
     },

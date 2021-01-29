@@ -28,7 +28,7 @@ build-explorer: .make/npm/build-explorer
 build-event-store: .make/npm/build-event-store
 
 build-all: \
-	   build-explorer
+	 build-explorer
 
 test:
 	yarn test
@@ -45,17 +45,17 @@ test:
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: build-explorer
-	docker build -t casperlabs/explorer:$(DOCKER_TAG) .
+	docker build -t make/casperlabs-block-explorer:$(DOCKER_TAG) .
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/event-web-server:
 	cd packages/event_store && \
-	docker build -t casperlabs/event-web-server:$(DOCKER_TAG) -f Dockerfile.web_server .
+	docker build -t make/casperlabs-event-store-api:$(DOCKER_TAG) -f Dockerfile.api .
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/event-handler:
 	cd packages/event_store && \
-	docker build -t casperlabs/event-handler:$(DOCKER_TAG) -f Dockerfile.handler .
+	docker build -t make/casperlabs-event-store-handler:$(DOCKER_TAG) -f Dockerfile.handler .
 	mkdir -p $(dir $@) && touch $@
 
 clean:

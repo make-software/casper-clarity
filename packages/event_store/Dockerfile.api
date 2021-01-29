@@ -6,6 +6,9 @@ ENV NODE_ENV=$NODE_ENV
 ARG DATABASE_URI
 ENV DATABASE_URI=$DATABASE_URI
 
+ARG HOST=0.0.0.0
+ENV HOST=$HOST
+
 WORKDIR /app
 
 COPY src /app/src
@@ -15,4 +18,4 @@ COPY package.json /app/package.json
 
 RUN npm install
 
-ENTRYPOINT npm run start-event-handler
+ENTRYPOINT npm run start-web-server

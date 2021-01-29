@@ -61,10 +61,12 @@ typings/
 .next
 
 # dev db
-developement_sqlite.db
+local_sqlite.db
 
 # packages list
 package-lock.json
 
 # VSCode
 .vscode
+
+db-config.json

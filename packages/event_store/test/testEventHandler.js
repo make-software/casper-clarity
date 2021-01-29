@@ -1,7 +1,7 @@
 var assert = require('chai').assert;
 const cp = require('child_process');
 
-const EventHandler = require('../src/eventHandler');
+const runEventHandler = require('../src/eventHandler');
 var models = require('../src/models/index');
 const Storage = require('../src/storage');
 
@@ -16,7 +16,6 @@ describe('EventHandler', async () => {
     beforeEach(async () => {
         await models.sequelize.sync({ force: true, logging: false});
         storage = new Storage(models);
-        eventHandler = new EventHandler();
     })
 
     it('TODO: Should handle stream connection drop', async () => {

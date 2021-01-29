@@ -3,7 +3,7 @@
 /** 
  * Read config 
  */
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || 'local';
 const config = require(__dirname + '/../config/web-config.json')[env];
 
 /**
@@ -15,41 +15,42 @@ var http = require('http');
 /**
  * Sync database schema.
  */
-if (env == "production") {
+// @todo Ihor: not sure why database sync was added only for production
+// if (env == 'production') {
     (async () => {
         console.log("Syncing database schema...");
         await models.sequelize.sync({ force: false, logging: false });
         console.log("Syncing database schema... DONE");
     })();
-}
+// }
 
 /**
  * Test data for developement env.
  */
-if (env == 'development') {
-    (async () => {
-        await models.sequelize.sync({ force: true, logging: false });
-        if (process.env.MOCK_DATA) {
-            const Storage = require('./storage');
-            let storage = new Storage(models);
-            if (process.env.MOCK_DATA == 2) {
-                var data = require('../test/testData/duplicateEvents.js');
-            } else {
-                var data = require('../test/mockData.js');
-            }
-            await storage.onFinalizedBlock(data.finalizedBlockEvent1);
-            await storage.onFinalizedBlock(data.finalizedBlockEvent2);
-            await storage.onFinalizedBlock(data.finalizedBlockEvent3);
-            await storage.onDeployProcessed(data.deployProcessedEvent1);
-            await storage.onDeployProcessed(data.deployProcessedEvent2);
-            await storage.onDeployProcessed(data.deployProcessedEvent3);
-            await storage.onBlockAdded(data.blockAddedEvent1);
-            await storage.onBlockAdded(data.blockAddedEvent2);
-            await storage.onBlockAdded(data.blockAddedEvent3);
-            console.log('Data loaded!');
-        };
-    })();
-}
+// if (env == 'local') {
+//     (async () => {
+//         await models.sequelize.sync({ force: true, logging: false });
+//         if (process.env.MOCK_DATA) {
+//             const Storage = require('./storage');
+//             let storage = new Storage(models);
+//             if (process.env.MOCK_DATA == 2) {
+//                 var data = require('../test/testData/duplicateEvents.js');
+//             } else {
+//                 var data = require('../test/mockData.js');
+//             }
+//             await storage.onFinalizedBlock(data.finalizedBlockEvent1);
+//             await storage.onFinalizedBlock(data.finalizedBlockEvent2);
+//             await storage.onFinalizedBlock(data.finalizedBlockEvent3);
+//             await storage.onDeployProcessed(data.deployProcessedEvent1);
+//             await storage.onDeployProcessed(data.deployProcessedEvent2);
+//             await storage.onDeployProcessed(data.deployProcessedEvent3);
+//             await storage.onBlockAdded(data.blockAddedEvent1);
+//             await storage.onBlockAdded(data.blockAddedEvent2);
+//             await storage.onBlockAdded(data.blockAddedEvent3);
+//             console.log('Data loaded!');
+//         };
+//     })();
+// }
 
 /**
  * Build the Express app.
@@ -71,7 +72,7 @@ var server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(config.PORT, config.HOST);
+server.listen(config.PORT, process.env['HOST'] ? process.env['HOST'] : config.HOST);
 server.on('error', onError);
 server.on('listening', onListening);
 
