@@ -165,8 +165,8 @@ function transferDeploy(fromAccount, toAccount, amount) {
     return DeployUtil.makeDeploy(deployParams, transferParams, payment);
 }
 
-async function fund(account) {
-    let deploy = transferDeploy(faucetAccount, account, 10000000000000);
+async function fund(account, amount=10000000000000) {
+    let deploy = transferDeploy(faucetAccount, account, amount);
     await sendDeploy(deploy, [faucetAccount]);
 }
 
