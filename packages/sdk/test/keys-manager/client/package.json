@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/casper-ecosystem/casper-client-sdk-example#readme",
   "dependencies": {
-    "casper-client-sdk": "1.0.13",
+    "casper-client-sdk": "file:./../../../",
     "chai": "^4.2.0",
     "mocha": "^8.2.1"
   }
