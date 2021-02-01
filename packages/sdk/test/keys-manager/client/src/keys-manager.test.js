@@ -8,21 +8,34 @@ describe('Testing SDK', () => {
         this.mainAccount = masterKey.deriveIndex(1);
         this.firstAccount = masterKey.deriveIndex(2);
         this.secondAccount = masterKey.deriveIndex(3);
-        console.log("Setting up accounts...");
-        console.log("KEY: ", utils.toAccountHashString(this.mainAccount.publicKey));
+
+
     });
 
     it('Should fund account', async () => {
-        console.log("KEY: ", this.mainAccount.publicKey);
-        
-        let account = await utils.printAccount(this.mainAccount);
+        let account = await utils.getAccount(this.mainAccount.publicKey);
         let initialBalance = account.mainPurse;
-        console.log(initialBalance);
+        await utils.fund(this.mainAccount);
+        let finalBalance = account.mainPurse;
+
+        chai.assert(finalBalance > initialBalance, "Balance did not increase");
     });
     
-    // it('Should make a transfer...', () => {
+    // it('Should make a transfer...', async () => {
 
+    //     let deployThreshold = 2;
+    //     let keyManagementThreshold = 2;
+    //     let accounts = [
+    //         { publicKey: this.mainAccount.publicKey, weight: 1 },
+    //         { publicKey: this.firstAccount.publicKey, weight: 1 }, 
+    //     ];
 
-    //     chai.assert.equal(1, 1, "Transfer failed");
+    //     let deploy = utils.keys.setAll(this.mainAccount, deployThreshold, keyManagementThreshold, accounts);
+    //     await utils.sendDeploy(deploy, [this.mainAccount]);
+
+    //     deploy = utils.transferDeploy(this.mainAccount, this.secondAccount, 1000);
+    //     await utils.sendDeploy(deploy, [this.mainAccount, this.firstAccount]);
+
+    //     chai.assert();
     // });
 });
