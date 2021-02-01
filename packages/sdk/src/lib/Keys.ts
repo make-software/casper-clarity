@@ -122,7 +122,7 @@ export abstract class AsymmetricKey {
    * @param signature
    * @param msg
    */
-  public abstract verfiy(signature: Uint8Array, msg: Uint8Array): boolean;
+  public abstract verify(signature: Uint8Array, msg: Uint8Array): boolean;
 }
 
 // Based on SignatureAlgorithm.scala
@@ -274,7 +274,7 @@ export class Ed25519 extends AsymmetricKey {
    * @param signature
    * @param msg
    */
-  public verfiy(signature: Uint8Array, msg: Uint8Array) {
+  public verify(signature: Uint8Array, msg: Uint8Array) {
     return nacl.sign_detached_verify(
       msg,
       signature,
@@ -459,7 +459,7 @@ export class Secp256K1 extends AsymmetricKey {
    * @param signature
    * @param msg
    */
-  public verfiy(signature: Uint8Array, msg: Uint8Array) {
+  public verify(signature: Uint8Array, msg: Uint8Array) {
     return secp256k1.ecdsaVerify(
       signature,
       sha256(Buffer.from(msg)),

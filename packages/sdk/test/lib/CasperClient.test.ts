@@ -124,10 +124,10 @@ describe('CasperClient', () => {
     const secpKey1 = hdKey.deriveIndex(1);
     const msg = Buffer.from('hello world');
     const signature = secpKey1.sign(msg);
-    expect(secpKey1.verfiy(signature, msg)).to.be.equal(true);
+    expect(secpKey1.verify(signature, msg)).to.be.equal(true);
 
     const secpKey2 = hdKey.deriveIndex(2);
     const signature2 = secpKey2.sign(msg);
-    expect(secpKey2.verfiy(signature2, msg)).to.be.equal(true);
+    expect(secpKey2.verify(signature2, msg)).to.be.equal(true);
   });
 });

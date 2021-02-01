@@ -1,6 +1,17 @@
 const fs = require('fs');
 
-let {CasperClient, CasperServiceByJsonRPC, PublicKey, Keys, RuntimeArgs, CLValue, DeployUtil, AccountHash, KeyValue, CLTypedAndToBytesHelper} = require('casper-client-sdk');
+let {
+    CasperClient,
+    CasperServiceByJsonRPC,
+    PublicKey,
+    Keys,
+    RuntimeArgs,
+    CLValue,
+    DeployUtil,
+    AccountHash,
+    KeyValue,
+    CLTypedAndToBytesHelper
+} = require('casper-client-sdk');
 
 let nodeUrl = 'http://localhost:40101/rpc';
 let eventStoreUrl = 'http://localhost:3000';
@@ -39,7 +50,7 @@ async function getDeploy(deployHash) {
             return await client.getDeployByHash(deployHash);
         } catch(e) {
             i--;
-            await sleep(5000);
+            await sleep(1000);
         }
     }
     throw Error('Tried 10 times. Something\'s wrong');
@@ -67,6 +78,11 @@ async function getAccount(publicKey) {
     return account;
 }
 
+async function getBalanceOfByAccountHash(accountHash) {
+    let balance = await client.balanceOfByAccountHash(accountHash);
+    return balance;    
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -83,13 +99,13 @@ function randomMasterKey() {
 
 // Key manager
 
-function setAll(fromAccount, deployThereshold, keyManagementThreshold, accountWeights) {
+function setAll(fromAccount, deployThreshold, keyManagementThreshold, accountWeights) {
     let accounts = accountWeights.map(x => CLTypedAndToBytesHelper.bytes(x.publicKey.toAccountHash()));
     let weights = accountWeights.map(x => CLTypedAndToBytesHelper.u8(x.weight));
 
     return buildKeyManagerDeploy(fromAccount, {
         action: CLValue.string("set_all"),
-        deployment_thereshold: CLValue.u8(deployThereshold),
+        deployment_threshold: CLValue.u8(deployThreshold),
         key_management_threshold: CLValue.u8(keyManagementThreshold),
         accounts: CLValue.list(accounts),
         weights: CLValue.list(weights),
@@ -159,6 +175,7 @@ module.exports = {
     'randomMasterKey': randomMasterKey,
     'toAccountHashString': toAccountHashString,
     'fund': fund,
+    'getBalanceOfByAccountHash': getBalanceOfByAccountHash,
     'getAccount': getAccount,
     'printAccount': printAccount,
     'keys': {

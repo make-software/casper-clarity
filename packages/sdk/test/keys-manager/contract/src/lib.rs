@@ -21,12 +21,12 @@ pub fn execute() {
         Api::SetKeyManagementThreshold(threshold) => {
             set_threshold(ActionType::KeyManagement, threshold)
         }
-        Api::SetAll(deployment_thereshold, key_management_threshold, accounts, weights) => {
+        Api::SetAll(deployment_threshold, key_management_threshold, accounts, weights) => {
             for (account, weight) in accounts.iter().zip(weights) {
                 set_key_weight(account.clone(), weight).unwrap_or_revert();
             }
             set_threshold(ActionType::KeyManagement, key_management_threshold).unwrap_or_revert();
-            set_threshold(ActionType::Deployment, deployment_thereshold).unwrap_or_revert();
+            set_threshold(ActionType::Deployment, deployment_threshold).unwrap_or_revert();
             Ok(())
         }
     };

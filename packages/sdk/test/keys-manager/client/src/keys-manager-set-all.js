@@ -14,7 +14,7 @@ const utils = require('./utils');
     await utils.fund(mainAccount);
     await utils.printAccount(mainAccount);
 
-    let deployThereshold = 2;
+    let deployThreshold = 2;
     let keyManagementThreshold = 2;
     let accounts = [
         { publicKey: mainAccount.publicKey, weight: 1 },
@@ -22,7 +22,7 @@ const utils = require('./utils');
     ]
 
     console.log("\n[x] Update keys deploy.");
-    let deploy = utils.keys.setAll(mainAccount, deployThereshold, keyManagementThreshold, accounts);
+    let deploy = utils.keys.setAll(mainAccount, deployThreshold, keyManagementThreshold, accounts);
     await utils.sendDeploy(deploy, [mainAccount]);
     await utils.printAccount(mainAccount);
 
