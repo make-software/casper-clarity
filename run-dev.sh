@@ -1,3 +1,5 @@
+## Work in Progress
+
 # Build Clarity
 yarn install &> /dev/null &         # Install Clarity dependencies
 install_pid=$!
