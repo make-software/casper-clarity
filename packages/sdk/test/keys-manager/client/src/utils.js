@@ -3,19 +3,16 @@ const fs = require('fs');
 let {
     CasperClient,
     CasperServiceByJsonRPC,
-    PublicKey,
     Keys,
     RuntimeArgs,
     CLValue,
     DeployUtil,
-    AccountHash,
-    KeyValue,
     CLTypedAndToBytesHelper
 } = require('casper-client-sdk');
 
 let nodeUrl = 'http://localhost:40101/rpc';
 let eventStoreUrl = 'http://localhost:3000';
-let wasmPath = '../contract/target/wasm32-unknown-unknown/release/keys-manager.wasm';
+let wasmPath = '/home/ethilios/CasperLabs/clarity/packages/sdk/test/keys-manager/contract/target/wasm32-unknown-unknown/release/keys-manager.wasm';
 let networkName = 'casper-net-1';
 
 
@@ -36,11 +33,12 @@ function randomSeed() {
 
 async function sendDeploy(deploy, signingKeys) {
     for(let key of signingKeys){
-        console.log(`Signed by: ${toAccountHashString(key.publicKey)}`);
+        // console.log(`Signed by: ${toAccountHashString(key.publicKey)}`);
         deploy = client.signDeploy(deploy, key);
     }
     let deployHash = await client.putDeploy(deploy);
     await printDeploy(deployHash);
+    return deployHash;
 }
 
 async function getDeploy(deployHash) {
@@ -57,8 +55,8 @@ async function getDeploy(deployHash) {
 }
 
 async function printDeploy(deployHash) {
-    console.log("Deploy hash: " + deployHash);
-    console.log("Deploy result:");
+    // console.log("Deploy hash: " + deployHash);
+    // console.log("Deploy result:");
     console.log(await getDeploy(deployHash));
 }
 
@@ -81,6 +79,11 @@ async function getAccount(publicKey) {
 async function getBalanceOfByAccountHash(accountHash) {
     let balance = await client.balanceOfByAccountHash(accountHash);
     return balance;    
+}
+
+async function getBalanceOfByPublicKey(publicKey) {
+    let balance = await client.balanceOfByPublicKey(publicKey);
+    return balance;
 }
 
 function sleep(ms) {
@@ -176,6 +179,7 @@ module.exports = {
     'toAccountHashString': toAccountHashString,
     'fund': fund,
     'getBalanceOfByAccountHash': getBalanceOfByAccountHash,
+    'getBalanceOfByPublicKey': getBalanceOfByPublicKey,
     'getAccount': getAccount,
     'printAccount': printAccount,
     'keys': {
@@ -186,4 +190,5 @@ module.exports = {
     },
     'sendDeploy': sendDeploy,
     'transferDeploy': transferDeploy,
+    'getDeploy': getDeploy,
 }
