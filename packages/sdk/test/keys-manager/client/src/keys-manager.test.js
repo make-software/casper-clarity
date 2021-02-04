@@ -19,6 +19,7 @@ describe('Testing SDK', () => {
         let initialBalance = await utils.getBalanceOfByAccountHash(utils.toAccountHashString(this.mainAccount.publicKey));
         console.log(`Initial Balance: ${initialBalance}`);
 
+        // Increment initial balance by 100
         await utils.fund(this.mainAccount, 100);
 
         let finalBalance =  await utils.getBalanceOfByAccountHash(utils.toAccountHashString(this.mainAccount.publicKey));
@@ -41,9 +42,10 @@ describe('Testing SDK', () => {
         
         let deploy = utils.keys.setAll(this.mainAccount, deployThreshold, keyManagementThreshold, accounts);
         await utils.sendDeploy(deploy, [this.mainAccount]);
-        
+
 
         deploy = utils.transferDeploy(this.mainAccount, this.secondAccount, 1000);
+        // mainAccount and firstAccount have a combined weight of 2 which should satisfy the deployThreshold weight of 2
         let deployHash = await utils.sendDeploy(deploy, [this.mainAccount, this.firstAccount]);
 
         let processedDeploy = await utils.getDeploy(deployHash);
@@ -66,15 +68,12 @@ describe('Testing SDK', () => {
             { publicKey: this.firstAccount.publicKey, weight: 1 } 
         ];
 
-        await utils.printAccount(this.mainAccount);
-
         let deploy = utils.keys.setAll(this.mainAccount, deployThreshold, keyManagementThreshold, accounts);
         await utils.sendDeploy(deploy, [this.mainAccount]);
-        await utils.printAccount(this.mainAccount);
 
         deploy = utils.transferDeploy(this.mainAccount, this.secondAccount, 1000);
+        // mainAccount key has weight 2 which should fail against the deployThreshold weight of 3
         let deployHash = await utils.sendDeploy(deploy, [this.mainAccount]);
-        await utils.printAccount(this.mainAccount);
 
         let processedDeploy = await utils.getDeploy(deployHash);
 
