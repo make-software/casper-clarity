@@ -5,6 +5,8 @@
  */
 const env = process.env.NODE_ENV || 'local';
 const config = require(__dirname + '/../config/web-config.json')[env];
+const port = process.env.PORT ? process.env.PORT : config.PORT;
+const host = process.env.HOST ? process.env.HOST : config.HOST
 
 /**
  * Module dependencies.
@@ -62,7 +64,7 @@ app = httpServer(models);
 /**
  * Set port.
  */
-app.set('port', config.PORT);
+app.set('port', port);
 
 /**
  * Create HTTP server.
@@ -72,7 +74,7 @@ var server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(config.PORT, process.env['HOST'] ? process.env['HOST'] : config.HOST);
+server.listen(port, host);
 server.on('error', onError);
 server.on('listening', onListening);
 
@@ -84,9 +86,9 @@ function onError(error) {
         throw error;
     }
 
-    var bind = typeof config.PORT === 'string'
-        ? 'Pipe ' + config.PORT
-        : 'Port ' + config.PORT;
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
 
     // handle specific listen errors with friendly messages
     switch (error.code) {

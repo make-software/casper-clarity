@@ -6,6 +6,19 @@ class Storage {
         this.pubsub = pubsub;
     }
 
+    async onEventId(id) {
+        console.log(`Processing Id event: ${id}`);
+
+        let found = await this.findEventId(id);
+        if (found !== null) {
+            // logs msg
+            console.warn(`Id ${id} already exists. Skipping`);
+            return;
+        }
+
+        await this.models.EventId.create({ id });
+    }
+
     async onDeployProcessed(event) {
 
         console.log(`Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
@@ -105,6 +118,22 @@ class Storage {
 
     async findBlockByHeight(height) {
         return this.models.Block.findByPk(height);
+    }
+
+    async findEventId(id) {
+        return this.models.EventId.findOne({
+            where: {
+                id: id
+            }
+        });
+    }
+
+    async getLastEventId() {
+        const eventId = await this.models.EventId.findOne({
+            order: [[ 'id', 'DESC' ]],
+        });
+
+        return eventId ? eventId.id : null;
     }
 
     async findBlockByHash(blockHash) {

@@ -14,10 +14,13 @@ setup: .make/bootstrap
 
 docker-build-all: \
 	docker-build/explorer \
+	docker-build/nginx \
 	docker-build/event-web-server \
 	docker-build/event-handler
 
 docker-build/explorer: .make/docker-build/explorer
+
+docker-build/nginx: .make/docker-build/nginx
 
 docker-build/event-web-server: .make/docker-build/event-web-server
 
@@ -38,24 +41,27 @@ test:
 .make/bootstrap:
 	yarn bootstrap
 
-
 .make/npm/build-explorer: .make/bootstrap
 	# CI=false so on Drone it won't fail on warnings (currently about href).
 	yarn run build
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/explorer: build-explorer
-	docker build -t make/casperlabs-block-explorer:$(DOCKER_TAG) .
+	docker build -t make/clarity/web-app .
+	mkdir -p $(dir $@) && touch $@
+
+.make/docker-build/nginx: build-node-proxy
+	docker build -t make/clarity/node-proxy .
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/event-web-server:
 	cd packages/event_store && \
-	docker build -t make/casperlabs-event-store-api:$(DOCKER_TAG) -f Dockerfile.api .
+	docker build -t make/clarity/event-store-api -f Dockerfile.api .
 	mkdir -p $(dir $@) && touch $@
 
 .make/docker-build/event-handler:
 	cd packages/event_store && \
-	docker build -t make/casperlabs-event-store-handler:$(DOCKER_TAG) -f Dockerfile.handler .
+	docker build -t make/clarity/event-store-handler -f Dockerfile.handler .
 	mkdir -p $(dir $@) && touch $@
 
 clean:

@@ -1,0 +1,12 @@
+FROM nginx
+
+COPY ${PWD}/docker_nginx/configs/nginx.conf /etc/nginx/nginx.conf
+COPY ${PWD}/docker_nginx/templates /etc/nginx/templates
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+ARG NODE_ADDRESS
+ENV NODE_ADDRESS=$NODE_ADDRESS
+
+ARG SERVER_NAME=casperlabs-node-proxy.local
+ENV SERVER_NAME=$SERVER_NAME
