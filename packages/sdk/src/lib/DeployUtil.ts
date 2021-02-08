@@ -26,7 +26,7 @@ import {
 } from './byterepr';
 import { RuntimeArgs } from './RuntimeArgs';
 // import JSBI from 'jsbi';
-import { Keys, URef } from './index';
+import { DeployUtil, Keys, URef } from './index';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { jsonArrayMember, jsonMember, jsonObject, TypedJSON } from 'typedjson';
@@ -51,8 +51,8 @@ const shortEnglishHumanizer = humanizeDuration.humanizer({
   }
 });
 
-const byteArrayJsonSerializer: (bytes: ByteArray) => string = (
-  bytes: ByteArray
+const byteArrayJsonSerializer: (bytes: Uint8Array) => string = (
+  bytes: Uint8Array
 ) => {
   return encodeBase16(bytes);
 };
@@ -101,15 +101,15 @@ export class DeployHeader implements ToBytes {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public bodyHash: ByteArray;
+  public bodyHash: Uint8Array;
 
   @jsonArrayMember(ByteArray, {
-    serializer: (value: ByteArray[]) =>
+    serializer: (value: Uint8Array[]) =>
       value.map(it => byteArrayJsonSerializer(it)),
     deserializer: (json: any) =>
       json.map((it: string) => byteArrayJsonDeserializer(it))
   })
-  public dependencies: ByteArray[];
+  public dependencies: Uint8Array[];
 
   @jsonMember({ name: 'chain_name', constructor: String })
   public chainName: string;
@@ -130,8 +130,8 @@ export class DeployHeader implements ToBytes {
     timestamp: number,
     ttl: number,
     gasPrice: number,
-    bodyHash: ByteArray,
-    dependencies: ByteArray[],
+    bodyHash: Uint8Array,
+    dependencies: Uint8Array[],
     chainName: string
   ) {
     this.account = account;
@@ -143,7 +143,7 @@ export class DeployHeader implements ToBytes {
     this.chainName = chainName;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       this.account.toBytes(),
       toBytesU64(this.timestamp),
@@ -160,9 +160,9 @@ export class DeployHeader implements ToBytes {
  * The cryptographic hash of a Deploy.
  */
 class DeployHash implements ToBytes {
-  constructor(private hash: ByteArray) {}
+  constructor(private hash: Uint8Array) {}
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return toBytesDeployHash(this.hash);
   }
 }
@@ -191,10 +191,14 @@ abstract class ExecutableDeployItemInternal implements ToBytes {
 
   public abstract args: RuntimeArgs;
 
-  public abstract toBytes(): ByteArray;
+  public abstract toBytes(): Uint8Array;
 
-  public getArgByName(argName: string): CLValue | undefined {
-    return this.args.args.get(argName);
+  public getArgByName(name: string): CLValue | undefined {
+    return this.args.args.get(name);
+  }
+
+  public setArg(name: string, value: CLValue) {
+    this.args.args.set(name, value);
   }
 }
 
@@ -236,7 +240,7 @@ export class ModuleBytes extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesArrayU8(this.moduleBytes),
@@ -253,7 +257,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public hash: ByteArray;
+  public hash: Uint8Array;
 
   @jsonMember({
     name: 'entry_point',
@@ -267,7 +271,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
   })
   public args: RuntimeArgs;
 
-  constructor(hash: ByteArray, entryPoint: string, args: RuntimeArgs) {
+  constructor(hash: Uint8Array, entryPoint: string, args: RuntimeArgs) {
     super();
 
     this.entryPoint = entryPoint;
@@ -275,7 +279,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
     this.hash = hash;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
@@ -312,7 +316,7 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
@@ -354,7 +358,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     let serializedVersion;
     if (this.version === null) {
       serializedVersion = new Option(null, CLTypeHelper.u32());
@@ -412,7 +416,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     let serializedVersion;
 
     if (this.version === null) {
@@ -453,7 +457,7 @@ export class Transfer extends ExecutableDeployItemInternal {
     this.args = args;
   }
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     return concat([
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.args.toBytes())
@@ -498,7 +502,7 @@ export class ExecutableDeployItem implements ToBytes {
   })
   public transfer?: Transfer;
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     if (this.isModuleBytes()) {
       return this.moduleBytes!.toBytes();
     } else if (this.isStoredContractByHash()) {
@@ -532,6 +536,23 @@ export class ExecutableDeployItem implements ToBytes {
     throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
   }
 
+  public setArg(name: string, value: CLValue) {
+    if (this.isModuleBytes()) {
+      return this.moduleBytes!.setArg(name, value);
+    } else if (this.isStoredContractByHash()) {
+      return this.storedContractByHash!.setArg(name, value);
+    } else if (this.isStoredContractByName()) {
+      return this.storedContractByName!.setArg(name, value);
+    } else if (this.isStoredVersionContractByHash()) {
+      return this.storedVersionedContractByHash!.setArg(name, value);
+    } else if (this.isStoredVersionContractByName()) {
+      return this.storedVersionedContractByName!.setArg(name, value);
+    } else if (this.isTransfer()) {
+      return this.transfer!.setArg(name, value);
+    }
+    throw new Error('failed to serialize ExecutableDeployItemJsonWrapper');
+  }
+
   public static fromExecutableDeployItemInternal(
     item: ExecutableDeployItemInternal
   ) {
@@ -560,7 +581,7 @@ export class ExecutableDeployItem implements ToBytes {
   }
 
   public static newModuleBytes(
-    moduleBytes: ByteArray,
+    moduleBytes: Uint8Array,
     args: RuntimeArgs
   ): ExecutableDeployItem {
     return ExecutableDeployItem.fromExecutableDeployItemInternal(
@@ -711,7 +732,7 @@ export class Deploy {
     serializer: byteArrayJsonSerializer,
     deserializer: byteArrayJsonDeserializer
   })
-  public hash: ByteArray;
+  public hash: Uint8Array;
 
   @jsonMember({ constructor: DeployHeader })
   public header: DeployHeader;
@@ -738,7 +759,7 @@ export class Deploy {
    * @param approvals  An array of signature and public key of the signers, who approve this deploy
    */
   constructor(
-    hash: ByteArray,
+    hash: Uint8Array,
     header: DeployHeader,
     payment: ExecutableDeployItem,
     session: ExecutableDeployItem,
@@ -805,7 +826,7 @@ export class DeployParams {
   constructor(
     public accountPublicKey: PublicKey,
     public chainName: string,
-    public gasPrice: number = 10,
+    public gasPrice: number = 1,
     public ttl: number = 3600000,
     public dependencies: Uint8Array[] = [],
     public timestamp?: number
@@ -880,7 +901,7 @@ export const signDeploy = (
  */
 export const setSignature = (
   deploy: Deploy,
-  sig: ByteArray,
+  sig: Uint8Array,
   publicKey: PublicKey
 ): Deploy => {
   const approval = new Approval();
@@ -930,4 +951,28 @@ export const deployToJson = (deploy: Deploy) => {
 export const deployFromJson = (json: any) => {
   const serializer = new TypedJSON(Deploy);
   return serializer.parse(json.deploy);
+};
+
+export const addArgToDeploy = (
+  deploy: Deploy,
+  name: string,
+  value: CLValue
+): Deploy => {
+  if (deploy.approvals.length !== 0) {
+    throw Error('Can not add argument to already signed deploy.');
+  }
+
+  const deployParams = new DeployUtil.DeployParams(
+    deploy.header.account,
+    deploy.header.chainName,
+    deploy.header.gasPrice,
+    deploy.header.ttl,
+    deploy.header.dependencies,
+    deploy.header.timestamp
+  );
+
+  const session = deploy.session;
+  session.setArg(name, value);
+
+  return makeDeploy(deployParams, session, deploy.payment);
 };

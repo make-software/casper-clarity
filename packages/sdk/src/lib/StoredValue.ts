@@ -31,7 +31,7 @@ class ActionThresholds {
  */
 @jsonObject
 class AccountJson {
-  get accountHash(): string {
+  public accountHash(): string {
     return this._accountHash;
   }
 

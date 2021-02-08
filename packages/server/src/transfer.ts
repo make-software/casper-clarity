@@ -1,9 +1,4 @@
-import {
-  ByteArray,
-  CasperServiceByJsonRPC,
-  Contracts,
-  Keys
-} from 'casper-client-sdk';
+import { CasperServiceByJsonRPC, Contracts, Keys } from 'casper-client-sdk';
 import commandLineArgs from 'command-line-args';
 
 // https://www.npmjs.com/package/command-line-args
@@ -33,7 +28,7 @@ const contractKeys = Keys.Ed25519.parseKeyFiles(
   options['from-private-key-path']
 );
 
-const hex = (x: ByteArray) => Buffer.from(x).toString('hex');
+const hex = (x: Uint8Array) => Buffer.from(x).toString('hex');
 
 const accountPublicKey = Keys.Ed25519.parsePublicKeyFile(
   options['to-public-key-path']

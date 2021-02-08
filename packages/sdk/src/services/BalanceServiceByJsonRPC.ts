@@ -3,6 +3,7 @@
  */
 import { CasperServiceByJsonRPC } from './CasperServiceByJsonRPC';
 import { PublicKey } from '../lib';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export class BalanceServiceByJsonRPC {
   private balanceUrefs = new Map<string, string>();
@@ -20,7 +21,7 @@ export class BalanceServiceByJsonRPC {
   public async getAccountBalance(
     blockHashBase16: string,
     publicKey: PublicKey
-  ): Promise<number | undefined> {
+  ): Promise<BigNumber | undefined> {
     try {
       const stateRootHash = await this.casperService.getStateRootHash(
         blockHashBase16

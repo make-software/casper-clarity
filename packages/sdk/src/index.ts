@@ -1,7 +1,3 @@
-export type ByteArray = Uint8Array;
-export type DeployHash = ByteArray;
-export type BlockHash = ByteArray;
-
 export * from './services';
 export * from './lib';
 export {

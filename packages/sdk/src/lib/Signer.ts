@@ -9,8 +9,7 @@
  * Check whether CasperLabs Signer extension is connected
  */
 export const isConnected: () => Promise<boolean | undefined> = async () => {
-  const response = await window.casperlabsHelper!.isConnected();
-  return response;
+  return await window.casperlabsHelper!.isConnected();
 };
 
 /**

@@ -1,5 +1,5 @@
 import { expect, assert } from 'chai';
-import { Keys, DeployUtil } from '../../src/lib';
+import { Keys, DeployUtil, CLValue } from '../../src/lib';
 import { TypedJSON } from 'typedjson';
 
 describe('DeployUtil', () => {
@@ -43,8 +43,10 @@ describe('DeployUtil', () => {
     deploy = DeployUtil.signDeploy(deploy, senderKey);
     deploy = DeployUtil.signDeploy(deploy, recipientKey);
 
+    // Serialize deploy to JSON.
     let json = DeployUtil.deployToJson(deploy);
-    // console.log(json);
+
+    // Deserialize deploy from JSON.
     deploy = DeployUtil.deployFromJson(json)!;
 
     assert.isTrue(deploy.isTransfer());
@@ -73,5 +75,100 @@ describe('DeployUtil', () => {
     );
     assert.deepEqual(deploy.approvals[0].signer, senderKey.accountHex());
     assert.deepEqual(deploy.approvals[1].signer, recipientKey.accountHex());
+  });
+
+  it('should allow to add arg to Deploy', function () {
+    const senderKey = Keys.Ed25519.new();
+    const recipientKey = Keys.Ed25519.new();
+    const networkName = 'test-network';
+    const paymentAmount = 10000000000000;
+    const transferAmount = 10;
+    const id = 34;
+    const customId = 60;
+
+    let deployParams = new DeployUtil.DeployParams(
+      senderKey.publicKey,
+      networkName
+    );
+    let session = DeployUtil.ExecutableDeployItem.newTransfer(
+      transferAmount,
+      recipientKey.publicKey,
+      undefined,
+      id
+    );
+    let payment = DeployUtil.standardPayment(paymentAmount);
+    let oldDeploy = DeployUtil.makeDeploy(deployParams, session, payment);
+
+    // Add new argument.
+    let deploy = DeployUtil.addArgToDeploy(
+      oldDeploy,
+      'custom_id',
+      CLValue.u32(customId)
+    );
+
+    // Serialize and deserialize deploy.
+    let json = DeployUtil.deployToJson(deploy);
+    deploy = DeployUtil.deployFromJson(json)!;
+
+    assert.deepEqual(
+      deploy.session.getArgByName('custom_id')!.asBigNumber().toNumber(),
+      customId
+    );
+    assert.isTrue(deploy.isTransfer());
+    assert.isTrue(deploy.isStandardPayment());
+    assert.deepEqual(deploy.header.account, senderKey.publicKey);
+    assert.deepEqual(
+      deploy.payment.getArgByName('amount')!.asBigNumber().toNumber(),
+      paymentAmount
+    );
+    assert.deepEqual(
+      deploy.session.getArgByName('amount')!.asBigNumber().toNumber(),
+      transferAmount
+    );
+    assert.deepEqual(
+      deploy.session.getArgByName('target')!.asBytesArray(),
+      recipientKey.accountHash()
+    );
+    assert.deepEqual(
+      deploy.session
+        .getArgByName('id')!
+        .asOption()
+        .getSome()
+        .asBigNumber()
+        .toNumber(),
+      id
+    );
+
+    assert.notEqual(oldDeploy.hash, deploy.hash);
+    assert.notEqual(oldDeploy.header.bodyHash, deploy.header.bodyHash);
+  });
+
+  it('should not allow to add arg to a signed Deploy', function () {
+    const senderKey = Keys.Ed25519.new();
+    const recipientKey = Keys.Ed25519.new();
+    const networkName = 'test-network';
+    const paymentAmount = 10000000000000;
+    const transferAmount = 10;
+    const id = 34;
+    const customId = 60;
+
+    let deployParams = new DeployUtil.DeployParams(
+      senderKey.publicKey,
+      networkName
+    );
+    let session = DeployUtil.ExecutableDeployItem.newTransfer(
+      transferAmount,
+      recipientKey.publicKey,
+      undefined,
+      id
+    );
+    let payment = DeployUtil.standardPayment(paymentAmount);
+    let deploy = DeployUtil.makeDeploy(deployParams, session, payment);
+    deploy = DeployUtil.signDeploy(deploy, senderKey);
+
+    expect(() => {
+      // Add new argument.
+      DeployUtil.addArgToDeploy(deploy, 'custom_id', CLValue.u32(customId));
+    }).to.throw('Can not add argument to already signed deploy.');
   });
 });

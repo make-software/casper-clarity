@@ -9,7 +9,7 @@ import { jsonMember, jsonObject, TypedJSON } from 'typedjson';
 export class NamedArg implements ToBytes {
   constructor(public name: string, public value: CLValue) {}
 
-  public toBytes(): ByteArray {
+  public toBytes(): Uint8Array {
     const name = toBytesString(this.name);
     const value = this.value.toBytes();
     return concat([name, value]);
@@ -20,13 +20,13 @@ export class NamedArg implements ToBytes {
     if (nameRes.hasError()) {
       return Result.Err(nameRes.error);
     }
-    const clValueRes = CLValue.fromBytes(nameRes.remainder);
+    const clValueRes = CLValue.fromBytes(nameRes.remainder());
     if (clValueRes.hasError()) {
       return Result.Err(clValueRes.error);
     }
     return Result.Ok(
-      new NamedArg(nameRes.value.val, clValueRes.value),
-      clValueRes.remainder
+      new NamedArg(nameRes.value().val, clValueRes.value()),
+      clValueRes.remainder()
     );
   }
 }
@@ -91,16 +91,16 @@ export class RuntimeArgs implements ToBytes {
     if (sizeRes.hasError()) {
       return Result.Err(sizeRes.error);
     }
-    const size = sizeRes.value.val.toNumber();
-    let remainBytes = sizeRes.remainder;
+    const size = sizeRes.value().val.toNumber();
+    let remainBytes = sizeRes.remainder();
     const res: NamedArg[] = [];
     for (let i = 0; i < size; i++) {
       const namedArgRes = NamedArg.fromBytes(remainBytes);
       if (namedArgRes.hasError()) {
         return Result.Err(namedArgRes.error);
       }
-      res.push(namedArgRes.value);
-      remainBytes = namedArgRes.remainder;
+      res.push(namedArgRes.value());
+      remainBytes = namedArgRes.remainder();
     }
     return Result.Ok(RuntimeArgs.fromNamedArgs(res), remainBytes);
   }

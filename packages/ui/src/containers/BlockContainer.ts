@@ -77,7 +77,7 @@ export class BlockContainer {
         PublicKey.fromEd25519(decodeBase16(accountKey.slice(2)))
       );
       if (balance !== undefined) {
-        this.balances.set(accountKey, balance);
+        this.balances.set(accountKey, balance.toNumber());
       }
     }
   }

@@ -15,13 +15,13 @@ import { AsymmetricKey } from './Keys';
  *
  * @param x
  */
-export function byteHash(x: ByteArray): ByteArray {
+export function byteHash(x: Uint8Array): Uint8Array {
   return blake.blake2b(x, null, 32);
 }
 
 export class Contract {
-  private sessionWasm: ByteArray;
-  private paymentWasm: ByteArray;
+  private sessionWasm: Uint8Array;
+  private paymentWasm: Uint8Array;
 
   /**
    *
@@ -102,7 +102,7 @@ export class Faucet {
    *
    * @param accountPublicKeyHash the public key hash that want to be funded
    */
-  public static args(accountPublicKeyHash: ByteArray): RuntimeArgs {
+  public static args(accountPublicKeyHash: Uint8Array): RuntimeArgs {
     const accountKey = KeyValue.fromAccount(
       new AccountHash(accountPublicKeyHash)
     );
@@ -120,7 +120,7 @@ export class Transfer {
    * @param amount the amount of tokens to transfer
    */
   public static args(
-    accountPublicKeyHash: ByteArray,
+    accountPublicKeyHash: Uint8Array,
     amount: bigint
   ): RuntimeArgs {
     const account = CLValue.key(

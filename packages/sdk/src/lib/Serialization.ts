@@ -3,7 +3,7 @@
  * @packageDocumentation
  */
 
-type Serializer<T> = (arg: T) => ByteArray;
+type Serializer<T> = (arg: T) => Uint8Array;
 
 /**
  * Help function to serialize size
@@ -25,7 +25,7 @@ const Size: Serializer<number> = size => {
  *
  * @param bytes
  */
-export const ByteArrayArg: Serializer<ByteArray> = bytes => {
+export const ByteArrayArg: Serializer<Uint8Array> = bytes => {
   return Buffer.from(bytes);
 };
 
@@ -38,7 +38,7 @@ export const ByteArrayArg: Serializer<ByteArray> = bytes => {
  *
  * So for `[1,2,3,4,5,6]` it serializes to`[6, 0, 0, 0, 1, 2, 3, 4, 5, 6]`
  */
-export const ByteSequenceArg: Serializer<ByteArray> = bytes => {
+export const ByteSequenceArg: Serializer<Uint8Array> = bytes => {
   return Buffer.concat([Size(bytes.length), bytes].map(Buffer.from));
 };
 
@@ -81,7 +81,7 @@ export const UInt64Arg: Serializer<bigint> = value => {
  * That was serialized `u64` (`[1, 2, 3, 4, 0, 0, 0, 0]`)
  * `1, 2, 3, 4, 0, 0, 0, 0]`
  */
-export function Args(...args: ByteArray[]): ByteArray {
+export function Args(...args: Uint8Array[]): Uint8Array {
   const arrays = [Size(args.length)].concat(args.map(ByteSequenceArg));
   return Buffer.concat(arrays.map(Buffer.from));
 }

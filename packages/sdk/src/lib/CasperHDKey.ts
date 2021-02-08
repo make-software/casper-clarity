@@ -25,7 +25,7 @@ export class CasperHDKey {
    * Generate HDKey from master seed
    * @param seed
    */
-  public static fromMasterSeed(seed: ByteArray): CasperHDKey {
+  public static fromMasterSeed(seed: Uint8Array): CasperHDKey {
     return new CasperHDKey(HDKey.fromMasterSeed(Buffer.from(seed)));
   }
 
@@ -66,7 +66,7 @@ export class CasperHDKey {
    * Generate the signature for the message by using the key
    * @param msg The message to sign
    */
-  public sign(msg: ByteArray) {
+  public sign(msg: Uint8Array) {
     return this.hdKey.sign(sha256(Buffer.from(msg)));
   }
 
@@ -75,7 +75,7 @@ export class CasperHDKey {
    * @param signature the signature generated for the msg
    * @param msg the raw message
    */
-  public verify(signature: ByteArray, msg: ByteArray) {
+  public verify(signature: Uint8Array, msg: Uint8Array) {
     return this.hdKey.verify(sha256(Buffer.from(msg)), Buffer.from(signature));
   }
 

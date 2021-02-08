@@ -51,67 +51,67 @@ export const toBytesNumber = (
 /**
  * Converts `u8` to little endian.
  */
-export function toBytesU8(u8: BigNumberish): ByteArray {
+export function toBytesU8(u8: BigNumberish): Uint8Array {
   return toBytesNumber(8, false, u8);
 }
 
 /**
  * Converts `i32` to little endian.
  */
-export function toBytesI32(i32: BigNumberish): ByteArray {
+export function toBytesI32(i32: BigNumberish): Uint8Array {
   return toBytesNumber(32, true, i32);
 }
 
 /**
  * Converts `u32` to little endian.
  */
-export function toBytesU32(u32: BigNumberish): ByteArray {
+export function toBytesU32(u32: BigNumberish): Uint8Array {
   return toBytesNumber(32, false, u32);
 }
 
 /**
  * Converts `u64` to little endian.
  */
-export function toBytesU64(u64: BigNumberish): ByteArray {
+export function toBytesU64(u64: BigNumberish): Uint8Array {
   return toBytesNumber(64, false, u64);
 }
 
 /**
  * Converts `i64` to little endian.
  */
-export function toBytesI64(i64: BigNumberish): ByteArray {
+export function toBytesI64(i64: BigNumberish): Uint8Array {
   return toBytesNumber(64, true, i64);
 }
 
 /**
  * Converts `u128` to little endian.
  */
-export function toBytesU128(u128: BigNumberish): ByteArray {
+export function toBytesU128(u128: BigNumberish): Uint8Array {
   return toBytesNumber(128, false, u128);
 }
 
 /**
  * Converts `u256` to little endian.
  */
-export function toBytesU256(u256: BigNumberish): ByteArray {
+export function toBytesU256(u256: BigNumberish): Uint8Array {
   return toBytesNumber(256, false, u256);
 }
 
-export function toBytesDeployHash(deployHash: ByteArray) {
+export function toBytesDeployHash(deployHash: Uint8Array) {
   return toBytesBytesArray(deployHash);
 }
 
 /**
  * Converts `u512` to little endian.
  */
-export function toBytesU512(u512: BigNumberish): ByteArray {
+export function toBytesU512(u512: BigNumberish): Uint8Array {
   return toBytesNumber(512, false, u512);
 }
 
 /**
  * Serializes a string into an array of bytes.
  */
-export function toBytesString(str: string): ByteArray {
+export function toBytesString(str: string): Uint8Array {
   const arr = Uint8Array.from(Buffer.from(str));
   return concat([toBytesU32(arr.byteLength), arr]);
 }
@@ -119,14 +119,14 @@ export function toBytesString(str: string): ByteArray {
 /**
  * Serializes an array of u8, equal to Vec<u8> in rust.
  */
-export function toBytesArrayU8(arr: ByteArray): ByteArray {
+export function toBytesArrayU8(arr: Uint8Array): Uint8Array {
   return concat([toBytesU32(arr.length), arr]);
 }
 
 /**
  * Serializes an byteArray, equal to [u8;n] in rust.
  */
-export function toBytesBytesArray(arr: ByteArray): ByteArray {
+export function toBytesBytesArray(arr: Uint8Array): Uint8Array {
   return arr;
 }
 

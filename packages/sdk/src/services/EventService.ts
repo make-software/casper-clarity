@@ -74,21 +74,21 @@ export class EventService {
     this.url = url;
   }
 
-  public async getBlocks(page: number, count: number): Promise<BlocksResult> {
-    const response = await axios.get(
-      this.url + `/blocks?page=${page}&limit=${count}`
-    );
+  private async getResponseData(endPoint: string): Promise<any> {
+    const response = await axios.get(`${this.url}${endPoint}`);
     return response.data;
+  }
+
+  public async getBlocks(page: number, count: number): Promise<BlocksResult> {
+    return this.getResponseData(`/blocks?page=${page}&limit=${count}`);
   }
 
   public async getDeployByHash(deployHash: string): Promise<DeployResult> {
-    const response = await axios.get(this.url + `/deploy/${deployHash}`);
-    return response.data;
+    return this.getResponseData(`/deploy/${deployHash}`);
   }
 
   public async getBlockByHash(blockHash: string): Promise<BlockResult> {
-    const response = await axios.get(this.url + `/block/${blockHash}`);
-    return response.data;
+    return this.getResponseData(`/block/${blockHash}`);
   }
 
   public async getAccountDeploys(
@@ -96,16 +96,14 @@ export class EventService {
     page: number,
     limit: number
   ): Promise<AccountDeploysResult> {
-    const response = await axios.get(
-      this.url + `/accountDeploys/${accountHex}?page=${page}&limit=${limit}`
+    return this.getResponseData(
+      `/accountDeploys/${accountHex}?page=${page}&limit=${limit}`
     );
-    return response.data;
   }
 
   public async getTransfersByAccountHash(
     accountHash: string
   ): Promise<TransferResult[]> {
-    const response = await axios.get(this.url + `/transfers/${accountHash}`);
-    return response.data;
+    return this.getResponseData(`/transfers/${accountHash}`);
   }
 }

@@ -120,25 +120,33 @@ depends_on:
 ---
 kind: pipeline
 type: docker
-name: npm publish
+name: sdk-publish-tag
 
 steps:
-- name: npm publish
+- name: sdk-pre-publish
   image: "casperlabs/clarity-build:latest"
-  environment:
-    NPM_TOKEN:
-      from_secret: npm_token  
   commands:
-    - "git fetch"
-    - "git checkout $DRONE_TAG"
-    - "cd packages/sdk"
-    - "npm version"
-    - "npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN"
-    - "npm whoami"
-    - "npm publish --verbose"
+  - "yarn install"
+  - "cd packages/sdk"
+  - "npm run-script prepublishOnly"
+
+- name: sdk-publish
+  image: plugins/npm
+  failure: "ignore"
+  settings:
+    username:
+      from_secret: npm_user
+    token:
+      from_secret: npm_token
+    email:
+      from_secret: npm_email
+    folder:
+    - "packages/sdk"
+    fail_on_version_conflict:
+    - true
+    access:
+    - "public"
 
 trigger:
-  event:
-  - tag
-
-
+  ref:
+  - refs/tags/sdk*

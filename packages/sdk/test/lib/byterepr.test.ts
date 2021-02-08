@@ -43,13 +43,13 @@ describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize u8', () => {
     let bytesU8 = toBytesU8(10);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0x0a]));
-    expect(U8.fromBytes(bytesU8).value.toBytes()).to.deep.eq(
+    expect(U8.fromBytes(bytesU8).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.u8(10).toBytes()
     );
 
     bytesU8 = toBytesU8(255);
     expect(bytesU8).to.deep.eq(Uint8Array.from([0xff]));
-    expect(U8.fromBytes(bytesU8).value.toBytes()).to.deep.eq(
+    expect(U8.fromBytes(bytesU8).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.u8(255).toBytes()
     );
 
@@ -59,17 +59,17 @@ describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize u32', () => {
     let bytesU32 = toBytesU32(0xf0e0_d0c0);
     expect(bytesU32).to.deep.eq(Uint8Array.from([0xc0, 0xd0, 0xe0, 0xf0]));
-    expect(U32.fromBytes(bytesU32).value.toBytes()).to.deep.eq(
+    expect(U32.fromBytes(bytesU32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.u32(0xf0e0_d0c0).toBytes()
     );
     bytesU32 = toBytesU32(100000);
     expect(bytesU32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
-    expect(U32.fromBytes(bytesU32).value.toBytes()).to.deep.eq(
+    expect(U32.fromBytes(bytesU32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.u32(100000).toBytes()
     );
     bytesU32 = toBytesU32(0);
     expect(bytesU32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
-    expect(U32.fromBytes(bytesU32).value.toBytes()).to.deep.eq(
+    expect(U32.fromBytes(bytesU32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.u32(0).toBytes()
     );
   });
@@ -77,22 +77,22 @@ describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize i32', () => {
     let bytesI32 = toBytesI32(-100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([96, 121, 254, 255]));
-    expect(I32.fromBytes(bytesI32).value.toBytes()).to.deep.eq(
+    expect(I32.fromBytes(bytesI32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.i32(-100000).toBytes()
     );
     bytesI32 = toBytesI32(100000);
     expect(bytesI32).to.deep.eq(Uint8Array.from([160, 134, 1, 0]));
-    expect(I32.fromBytes(bytesI32).value.toBytes()).to.deep.eq(
+    expect(I32.fromBytes(bytesI32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.i32(100000).toBytes()
     );
     bytesI32 = toBytesI32(0);
     expect(bytesI32).to.deep.eq(Uint8Array.from([0, 0, 0, 0]));
-    expect(I32.fromBytes(bytesI32).value.toBytes()).to.deep.eq(
+    expect(I32.fromBytes(bytesI32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.i32(0).toBytes()
     );
     bytesI32 = toBytesI32(-1);
     expect(bytesI32).to.deep.eq(Uint8Array.from([255, 255, 255, 255]));
-    expect(I32.fromBytes(bytesI32).value.toBytes()).to.deep.eq(
+    expect(I32.fromBytes(bytesI32).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.i32(-1).toBytes()
     );
   });
@@ -102,14 +102,14 @@ describe(`numbers' toBytes`, () => {
     expect(bytesI64).to.deep.eq(
       Uint8Array.from([57, 20, 94, 139, 1, 121, 193, 2])
     );
-    expect(I64.fromBytes(bytesI64).value.toBytes()).to.deep.eq(
+    expect(I64.fromBytes(bytesI64).value().toBytes()).to.deep.eq(
       CLTypedAndToBytesHelper.i64('198572906121139257').toBytes()
     );
     bytesI64 = toBytesI64('-4009477689550808');
     expect(bytesI64).to.deep.eq(
       Uint8Array.from([40, 88, 148, 186, 102, 193, 241, 255])
     );
-    expect(I64.fromBytes(bytesI64).value.toBytes()).to.deep.equal(
+    expect(I64.fromBytes(bytesI64).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.i64('-4009477689550808').toBytes()
     );
   });
@@ -119,14 +119,14 @@ describe(`numbers' toBytes`, () => {
     expect(bytesU64).to.deep.eq(
       Uint8Array.from([57, 20, 214, 178, 212, 118, 11, 197])
     );
-    expect(U64.fromBytes(bytesU64).value.toBytes()).to.deep.equal(
+    expect(U64.fromBytes(bytesU64).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.u64('14198572906121139257').toBytes()
     );
     bytesU64 = toBytesU64('9834009477689550808');
     expect(bytesU64).to.deep.eq(
       Uint8Array.from([216, 167, 130, 99, 132, 107, 121, 136])
     );
-    expect(U64.fromBytes(bytesU64).value.toBytes()).to.deep.equal(
+    expect(U64.fromBytes(bytesU64).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.u64('9834009477689550808').toBytes()
     );
   });
@@ -134,21 +134,21 @@ describe(`numbers' toBytes`, () => {
   it('should be able to serialize/deserialize u128', () => {
     let bytesU128 = toBytesU128(100000);
     expect(bytesU128).to.deep.eq(Uint8Array.from([3, 160, 134, 1]));
-    expect(U128.fromBytes(bytesU128).value.toBytes()).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.u128(100000).toBytes()
     );
     bytesU128 = toBytesU128(0xf0e0_d0c0_0000);
     expect(bytesU128).to.deep.eq(
       Uint8Array.from([6, 0, 0, 0xc0, 0xd0, 0xe0, 0xf0])
     );
-    expect(U128.fromBytes(bytesU128).value.toBytes()).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.u128(0xf0e0_d0c0_0000).toBytes()
     );
     bytesU128 = toBytesU128(0x0000_f0e0_d0c0_0000);
     expect(bytesU128).to.deep.eq(
       Uint8Array.from([6, 0, 0, 0xc0, 0xd0, 0xe0, 0xf0])
     );
-    expect(U128.fromBytes(bytesU128).value.toBytes()).to.deep.equal(
+    expect(U128.fromBytes(bytesU128).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.u128(0x0000_f0e0_d0c0_0000).toBytes()
     );
   });
@@ -174,7 +174,7 @@ describe(`numbers' toBytes`, () => {
         149
       ])
     );
-    expect(StringValue.fromBytes(bytesString).value.toBytes()).to.deep.equal(
+    expect(StringValue.fromBytes(bytesString).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.string('test_测试').toBytes()
     );
   });
@@ -183,7 +183,7 @@ describe(`numbers' toBytes`, () => {
     const unit = CLTypedAndToBytesHelper.unit();
     const bytesUnit = unit.toBytes();
     expect(bytesUnit).to.deep.eq(Uint8Array.from([]));
-    expect(Unit.fromBytes(bytesUnit).value.toBytes()).to.deep.equal(
+    expect(Unit.fromBytes(bytesUnit).value().toBytes()).to.deep.equal(
       CLTypedAndToBytesHelper.unit().toBytes()
     );
   });
@@ -250,10 +250,10 @@ describe(`numbers' toBytes`, () => {
       ])
     );
 
-    expect(KeyValue.fromBytes(bytes).value?.uRef?.uRefAddr).to.deep.equal(
+    expect(KeyValue.fromBytes(bytes).value()?.uRef?.uRefAddr).to.deep.equal(
       decodeBase16(urefAddr)
     );
-    expect(KeyValue.fromBytes(bytes).value?.uRef?.accessRights).to.deep.equal(
+    expect(KeyValue.fromBytes(bytes).value()?.uRef?.accessRights).to.deep.equal(
       AccessRights.READ_ADD_WRITE
     );
   });
@@ -265,7 +265,7 @@ describe(`numbers' toBytes`, () => {
       1, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42
     ]);
     expect(keyHash.toBytes()).to.deep.eq(expectedBytes);
-    expect(KeyValue.fromBytes(expectedBytes).value).to.deep.eq(keyHash);
+    expect(KeyValue.fromBytes(expectedBytes).value()).to.deep.eq(keyHash);
   });
 
   it('should serialize/deserialize Account variant of Key correctly', () => {
@@ -278,7 +278,7 @@ describe(`numbers' toBytes`, () => {
     ]);
 
     expect(keyAccount.toBytes()).to.deep.eq(expectedBytes);
-    expect(KeyValue.fromBytes(expectedBytes).value).to.deep.eq(keyAccount);
+    expect(KeyValue.fromBytes(expectedBytes).value()).to.deep.eq(keyAccount);
   });
 
   it('should serialize DeployHash correctly', () => {
@@ -331,7 +331,7 @@ describe(`numbers' toBytes`, () => {
     // prettier-ignore
     const expectedBytes = Uint8Array.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 7]);
     expect(uref.toBytes()).to.deep.equal(expectedBytes);
-    expect(URef.fromBytes(expectedBytes).value).to.deep.eq(uref);
+    expect(URef.fromBytes(expectedBytes).value()).to.deep.eq(uref);
   });
 
   it('should serialize/deserialize Tuple1 correctly', () => {
@@ -345,14 +345,18 @@ describe(`numbers' toBytes`, () => {
       Tuple1.fromBytes(
         CLTypeHelper.tuple1(CLTypeHelper.string()),
         expectedBytes
-      ).value.clType()
+      )
+        .value()
+        .clType()
     ).to.deep.equal(tuple.clType());
 
     expect(
       Tuple1.fromBytes(
         CLTypeHelper.tuple1(CLTypeHelper.string()),
         expectedBytes
-      ).value.toBytes()
+      )
+        .value()
+        .toBytes()
     ).to.deep.equal(tuple.toBytes());
   });
 
@@ -369,14 +373,18 @@ describe(`numbers' toBytes`, () => {
       Tuple2.fromBytes(
         CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
         expectedBytes
-      ).value.clType()
+      )
+        .value()
+        .clType()
     ).to.deep.equal(tuple2.clType());
 
     expect(
       Tuple2.fromBytes(
         CLTypeHelper.tuple2(CLTypeHelper.string(), CLTypeHelper.u64()),
         expectedBytes
-      ).value.toBytes()
+      )
+        .value()
+        .toBytes()
     ).to.deep.equal(tuple2.toBytes());
   });
 
@@ -399,7 +407,9 @@ describe(`numbers' toBytes`, () => {
           CLTypeHelper.bool()
         ),
         expectedBytes
-      ).value.clType()
+      )
+        .value()
+        .clType()
     ).to.deep.equal(tuple3.clType());
 
     expect(
@@ -410,7 +420,9 @@ describe(`numbers' toBytes`, () => {
           CLTypeHelper.bool()
         ),
         expectedBytes
-      ).value.toBytes()
+      )
+        .value()
+        .toBytes()
     ).to.deep.equal(tuple3.toBytes());
   });
 
@@ -425,10 +437,9 @@ describe(`numbers' toBytes`, () => {
     expect(list.toBytes()).to.deep.eq(expectedBytes);
 
     expect(
-      List.fromBytes(
-        CLTypeHelper.list(CLTypeHelper.u32()),
-        expectedBytes
-      ).value.toBytes()
+      List.fromBytes(CLTypeHelper.list(CLTypeHelper.u32()), expectedBytes)
+        .value()
+        .toBytes()
     ).to.deep.eq(list.toBytes());
   });
 
@@ -461,7 +472,9 @@ describe(`numbers' toBytes`, () => {
           CLTypeHelper.list(CLTypeHelper.u64())
         ),
         expectBytes
-      ).value.toBytes()
+      )
+        .value()
+        .toBytes()
     ).to.deep.eq(expectBytes);
   });
 
@@ -473,10 +486,9 @@ describe(`numbers' toBytes`, () => {
     expect(opt.toBytes()).to.deep.eq(expectBytes);
 
     expect(
-      Option.fromBytes(
-        CLTypeHelper.option(CLTypeHelper.string()),
-        expectBytes
-      ).value.toBytes()
+      Option.fromBytes(CLTypeHelper.option(CLTypeHelper.string()), expectBytes)
+        .value()
+        .toBytes()
     ).to.deep.eq(expectBytes);
   });
 

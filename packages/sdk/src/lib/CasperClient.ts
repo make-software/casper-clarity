@@ -10,6 +10,7 @@ import { encodeBase16 } from './Conversions';
 import { Deploy, DeployParams, ExecutableDeployItem } from './DeployUtil';
 import { AsymmetricKey, SignatureAlgorithm } from './Keys';
 import { CasperHDKey } from './CasperHDKey';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export class CasperClient {
   private nodeClient: CasperServiceByJsonRPC;
@@ -44,7 +45,7 @@ export class CasperClient {
   public loadPublicKeyFromFile(
     path: string,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePublicKeyFile(path);
@@ -62,7 +63,7 @@ export class CasperClient {
   public loadPrivateKeyFromFile(
     path: string,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.parsePrivateKeyFile(path);
@@ -98,7 +99,7 @@ export class CasperClient {
    *
    * @param seed The seed buffer for parent key
    */
-  public newHdWallet(seed: ByteArray): CasperHDKey {
+  public newHdWallet(seed: Uint8Array): CasperHDKey {
     return CasperHDKey.fromMasterSeed(seed);
   }
 
@@ -107,9 +108,9 @@ export class CasperClient {
    * @param privateKey
    */
   public privateToPublicKey(
-    privateKey: ByteArray,
+    privateKey: Uint8Array,
     algo: SignatureAlgorithm
-  ): ByteArray {
+  ): Uint8Array {
     switch (algo) {
       case SignatureAlgorithm.Ed25519:
         return Keys.Ed25519.privateToPublicKey(privateKey);
@@ -190,21 +191,23 @@ export class CasperClient {
   /**
    * Get the balance of public key
    */
-  public async balanceOfByPublicKey(publicKey: PublicKey): Promise<number> {
+  public async balanceOfByPublicKey(publicKey: PublicKey): Promise<BigNumber> {
     return this.balanceOfByAccountHash(encodeBase16(publicKey.toAccountHash()));
   }
 
   /**
    * Get the balance by account hash
    */
-  public async balanceOfByAccountHash(accountHashStr: string): Promise<number> {
+  public async balanceOfByAccountHash(
+    accountHashStr: string
+  ): Promise<BigNumber> {
     try {
       const stateRootHash = await this.nodeClient
         .getLatestBlockInfo()
         .then(it => it.block?.header.state_root_hash);
       // Find the balance Uref and cache it if we don't have it.
       if (!stateRootHash) {
-        return 0;
+        return BigNumber.from(0);
       }
       const balanceUref = await this.nodeClient.getAccountBalanceUrefByPublicKeyHash(
         stateRootHash,
@@ -212,7 +215,7 @@ export class CasperClient {
       );
 
       if (!balanceUref) {
-        return 0;
+        return BigNumber.from(0);
       }
 
       return await this.nodeClient.getAccountBalance(
@@ -220,7 +223,7 @@ export class CasperClient {
         balanceUref
       );
     } catch (e) {
-      return 0;
+      return BigNumber.from(0);
     }
   }
 

@@ -24,8 +24,7 @@
     ]
   },
   "include": [
-	  "./src/**/*",
-	  "../ui/src/@types/models.d.ts"
+	  "./src/**/*"
   ],
   "exclude": ["./test/**/*"]
 }

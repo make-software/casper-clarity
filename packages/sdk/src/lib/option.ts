@@ -83,22 +83,25 @@ export class Option extends CLTypedAndToBytes {
     return CLTypeHelper.option(this.innerType!);
   }
 
-  public static fromBytes(type: OptionType, bytes: ByteArray): Result<Option> {
+  public static fromBytes(type: OptionType, bytes: Uint8Array): Result<Option> {
     const u8Res = U8.fromBytes(bytes);
     if (u8Res.hasError()) {
       return Result.Err(u8Res.error);
     }
-    const optionTag = u8Res.value.val.toNumber();
+    const optionTag = u8Res.value().val.toNumber();
     if (optionTag === OPTION_TAG_NONE) {
-      return Result.Ok(new Option(null, type.innerType), u8Res.remainder);
+      return Result.Ok(new Option(null, type.innerType), u8Res.remainder());
     } else if (optionTag === OPTION_TAG_SOME) {
-      const innerValueRes = fromBytesByCLType(type.innerType, u8Res.remainder);
+      const innerValueRes = fromBytesByCLType(
+        type.innerType,
+        u8Res.remainder()
+      );
       if (innerValueRes.hasError()) {
         return Result.Err(innerValueRes.error);
       }
       return Result.Ok(
-        new Option(innerValueRes.value, type.innerType),
-        innerValueRes.remainder
+        new Option(innerValueRes.value(), type.innerType),
+        innerValueRes.remainder()
       );
     } else {
       return Result.Err(FromBytesError.FormattingError);

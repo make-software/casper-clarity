@@ -16,7 +16,7 @@ export function base64to16(base64: string): string {
 /**
  * Encode Uint8Array into string using Base-16 encoding.
  */
-export function encodeBase16(bytes: ByteArray): string {
+export function encodeBase16(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('hex');
 }
 
@@ -25,6 +25,6 @@ export function encodeBase16(bytes: ByteArray): string {
  *
  * @param base16String base16 encoded string
  */
-export function decodeBase16(base16String: string): ByteArray {
+export function decodeBase16(base16String: string): Uint8Array {
   return Buffer.from(base16String, 'hex');
 }

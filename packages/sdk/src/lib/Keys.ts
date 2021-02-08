@@ -27,7 +27,7 @@ export enum SignatureAlgorithm {
 
 function accountHashHelper(
   signatureAlgorithm: SignatureAlgorithm,
-  publicKey: ByteArray
+  publicKey: Uint8Array
 ) {
   const separator = Buffer.from([0]);
   const prefix = Buffer.concat([Buffer.from(signatureAlgorithm), separator]);
@@ -53,7 +53,7 @@ function accountHashHelper(
  * ```
  *
  */
-export function readBase64WithPEM(content: string): ByteArray {
+export function readBase64WithPEM(content: string): Uint8Array {
   const base64 = content
     // there are two kinks of line-endings, CRLF(\r\n) and LF(\n)
     // we need handle both
@@ -67,12 +67,12 @@ export function readBase64WithPEM(content: string): ByteArray {
 
 export abstract class AsymmetricKey {
   public readonly publicKey: PublicKey;
-  public readonly privateKey: ByteArray;
+  public readonly privateKey: Uint8Array;
   public readonly signatureAlgorithm: SignatureAlgorithm;
 
   constructor(
-    publicKey: ByteArray,
-    privateKey: ByteArray,
+    publicKey: Uint8Array,
+    privateKey: Uint8Array,
     signatureAlgorithm: SignatureAlgorithm
   ) {
     this.publicKey = PublicKey.from(publicKey, signatureAlgorithm);
@@ -83,7 +83,7 @@ export abstract class AsymmetricKey {
   /**
    * Compute a unique hash from the algorithm name(Ed25519 here) and a public key, used for accounts.
    */
-  public accountHash(): ByteArray {
+  public accountHash(): Uint8Array {
     return this.publicKey.toAccountHash();
   }
 
@@ -115,14 +115,14 @@ export abstract class AsymmetricKey {
    * Sign the message by using the keyPair
    * @param msg
    */
-  public abstract sign(msg: ByteArray): ByteArray;
+  public abstract sign(msg: Uint8Array): Uint8Array;
 
   /**
    * Verify the signature along with the raw message
    * @param signature
    * @param msg
    */
-  public abstract verfiy(signature: ByteArray, msg: ByteArray): boolean;
+  public abstract verfiy(signature: Uint8Array, msg: Uint8Array): boolean;
 }
 
 // Based on SignatureAlgorithm.scala
@@ -142,7 +142,7 @@ export class Ed25519 extends AsymmetricKey {
    * Generate the accountHex for the Ed25519 public key
    * @param publicKey
    */
-  public static accountHex(publicKey: ByteArray): string {
+  public static accountHex(publicKey: Uint8Array): string {
     return '01' + encodeBase16(publicKey);
   }
 
@@ -168,7 +168,7 @@ export class Ed25519 extends AsymmetricKey {
    * Generate the accountHash for the Ed25519 public key
    * @param publicKey
    */
-  public static accountHash(publicKey: ByteArray): ByteArray {
+  public static accountHash(publicKey: Uint8Array): Uint8Array {
     return accountHashHelper(SignatureAlgorithm.Ed25519, publicKey);
   }
 
@@ -178,8 +178,8 @@ export class Ed25519 extends AsymmetricKey {
    * @param privateKey
    */
   public static parseKeyPair(
-    publicKey: ByteArray,
-    privateKey: ByteArray
+    publicKey: Uint8Array,
+    privateKey: Uint8Array
   ): AsymmetricKey {
     const publ = Ed25519.parsePublicKey(publicKey);
     const priv = Ed25519.parsePrivateKey(privateKey);
@@ -190,19 +190,19 @@ export class Ed25519 extends AsymmetricKey {
     });
   }
 
-  public static parsePrivateKeyFile(path: string): ByteArray {
+  public static parsePrivateKeyFile(path: string): Uint8Array {
     return Ed25519.parsePrivateKey(Ed25519.readBase64File(path));
   }
 
-  public static parsePublicKeyFile(path: string): ByteArray {
+  public static parsePublicKeyFile(path: string): Uint8Array {
     return Ed25519.parsePublicKey(Ed25519.readBase64File(path));
   }
 
-  public static parsePrivateKey(bytes: ByteArray) {
+  public static parsePrivateKey(bytes: Uint8Array) {
     return Ed25519.parseKey(bytes, 0, 32);
   }
 
-  public static parsePublicKey(bytes: ByteArray) {
+  public static parsePublicKey(bytes: Uint8Array) {
     return Ed25519.parseKey(bytes, 32, 64);
   }
 
@@ -215,12 +215,12 @@ export class Ed25519 extends AsymmetricKey {
    *
    * @param path the path of file to read from
    */
-  private static readBase64File(path: string): ByteArray {
+  private static readBase64File(path: string): Uint8Array {
     const content = fs.readFileSync(path).toString();
     return Ed25519.readBase64WithPEM(content);
   }
 
-  private static parseKey(bytes: ByteArray, from: number, to: number) {
+  private static parseKey(bytes: Uint8Array, from: number, to: number) {
     const len = bytes.length;
     // prettier-ignore
     const key =
@@ -265,7 +265,7 @@ export class Ed25519 extends AsymmetricKey {
    * Sign the message by using the keyPair
    * @param msg
    */
-  public sign(msg: ByteArray): ByteArray {
+  public sign(msg: Uint8Array): Uint8Array {
     return nacl.sign_detached(msg, this.privateKey);
   }
 
@@ -274,7 +274,7 @@ export class Ed25519 extends AsymmetricKey {
    * @param signature
    * @param msg
    */
-  public verfiy(signature: ByteArray, msg: ByteArray) {
+  public verfiy(signature: Uint8Array, msg: Uint8Array) {
     return nacl.sign_detached_verify(
       msg,
       signature,
@@ -286,7 +286,7 @@ export class Ed25519 extends AsymmetricKey {
    * Derive public key from private key
    * @param privateKey
    */
-  public static privateToPublicKey(privateKey: ByteArray) {
+  public static privateToPublicKey(privateKey: Uint8Array) {
     if (privateKey.length === SignLength.SecretKey) {
       return nacl.sign_keyPair_fromSecretKey(privateKey).publicKey;
     } else {
@@ -306,7 +306,7 @@ export class Ed25519 extends AsymmetricKey {
 }
 
 export class Secp256K1 extends AsymmetricKey {
-  constructor(publicKey: ByteArray, privateKey: ByteArray) {
+  constructor(publicKey: Uint8Array, privateKey: Uint8Array) {
     super(publicKey, privateKey, SignatureAlgorithm.Secp256K1);
   }
 
@@ -338,7 +338,7 @@ export class Secp256K1 extends AsymmetricKey {
    * Generate the accountHash for the Secp256K1 public key
    * @param publicKey
    */
-  public static accountHash(publicKey: ByteArray): ByteArray {
+  public static accountHash(publicKey: Uint8Array): Uint8Array {
     return accountHashHelper(SignatureAlgorithm.Secp256K1, publicKey);
   }
 
@@ -346,7 +346,7 @@ export class Secp256K1 extends AsymmetricKey {
    * Generate the accountHex for the Secp256K1 public key
    * @param publicKey
    */
-  public static accountHex(publicKey: ByteArray): string {
+  public static accountHex(publicKey: Uint8Array): string {
     return '02' + encodeBase16(publicKey);
   }
 
@@ -357,8 +357,8 @@ export class Secp256K1 extends AsymmetricKey {
    * @param originalFormat the format of the public/private key
    */
   public static parseKeyPair(
-    publicKey: ByteArray,
-    privateKey: ByteArray,
+    publicKey: Uint8Array,
+    privateKey: Uint8Array,
     originalFormat: 'raw' | 'der'
   ): AsymmetricKey {
     const publ = Secp256K1.parsePublicKey(publicKey, originalFormat);
@@ -367,16 +367,16 @@ export class Secp256K1 extends AsymmetricKey {
     return new Secp256K1(publ, priv);
   }
 
-  public static parsePrivateKeyFile(path: string): ByteArray {
+  public static parsePrivateKeyFile(path: string): Uint8Array {
     return Secp256K1.parsePrivateKey(Secp256K1.readBase64File(path));
   }
 
-  public static parsePublicKeyFile(path: string): ByteArray {
+  public static parsePublicKeyFile(path: string): Uint8Array {
     return Secp256K1.parsePublicKey(Secp256K1.readBase64File(path));
   }
 
   public static parsePrivateKey(
-    bytes: ByteArray,
+    bytes: Uint8Array,
     originalFormat: 'der' | 'raw' = 'der'
   ) {
     let rawKeyHex: string;
@@ -393,7 +393,7 @@ export class Secp256K1 extends AsymmetricKey {
   }
 
   public static parsePublicKey(
-    bytes: ByteArray,
+    bytes: Uint8Array,
     originalFormat: 'der' | 'raw' = 'der'
   ) {
     let rawKeyHex: string;
@@ -418,7 +418,7 @@ export class Secp256K1 extends AsymmetricKey {
    *
    * @param path the path of file to read from
    */
-  private static readBase64File(path: string): ByteArray {
+  private static readBase64File(path: string): Uint8Array {
     const content = fs.readFileSync(path).toString();
     return Secp256K1.readBase64WithPEM(content);
   }
@@ -449,7 +449,7 @@ export class Secp256K1 extends AsymmetricKey {
    * Sign the message by using the keyPair
    * @param msg
    */
-  public sign(msg: ByteArray): ByteArray {
+  public sign(msg: Uint8Array): Uint8Array {
     const res = secp256k1.ecdsaSign(sha256(Buffer.from(msg)), this.privateKey);
     return res.signature;
   }
@@ -459,7 +459,7 @@ export class Secp256K1 extends AsymmetricKey {
    * @param signature
    * @param msg
    */
-  public verfiy(signature: ByteArray, msg: ByteArray) {
+  public verfiy(signature: Uint8Array, msg: Uint8Array) {
     return secp256k1.ecdsaVerify(
       signature,
       sha256(Buffer.from(msg)),
@@ -471,7 +471,7 @@ export class Secp256K1 extends AsymmetricKey {
    * Derive public key from private key
    * @param privateKey
    */
-  public static privateToPublicKey(privateKey: ByteArray): ByteArray {
+  public static privateToPublicKey(privateKey: Uint8Array): Uint8Array {
     return secp256k1.publicKeyCreate(privateKey, true);
   }
 

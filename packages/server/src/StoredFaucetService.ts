@@ -20,7 +20,7 @@ export class StoredFaucetService {
     private chainName: string
   ) {}
 
-  async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<DeployHash> {
+  async callStoredFaucet(accountPublicKeyHash: ByteArray): Promise<Uint8Array> {
     const state = await this.checkState();
     if (state) {
       const sessionArgs = CallFaucet.args(

@@ -3,6 +3,7 @@ import { DeployUtil, encodeBase16, PublicKey } from '..';
 import { deployToJson } from '../lib/DeployUtil';
 import { TypedJSON } from 'typedjson';
 import { StoredValue } from '../lib/StoredValue';
+import { BigNumber } from '@ethersproject/bignumber';
 
 interface RpcResult {
   api_version: string;
@@ -236,7 +237,7 @@ export class CasperServiceByJsonRPC {
   public async getAccountBalance(
     stateRootHash: string,
     balanceUref: string
-  ): Promise<number> {
+  ): Promise<BigNumber> {
     return await this.client
       .request({
         method: 'state_get_balance',
@@ -245,7 +246,7 @@ export class CasperServiceByJsonRPC {
           purse_uref: balanceUref
         }
       })
-      .then(res => parseInt(res.balance_value, 10));
+      .then(res => BigNumber.from(res.balance_value));
   }
 
   public async getStateRootHash(
