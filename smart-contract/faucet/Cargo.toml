@@ -12,8 +12,8 @@ test = false
 bench = false
 
 [features]
-std = ["casperlabs-contract/std", "casperlabs-types/std"]
+std = ["casper-contract/std", "casper-types/std"]
 
 [dependencies]
-casperlabs-contract = "0.6.0"
-casperlabs-types = "0.6.0"
+casper-contract = "0.7.0"
+casper-types = "0.7.0"

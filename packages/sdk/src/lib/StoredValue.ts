@@ -145,12 +145,27 @@ export class SeigniorageAllocation {
 }
 
 /**
- * Auction metdata.  Intended to be recorded at each era.
+ * Auction metadata. Intended to be recorded at each era.
  */
 @jsonObject
 export class EraInfoJson {
   @jsonArrayMember(SeigniorageAllocation, { name: 'seigniorage_allocations' })
   public seigniorageAllocations: SeigniorageAllocation[];
+}
+
+/**
+ * Contract metadata.
+ */
+@jsonObject
+export class ContractMetadataJson {
+  @jsonMember({ name: 'contract_package_hash', constructor: String })
+  public contractPackageHash: string;
+
+  @jsonMember({ name: 'contract_wasm_hash', constructor: String })
+  public contractWasmHash: string;
+
+  @jsonMember({ name: 'protocol_version', constructor: String })
+  public protocolVersion: string;
 }
 
 @jsonObject
@@ -167,8 +182,8 @@ export class StoredValue {
   public ContractWASM?: string;
 
   // Methods and type signatures supported by a contract
-  @jsonMember({ constructor: String })
-  public Contract?: string;
+  @jsonMember({ constructor: ContractMetadataJson })
+  public Contract?: ContractMetadataJson;
 
   // A contract definition, metadata, and security container
   @jsonMember({ constructor: String })

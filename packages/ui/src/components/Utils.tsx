@@ -4,6 +4,7 @@ import { observer } from 'mobx-react';
 import AuthContainer from '../containers/AuthContainer';
 import { encodeBase16 } from 'casper-client-sdk';
 import { Helmet } from 'react-helmet';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export const Spinner = (msg: String) => (
   <div className="text-center">
@@ -232,9 +233,7 @@ export const Title = (props: { title: string }) => (
   </Helmet>
 );
 
-export const CSPR = (props: { motes: number }) => {
-  const s = (props.motes / 1000_000_000).toLocaleString(undefined, {
-    maximumFractionDigits: 5
-  });
-  return <span>{s} CSPR</span>;
+export const CSPR = (props: { motes: BigNumber }) => {
+  let val = props.motes.div(BigNumber.from(1000_000_000));
+  return <span>{val.toString()} CSPR</span>;
 };

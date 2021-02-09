@@ -284,7 +284,7 @@ export class StoredContractByHash extends ExecutableDeployItemInternal {
       Uint8Array.from([this.tag]),
       toBytesBytesArray(this.hash),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }
@@ -321,7 +321,7 @@ export class StoredContractByName extends ExecutableDeployItemInternal {
       Uint8Array.from([this.tag]),
       toBytesString(this.name),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }
@@ -370,7 +370,7 @@ export class StoredVersionedContractByName extends ExecutableDeployItemInternal 
       toBytesString(this.name),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }
@@ -429,7 +429,7 @@ export class StoredVersionedContractByHash extends ExecutableDeployItemInternal 
       toBytesBytesArray(this.hash),
       serializedVersion.toBytes(),
       toBytesString(this.entryPoint),
-      toBytesArrayU8(this.args.toBytes())
+      toBytesBytesArray(this.args.toBytes())
     ]);
   }
 }

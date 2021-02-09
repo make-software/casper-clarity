@@ -8,6 +8,7 @@ import { RefreshableComponent, SuccessIcon, FailIcon, CSPR } from './Utils';
 import { shortHash } from './Utils';
 import ObservableValueMap, { ObservableValue } from '../lib/ObservableValueMap';
 import { BlockResult, DeployResult, JsonBlock } from 'casper-client-sdk';
+import { BigNumber } from '@ethersproject/bignumber';
 
 // https://www.pluralsight.com/guides/react-router-typescript
 
@@ -122,7 +123,7 @@ const DeploysTable = observer(
               </td>
               <td>{shortHash(accountId)}</td>
               <td className="text-right">
-                <CSPR motes={deploy.cost} />
+                <CSPR motes={BigNumber.from(deploy.cost)} />
               </td>
               <td className="text-right">
                 <span>{deploy.state}</span>
@@ -165,7 +166,7 @@ export const Balance = observer(
   (props: { balance: ObservableValue<number> }) => {
     const value = props.balance.value;
     if (value == null) return null;
-    return <CSPR motes={value} />;
+    return <CSPR motes={BigNumber.from(value)} />;
   }
 );
 

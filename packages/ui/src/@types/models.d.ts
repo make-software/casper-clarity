@@ -38,5 +38,5 @@ interface AccountBalance {
   checkedAt: Date;
   blockHashBase16: string;
   // undefine means the account didn't exist.
-  balance: number | undefined;
+  balance: BigNumber | undefined;
 }

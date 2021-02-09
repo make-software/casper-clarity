@@ -157,7 +157,7 @@ export class AuthContainer {
           this.balances.set(accountHash, {
             checkedAt: now,
             blockHashBase16: latestBlockHash,
-            balance: latestAccountBalance?.toNumber()
+            balance: latestAccountBalance
           });
         }
       }

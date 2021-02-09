@@ -85,14 +85,25 @@ describe('StoredValue', () => {
 
   it('should parse Contract stored value correctly', function () {
     const mockJson = {
-      Contract:
-        'ea058d32053f59e9f66dd3d4de4594a8a3de36c65c87417efe79cdc7c1b926b4b1575b26a474dc52c03c2a7207db951fa4f82214ee4257c4b99bbab603908d5900000000010000000b00000063616c6c5f6661756365740b00000063616c6c5f66617563657402000000060000007461726765740f2000000006000000616d6f756e7408090100010000000000000000000000'
+      Contract: {
+        contract_package_hash: 'package-uref',
+        contract_wasm_hash: 'wasm-hash-uref',
+        protocol_version: '1.0.0'
+      }
     };
 
     const serializer = new TypedJSON(StoredValue);
     const storedValue = serializer.parse(mockJson);
     expect(storedValue?.Contract).to.not.eq(undefined);
-    expect(storedValue?.Contract).to.eq(mockJson.Contract);
+    expect(storedValue?.Contract?.contractPackageHash).to.eq(
+      mockJson.Contract.contract_package_hash
+    );
+    expect(storedValue?.Contract?.contractWasmHash).to.eq(
+      mockJson.Contract.contract_wasm_hash
+    );
+    expect(storedValue?.Contract?.protocolVersion).to.eq(
+      mockJson.Contract.protocol_version
+    );
   });
 
   it('should parse ContractPackage stored value correctly', function () {
