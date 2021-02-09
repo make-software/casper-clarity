@@ -1,6 +1,6 @@
 {
   "name": "casper-client-sdk",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "license": "Apache 2.0",
   "description": "SDK to interact with the Casper blockchain",
   "main": "dist/index.js",
@@ -38,7 +38,7 @@
     "husky": "^2.7.0",
     "lint-staged": "^8.2.1",
     "minimist": ">=1.2.3",
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.3",
     "nodemon": "^2.0.2",
     "nyc": "^15.0.1",
     "prettier": "^1.18.2",

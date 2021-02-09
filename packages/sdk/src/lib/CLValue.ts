@@ -491,7 +491,7 @@ const fromBytesSimpleType = (
 };
 
 export class List<T extends CLTypedAndToBytes> extends CLTypedAndToBytes {
-  constructor(private vec: T[]) {
+  constructor(public vec: T[]) {
     super();
     if (vec.length === 0) {
       throw new Error("Can't create instance for empty list");
@@ -811,7 +811,7 @@ class ByteArrayValue extends CLTypedAndToBytes {
   }
 
   public static fromBytes(bytes: Uint8Array): Result<ByteArrayValue> {
-    const b = new ByteArrayValue(bytes);
+    const b = new ByteArrayValue(bytes.subarray(0, 32));
     return Result.Ok(b, bytes.subarray(32));
   }
 }
@@ -1655,7 +1655,7 @@ export class CLValue implements ToBytes {
       const numberCoder = this.value as NumberCoder;
       return BigNumber.from(numberCoder.val);
     } else {
-      throw new Error("The CLValue can't convert to BigNumber");
+      throw new Error("The CLValue is not an instance of BigNumber");
     }
   }
 
@@ -1665,7 +1665,7 @@ export class CLValue implements ToBytes {
 
   public asBoolean() {
     if (!this.isBoolean()) {
-      throw new Error("The CLValue can't convert to Boolean");
+      throw new Error("The CLValue is not an instance of Boolean");
     }
     return (this.value as Bool).val;
   }
@@ -1676,7 +1676,7 @@ export class CLValue implements ToBytes {
 
   public asString() {
     if (!this.isString()) {
-      throw new Error("The CLValue can't convert to String");
+      throw new Error("The CLValue is not an instance of String");
     }
     return (this.value as StringValue).val;
   }
@@ -1687,7 +1687,7 @@ export class CLValue implements ToBytes {
 
   public asPublicKey(): PublicKey {
     if (!this.isPublicKey()) {
-      throw new Error("The CLValue can't convert to PublicKey");
+      throw new Error("The CLValue is not an instance of PublicKey");
     }
     return this.value as PublicKey;
   }
@@ -1698,7 +1698,7 @@ export class CLValue implements ToBytes {
 
   public asKey() {
     if (!this.isKey()) {
-      throw new Error("The CLValue can't convert to Key");
+      throw new Error("The CLValue is not an instance of Key");
     }
     return this.value as KeyValue;
   }
@@ -1709,7 +1709,7 @@ export class CLValue implements ToBytes {
 
   public asURef() {
     if (!this.isURef()) {
-      throw new Error("The CLValue can't convert to URef");
+      throw new Error("The CLValue is not an instance of URef");
     }
     return this.value as URef;
   }
@@ -1720,7 +1720,7 @@ export class CLValue implements ToBytes {
 
   public asBytesArray() {
     if (!this.isBytesArray()) {
-      throw new Error("The CLValue can't convert to BytesArray");
+      throw new Error("The CLValue is not an instance of BytesArray");
     }
     return (this.value as ByteArrayValue).toBytes();
   }
@@ -1731,9 +1731,25 @@ export class CLValue implements ToBytes {
 
   public asOption() {
     if (!this.isOption()) {
-      throw new Error("The CLValue can't convert to Option");
+      throw new Error("The CLValue is not an instance of Option");
     }
     return this.value as Option;
+  }
+
+  public isList() {
+    return this.clType instanceof ListType
+  }
+
+  public asList() {
+    if (!this.isList()) {
+      throw new Error("The CLValue is not an instance of List");
+    }
+    let innerType = (this.clType as ListType);
+    let list = List.fromBytes(innerType, this.clValueBytes());
+    if (list.hasError()) {
+      throw new Error("The CLValue can not be parsed to list.")
+    }
+    return list.value().vec.map((e) => CLValue.fromT(e));
   }
 }
 

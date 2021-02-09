@@ -1,5 +1,5 @@
 import { expect, assert } from 'chai';
-import { CLValue, RuntimeArgs, CLTypedAndToBytesHelper } from '../../src/lib';
+import { CLValue, RuntimeArgs, CLTypedAndToBytesHelper, Keys } from '../../src/lib';
 import { decodeBase16 } from '../../src';
 import { TypedJSON } from 'typedjson';
 
@@ -70,5 +70,22 @@ describe(`RuntimeArgs`, () => {
     let str = serializer.stringify(runtimeArgs);
     let value = serializer.parse(str)!;
     assert.isTrue(value.args.get('a')!.asOption().isNone());
+  });
+
+  it('should allow to extract lists of account hashes.', () => {
+    const account0 = Keys.Ed25519.new().accountHash();
+    const account1 = Keys.Ed25519.new().accountHash();
+    let runtimeArgs = RuntimeArgs.fromMap({
+      accounts: CLValue.list([
+        CLTypedAndToBytesHelper.bytes(account0),
+        CLTypedAndToBytesHelper.bytes(account1)
+      ])
+    });
+    let serializer = new TypedJSON(RuntimeArgs);
+    let json = serializer.stringify(runtimeArgs);
+
+    let accounts = runtimeArgs.args.get('accounts')!.asList();
+    assert.deepEqual(accounts[0].asBytesArray(), account0);
+    assert.deepEqual(accounts[1].asBytesArray(), account1);
   });
 });
