@@ -97,9 +97,6 @@ describe(`RuntimeArgs`, () => {
         CLTypedAndToBytesHelper.bytes(account1)
       ])
     });
-    let serializer = new TypedJSON(RuntimeArgs);
-    let json = serializer.stringify(runtimeArgs);
-
     let accounts = runtimeArgs.args.get('accounts')!.asList();
     assert.deepEqual(accounts[0].asBytesArray(), account0);
     assert.deepEqual(accounts[1].asBytesArray(), account1);

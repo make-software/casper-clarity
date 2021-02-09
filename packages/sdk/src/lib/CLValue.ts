@@ -1744,8 +1744,8 @@ export class CLValue implements ToBytes {
     if (!this.isList()) {
       throw new Error('The CLValue is not an instance of List');
     }
-    let innerType = this.clType as ListType;
-    let list = List.fromBytes(innerType, this.clValueBytes());
+    const innerType = this.clType as ListType;
+    const list = List.fromBytes(innerType, this.clValueBytes());
     if (list.hasError()) {
       throw new Error('The CLValue can not be parsed to list.');
     }
