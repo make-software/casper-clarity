@@ -54,6 +54,8 @@ server {
   }
 
   location / {
+      add_header 'Access-Control-Allow-Origin' "$http_origin";
+      add_header 'Access-Control-Allow_Credentials' 'true';
       return 404;
   }
 }
