@@ -1655,7 +1655,7 @@ export class CLValue implements ToBytes {
       const numberCoder = this.value as NumberCoder;
       return BigNumber.from(numberCoder.val);
     } else {
-      throw new Error("The CLValue is not an instance of BigNumber");
+      throw new Error('The CLValue is not an instance of BigNumber');
     }
   }
 
@@ -1665,7 +1665,7 @@ export class CLValue implements ToBytes {
 
   public asBoolean() {
     if (!this.isBoolean()) {
-      throw new Error("The CLValue is not an instance of Boolean");
+      throw new Error('The CLValue is not an instance of Boolean');
     }
     return (this.value as Bool).val;
   }
@@ -1676,7 +1676,7 @@ export class CLValue implements ToBytes {
 
   public asString() {
     if (!this.isString()) {
-      throw new Error("The CLValue is not an instance of String");
+      throw new Error('The CLValue is not an instance of String');
     }
     return (this.value as StringValue).val;
   }
@@ -1687,7 +1687,7 @@ export class CLValue implements ToBytes {
 
   public asPublicKey(): PublicKey {
     if (!this.isPublicKey()) {
-      throw new Error("The CLValue is not an instance of PublicKey");
+      throw new Error('The CLValue is not an instance of PublicKey');
     }
     return this.value as PublicKey;
   }
@@ -1698,7 +1698,7 @@ export class CLValue implements ToBytes {
 
   public asKey() {
     if (!this.isKey()) {
-      throw new Error("The CLValue is not an instance of Key");
+      throw new Error('The CLValue is not an instance of Key');
     }
     return this.value as KeyValue;
   }
@@ -1709,7 +1709,7 @@ export class CLValue implements ToBytes {
 
   public asURef() {
     if (!this.isURef()) {
-      throw new Error("The CLValue is not an instance of URef");
+      throw new Error('The CLValue is not an instance of URef');
     }
     return this.value as URef;
   }
@@ -1720,7 +1720,7 @@ export class CLValue implements ToBytes {
 
   public asBytesArray() {
     if (!this.isBytesArray()) {
-      throw new Error("The CLValue is not an instance of BytesArray");
+      throw new Error('The CLValue is not an instance of BytesArray');
     }
     return (this.value as ByteArrayValue).toBytes();
   }
@@ -1731,25 +1731,25 @@ export class CLValue implements ToBytes {
 
   public asOption() {
     if (!this.isOption()) {
-      throw new Error("The CLValue is not an instance of Option");
+      throw new Error('The CLValue is not an instance of Option');
     }
     return this.value as Option;
   }
 
   public isList() {
-    return this.clType instanceof ListType
+    return this.clType instanceof ListType;
   }
 
   public asList() {
     if (!this.isList()) {
-      throw new Error("The CLValue is not an instance of List");
+      throw new Error('The CLValue is not an instance of List');
     }
-    let innerType = (this.clType as ListType);
+    let innerType = this.clType as ListType;
     let list = List.fromBytes(innerType, this.clValueBytes());
     if (list.hasError()) {
-      throw new Error("The CLValue can not be parsed to list.")
+      throw new Error('The CLValue can not be parsed to list.');
     }
-    return list.value().vec.map((e) => CLValue.fromT(e));
+    return list.value().vec.map(e => CLValue.fromT(e));
   }
 }
 
