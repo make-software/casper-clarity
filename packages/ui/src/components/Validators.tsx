@@ -99,7 +99,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                 <td>{index! + 1}</td>
                 <td>{bidInfo.delegation_rate}</td>
                 <td>
-                  <CSPR motes={bidInfo.stakeStr} />
+                  <CSPR motes={bidInfo.stakeNum} />
                 </td>
               </tr>
             );
@@ -147,7 +147,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                   <td>{validatorInfo.validatorId}</td>
                   <td>{index! + 1}</td>
                   <td>
-                    <CSPR motes={validatorInfo.stakeStr} />
+                    <CSPR motes={validatorInfo.stakeNum} />
                   </td>
                 </tr>
               );
