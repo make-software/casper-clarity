@@ -234,6 +234,6 @@ export const Title = (props: { title: string }) => (
 );
 
 export const CSPR = (props: { motes: BigNumber }) => {
-  let val = props.motes.div(BigNumber.from(1000_000_000));
+  let val = BigNumber.from(props.motes).div(BigNumber.from(1000_000_000));
   return <span>{val.toString()} CSPR</span>;
 };
