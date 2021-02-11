@@ -212,3 +212,8 @@ footer.sticky-footer {
 .validator-tab-nav-element:hover {
   background-color: lightgrey;
 }
+
+span.stakePerc {
+  padding-left: 0.5rem;
+  color: fade-out($black, 0.5);
+}
