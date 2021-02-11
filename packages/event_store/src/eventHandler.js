@@ -2,7 +2,7 @@ const got = require('got');
 const readline = require('readline');
 const Storage = require('./storage');
 const models = require('../src/models/index');
-const env = process.env.NODE_ENV || 'local';
+const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/eh-config.json')[env];
 
 // Tagging test

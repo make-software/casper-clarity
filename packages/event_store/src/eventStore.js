@@ -3,7 +3,7 @@
 /** 
  * Read config 
  */
-const env = process.env.NODE_ENV || 'local';
+const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/web-config.json')[env];
 const port = process.env.PORT ? process.env.PORT : config.PORT;
 const host = process.env.HOST ? process.env.HOST : config.HOST
@@ -29,7 +29,7 @@ var http = require('http');
 /**
  * Test data for developement env.
  */
-// if (env == 'local') {
+// if (env == 'developement') {
 //     (async () => {
 //         await models.sequelize.sync({ force: true, logging: false });
 //         if (process.env.MOCK_DATA) {

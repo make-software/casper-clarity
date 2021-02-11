@@ -1,6 +1,6 @@
 FROM node:12.5.0-stretch-slim
 
-ARG NODE_ENV=local
+ARG NODE_ENV=production
 ENV NODE_ENV=$NODE_ENV
 
 ARG DATABASE_URI

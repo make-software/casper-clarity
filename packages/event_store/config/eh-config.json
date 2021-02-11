@@ -1,10 +1,4 @@
 {
-    "local": {
-        "EH_STREAM_PROTOCOL": "http",
-        "EH_STREAM_DOMAIN": "localhost",
-        "EH_STREAM_PORT": 9999,
-        "EH_STREAM_PATH": "events"
-    },
     "test": {
         "EH_STREAM_PROTOCOL": "http",
         "EH_STREAM_DOMAIN": "localhost",
