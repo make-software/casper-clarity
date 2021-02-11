@@ -61,14 +61,8 @@ describe(`RuntimeArgs`, () => {
     let str = serializer.stringify(value);
     let parsed = serializer.parse(str)!;
     assert.deepEqual(
-      value
-        .asOption()
-        .getSome()
-        .asBigNumber(),
-      parsed
-        .asOption()
-        .getSome()
-        .asBigNumber()
+      value.asOption().getSome().asBigNumber(),
+      parsed.asOption().getSome().asBigNumber()
     );
   });
 
@@ -80,12 +74,7 @@ describe(`RuntimeArgs`, () => {
     let serializer = new TypedJSON(RuntimeArgs);
     let str = serializer.stringify(runtimeArgs);
     let value = serializer.parse(str)!;
-    assert.isTrue(
-      value.args
-        .get('a')!
-        .asOption()
-        .isNone()
-    );
+    assert.isTrue(value.args.get('a')!.asOption().isNone());
   });
 
   it('should allow to extract lists of account hashes.', () => {

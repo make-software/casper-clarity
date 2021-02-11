@@ -26,5 +26,5 @@ export function encodeBase16(bytes: Uint8Array): string {
  * @param base16String base16 encoded string
  */
 export function decodeBase16(base16String: string): Uint8Array {
-  return Buffer.from(base16String, 'hex');
+  return new Uint8Array(Buffer.from(base16String, 'hex'));
 }

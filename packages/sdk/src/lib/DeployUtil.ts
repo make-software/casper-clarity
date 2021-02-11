@@ -57,7 +57,9 @@ const byteArrayJsonSerializer: (bytes: Uint8Array) => string = (
   return encodeBase16(bytes);
 };
 
-const byteArrayJsonDeserializer: (str: string) => ByteArray = (str: string) => {
+const byteArrayJsonDeserializer: (str: string) => Uint8Array = (
+  str: string
+) => {
   return decodeBase16(str);
 };
 
