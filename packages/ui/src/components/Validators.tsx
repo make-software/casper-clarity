@@ -143,7 +143,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                         validatorId: validator_weight.public_key,
                         stakeStr: stake,
                         stakeNum: BigNumber.from(stake),
-                        stakePerc: (motesToCspr(stake)  / motesToCspr(totalStakedAmount)) * 100
+                        stakePerc: (motesToCspr(stake)  / motesToCspr(totalValidatorWeight)) * 100
                     };
                 })
                 .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
