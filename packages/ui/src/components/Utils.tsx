@@ -237,3 +237,7 @@ export const CSPR = (props: { motes: BigNumber }) => {
   let val = props.motes.div(BigNumber.from(1000_000_000));
   return <span>{val.toString()} CSPR</span>;
 };
+
+export const motesToCspr = (motesStr: BigNumber | String) => {
+  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000)).toNumber();
+}

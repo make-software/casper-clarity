@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { RefreshableComponent, Loading, CSPR } from './Utils';
+import {RefreshableComponent, Loading, CSPR, motesToCspr} from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -60,7 +60,10 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             return <Loading/>;
         }
 
-        let sum = data.bids.reduce((acc, val) => acc + BigNumber.from(val.bid.staked_amount).div(BigNumber.from(1000_000_000)).toNumber(), 0);
+        const totalStakedAmount = data.bids.reduce(
+            (acc, val) => acc.add(BigNumber.from(val.bid.staked_amount)),
+            BigNumber.from(0)
+        );
 
         // Contaners for tabs.
         let navs = [];
@@ -82,7 +85,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                     stakeStr: stake,
                     stakeNum: BigNumber.from(stake),
                     reward: bid.bid.reward,
-                    stakePerc: ((BigNumber.from(stake).div(BigNumber.from(1000_000_000)).toNumber() / sum) * 100).toFixed(2)
+                    stakePerc: (motesToCspr(stake) / motesToCspr(totalStakedAmount)) * 100
                 };
             })
             .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -106,7 +109,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                                 <td>
                                     <CSPR motes={bidInfo.stakeNum}/>
                                     <span className="stakePerc">
-                                        ({bidInfo.stakePerc}%)
+                                        ({bidInfo.stakePerc.toFixed(2)}%)
                                     </span>
                                 </td>
                             </tr>
@@ -127,7 +130,10 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             // Build era navigation element.
             navs.push(navElement(false, navName, tabName, eraName));
 
-            let sum = era.validator_weights.reduce((acc, val) => acc + BigNumber.from(val.weight).div(BigNumber.from(1000_000_000)).toNumber(), 0);
+            let totalValidatorWeight = era.validator_weights.reduce(
+                (acc, val) => acc.add(val.weight),
+                BigNumber.from(0)
+            );
 
             // Prepare era rows.
             let rows = era.validator_weights
@@ -137,7 +143,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                         validatorId: validator_weight.public_key,
                         stakeStr: stake,
                         stakeNum: BigNumber.from(stake),
-                        stakePerc: ((BigNumber.from(stake).div(BigNumber.from(1000_000_000)).toNumber() / sum) * 100).toFixed(2)
+                        stakePerc: (motesToCspr(stake)  / motesToCspr(totalStakedAmount)) * 100
                     };
                 })
                 .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -160,7 +166,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                                     <td>
                                         <CSPR motes={validatorInfo.stakeNum}/>
                                         <span className="stakePerc">
-                                            ({validatorInfo.stakePerc}%)
+                                            ({validatorInfo.stakePerc.toFixed(2)}%)
                                         </span>
                                     </td>
                                 </tr>
