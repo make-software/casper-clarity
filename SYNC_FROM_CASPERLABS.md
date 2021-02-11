@@ -1,3 +1,8 @@
+Assuming the you earlier added Casperlabs' repository as a remote:
+```
+git remote add casperlabs git@github.com:CasperLabs/clarity.git
+```
+
 To sync with the Casperlabs` Clarity repository do the following:
 ```
 git fetch casperlabs 
