@@ -97,7 +97,7 @@ npm run start
 ```
 
 The UI web app container against staging
-------------------------------------------------------------------
+----------------------------------------
 
 Run the containers first:
 ```
