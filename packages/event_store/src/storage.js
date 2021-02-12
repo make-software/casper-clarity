@@ -44,6 +44,10 @@ class Storage {
             eventType = 'BlockAdded';
             primaryEntityHash = event.BlockAdded.block_hash;
             entityProcessing = this.onBlockAddedEvent(event.BlockAdded);
+        } else if (event.FinalitySignature) {
+            eventType = 'FinalitySignature';
+            primaryEntityHash = event.FinalitySignature.signature;
+            entityProcessing = this.onFinalitySignatureEvent(event.FinalitySignature);
         }
 
         const eventHash = crypto.createHash('sha256')
@@ -158,6 +162,17 @@ class Storage {
         if(this.pubsub !== null){
             this.pubsub.broadcast_block(await block.toJSON());
         }
+    }
+
+    async onFinalitySignatureEvent(event) {
+        console.log(`Info: Processing FinalitySignature event. Signature: ${event.signature}.`);
+
+        await this.storeEntity('FinalitySignature', {
+            signature: event.signature,
+            blockHash: event.block_hash,
+            publicKey: event.public_key,
+            eraId: event.era_id,
+        });
     }
 
     async findBlockByHeight(height) {
