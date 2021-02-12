@@ -650,6 +650,14 @@ export class PublicKey extends CLTypedAndToBytes {
     return accountHash;
   }
 
+  public isEd25519() {
+    return this.tag === ED25519_TAG
+  }
+
+  public isSecp256K1() {
+    return this.tag === SECP256K1_TAG
+  }
+
   public toAccountHash(): Uint8Array {
     const algorithmIdentifier = this.signatureAlgorithm();
     const separator = Buffer.from([0]);
@@ -1629,8 +1637,8 @@ export class CLValue implements ToBytes {
     return CLValue.fromT(new MapValue(mapEntries));
   }
 
-  public static publicKey(publicKey: Uint8Array) {
-    return CLValue.fromT(PublicKey.fromEd25519(publicKey));
+  public static publicKey(publicKey: PublicKey) {
+    return CLValue.fromT(publicKey);
   }
 
   public static byteArray(bytes: Uint8Array) {

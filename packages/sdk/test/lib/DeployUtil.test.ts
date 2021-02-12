@@ -173,7 +173,8 @@ describe('DeployUtil', () => {
   });
 
   it('should allow to extract additional args from Transfer.', function () {
-    const from = Keys.Ed25519.new();
+    // const from = Keys.Ed25519.new();
+    const from = Keys.Secp256K1.new();
     const to = Keys.Ed25519.new();
     const networkName = 'test-network';
     const paymentAmount = 10000000000000;
@@ -189,18 +190,16 @@ describe('DeployUtil', () => {
     );
     let payment = DeployUtil.standardPayment(paymentAmount);
     let deploy = DeployUtil.makeDeploy(deployParams, session, payment);
-    let fromRawPK = from.publicKey.rawPublicKey;
 
     let transferDeploy = DeployUtil.addArgToDeploy(
       deploy,
       'fromPublicKey',
-      CLValue.publicKey(fromRawPK)
+      CLValue.publicKey(from.publicKey)
     );
 
     assert.deepEqual(
-      transferDeploy.session.getArgByName('fromPublicKey')?.asPublicKey()
-        .rawPublicKey,
-      fromRawPK
+      transferDeploy.session.getArgByName('fromPublicKey')?.asPublicKey(),
+      from.publicKey
     );
 
     let newTransferDeploy = DeployUtil.deployFromJson(
@@ -208,9 +207,8 @@ describe('DeployUtil', () => {
     );
 
     assert.deepEqual(
-      newTransferDeploy?.session.getArgByName('fromPublicKey')?.asPublicKey()
-        .rawPublicKey,
-      fromRawPK
+      newTransferDeploy?.session.getArgByName('fromPublicKey')?.asPublicKey(),
+      from.publicKey
     );
   });
 });

@@ -3,6 +3,7 @@ import {
   CasperServiceByJsonRPC,
   DeployResult,
   EventService,
+  GetDeployResult,
   TransferResult
 } from '../services';
 import { DeployUtil, Keys, PublicKey } from './index';
@@ -252,6 +253,17 @@ export class CasperClient {
    */
   public async getDeployByHash(deployHash: string): Promise<DeployResult> {
     return await this.eventStoreClient.getDeployByHash(deployHash);
+  }
+
+  /**
+   * Get deploy by hash from RPC.
+   * @param deployHash
+   * @returns Tuple of Deploy and raw RPC response.
+   */
+  public async getDeployByHashFromRPC(deployHash: string): Promise<[Deploy, GetDeployResult]> {
+    return await this.nodeClient.getDeployInfo(deployHash).then((result: GetDeployResult) => {
+      return [DeployUtil.deployFromJson(result)!, result];
+    });
   }
 
   /**
