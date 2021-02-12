@@ -11,7 +11,8 @@ import {
   KeyValue,
   NamedArg,
   MapEntry,
-  CLTypedAndToBytesHelper
+  CLTypedAndToBytesHelper,
+  PublicKey
 } from 'casper-client-sdk';
 import { FormState } from 'formstate';
 import {
@@ -425,7 +426,7 @@ export class DeployArgumentParser {
         );
         break;
       case SimpleType.PublicKey:
-        clValueInstance = CLValue.publicKey(decodeBase16(argValueInJson));
+        clValueInstance = CLValue.publicKey(PublicKey.fromEd25519(decodeBase16(argValueInJson)));
         break;
     }
     return clValueInstance;
