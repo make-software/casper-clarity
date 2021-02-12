@@ -11,21 +11,24 @@ module.exports = (sequelize, DataTypes) => {
         async toJSON(skipTransfers = false) {
             let result = {
                 "deployHash": this.deployHash,
+                "blockHash": this.blockHash,
+                "blockHeight": this.blockHeight,
                 "account": this.account,
-                "state": this.state,
                 "cost": this.cost,
                 "errorMessage": this.errorMessage,
-                "blockHash": this.blockHash
-            }
+                "timestamp": this.timestamp,
+            };
+
             if (!skipTransfers) {
                 let transfers = await this.getTransfers();
                 result['transfers'] = transfers.map(transfer => {
                     return transfer.toJSON()
-                })
+                });
             }
+
             return result;
         }
-    };
+    }
 
     Deploy.init({
         deployHash: {

@@ -13,12 +13,12 @@ describe('HttpServer', async () => {
     beforeEach(async () => {
         await models.sequelize.sync({ force: true, logging: false });
         storage = new Storage(models);
-        await storage.onDeployProcessed(data.deployProcessedEvent1);
-        await storage.onDeployProcessed(data.deployProcessedEvent2);
-        await storage.onDeployProcessed(data.deployProcessedEvent3);
-        await storage.onBlockAdded(data.blockAddedEvent1);
-        await storage.onBlockAdded(data.blockAddedEvent2);
-        await storage.onBlockAdded(data.blockAddedEvent3);
+        await storage.onDeployProcessedEvent(data.deployProcessedEvent1);
+        await storage.onDeployProcessedEvent(data.deployProcessedEvent2);
+        await storage.onDeployProcessedEvent(data.deployProcessedEvent3);
+        await storage.onBlockAddedEvent(data.blockAddedEvent1);
+        await storage.onBlockAddedEvent(data.blockAddedEvent2);
+        await storage.onBlockAddedEvent(data.blockAddedEvent3);
         app = httpServer(models);
     });
   

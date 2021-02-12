@@ -18,7 +18,7 @@ function formNodeURL(lastEventId) {
         : 1;
 
     if (startFromEventId) {
-        console.log('Catching up from event id ' + startFromEventId);
+        console.log('Info: Catching up from event id ' + startFromEventId);
     }
 
     return protocol + '://' + domain +
@@ -29,9 +29,8 @@ function formNodeURL(lastEventId) {
 
 async function runEventHandler() {
     try {
-        console.log('Syncing database schema...');
+        console.log('Info: Syncing database schema');
         await models.sequelize.sync({ force: false, logging: false });
-        console.log('Syncing database schema... DONE');
 
         const storage = new Storage(models);
 
@@ -44,31 +43,21 @@ async function runEventHandler() {
         });
 
         stream.on('line', async (eventString) => {
-            console.log(eventString);
+            // console.log(eventString);
 
-            if (eventString.startsWith('id')) {
-                try {
-                    const id = eventString.substr(3);
-                    await storage.onEventId(id);
-                } catch (err) {
-                    console.log(`Error while processing an event.\nEvent: ${eventString}\nError: ${err}`);
+            try {
+                if (eventString.startsWith('id')) {
+                    await storage.onEventId(eventString.substr(3));
                 }
-            }
-            else if (eventString.startsWith('data')) {
-                try {
-                    const event = JSON.parse(eventString.substr(5));
-                    if (event.DeployProcessed) {
-                        await storage.onDeployProcessed(event.DeployProcessed);
-                    } else if (event.BlockAdded) {
-                        await storage.onBlockAdded(event.BlockAdded);
-                    }
-                } catch (err) {
-                    console.log(`Error while processing an event.\nEvent: ${eventString}\nError: ${err}`);
+                else if (eventString.startsWith('data')) {
+                    await storage.onEvent(eventString.substr(5));
                 }
+            } catch (err) {
+                console.log(`Error: Error while processing an event.\nEvent: ${eventString}\nError: ${err}`);
             }
         });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         if (err instanceof got.stream.RequestError) {
             throw new Error("Connection Failed - check the status of the node:\n" + err);
         } else {

@@ -1,4 +1,7 @@
-const { Op } = require("sequelize");
+const sequelize = require("sequelize");
+const crypto = require('crypto')
+
+const { Op } = sequelize;
 
 class Storage {
     constructor(models, pubsub = null) {
@@ -6,22 +9,62 @@ class Storage {
         this.pubsub = pubsub;
     }
 
-    async onEventId(id) {
-        console.log(`Processing Id event: ${id}`);
-
-        let found = await this.findEventId(id);
-        if (found !== null) {
-            // logs msg
-            console.warn(`Id ${id} already exists. Skipping`);
-            return;
+    async storeEntity(model, entity) {
+        try {
+            return await this.models[model].create(entity);
         }
-
-        await this.models.EventId.create({ id });
+        catch (err) {
+            if (err instanceof sequelize.UniqueConstraintError) {
+                console.warn(`Warning: ${model} with primary key ${err.fields.PRIMARY} already exists. Skipping.`);
+                return false;
+            }
+            else {
+                throw err;
+            }
+        }
     }
 
-    async onDeployProcessed(event) {
+    async onEventId(id) {
+        console.log(`Info: Processing id ${id}`);
+        await this.storeEntity('EventId', {id});
+    }
 
-        console.log(`Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
+    async onEvent(jsonBody) {
+        const event = JSON.parse(jsonBody);
+
+        let eventType,
+            primaryEntityHash,
+            entityProcessing;
+
+        if (event.DeployProcessed) {
+            eventType = 'DeployProcessed';
+            primaryEntityHash = event.DeployProcessed.deploy_hash;
+            entityProcessing = this.onDeployProcessedEvent(event.DeployProcessed);
+        } else if (event.BlockAdded) {
+            eventType = 'BlockAdded';
+            primaryEntityHash = event.BlockAdded.block_hash;
+            entityProcessing = this.onBlockAddedEvent(event.BlockAdded);
+        }
+
+        const eventHash = crypto.createHash('sha256')
+            .update(jsonBody, 'utf8')
+            .digest('hex');
+
+        const storingRawEvent = this.storeEntity('RawEvent', {
+            eventHash,
+            eventType,
+            primaryEntityHash,
+            jsonBody
+        });
+
+        await Promise.all([
+            storingRawEvent,
+            entityProcessing
+        ]);
+    }
+
+    async onDeployProcessedEvent(event) {
+        console.log(`Info: Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
         let deploy = await this.findDeployByHash(event.deploy_hash);
         if (deploy !== null){
             // logs msg
@@ -59,7 +102,9 @@ class Storage {
                         transferHash: transferHash,
                         deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
-                        toAccount: transferEvent.to.substring(13),
+                        toAccount: transferEvent.to
+                            ? transferEvent.to.substring(13)
+                            : null,
                         sourcePurse: transferEvent.source,
                         targetPurse: transferEvent.target,
                         amount: transferEvent.amount,
@@ -69,17 +114,16 @@ class Storage {
             });
         }
 
-
         if(this.pubsub !== null) {
             this.pubsub.broadcast_deploy(await deploy.toJSON());
         }
     }
 
-    async onBlockAdded(event) {
+    async onBlockAddedEvent(event) {
         let deploysStr = event.block_header.deploy_hashes.join(', ');
         let deployCount = event.block_header.deploy_hashes.length;
         console.log(
-            `Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
+            `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
             `Deploys: [${deploysStr}].`
         );
 
@@ -198,4 +242,4 @@ class Storage {
     }
 }
 
-module.exports = Storage
+module.exports = Storage;

@@ -27,11 +27,16 @@ npm run start-web-server
 To override the database connection set the ```DATABASE_URI``` env variable:
 ```
 cd packages/event_store
-NODE_ENV=production && DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && npm run start-event-handler
-NODE_ENV=production && DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && npm run start-web-server
+export NODE_ENV=production && export DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && npm run start-event-handler
+export NODE_ENV=production && export DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && npm run start-web-server
 ```
 
 Similarly you can override the ```NODE_ADDRESS``` environment variable.
+```
+cd packages/event_store
+export NODE_ENV=production && export DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && export NODE_ADDRESS=127.0.0.1 && npm run start-event-handler
+export NODE_ENV=production && export DATABASE_URI=mysql://root@127.0.0.1:3306/clarity && export NODE_ADDRESS=127.0.0.1 && npm run start-web-server
+```
 
 Clarity UI
 ----------
