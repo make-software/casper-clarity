@@ -95,3 +95,11 @@ And the dev UI web app after:
 cd packages/ui
 npm run start
 ```
+
+The UI web app container against staging
+------------------------------------------------------------------
+
+Run the containers first:
+```
+docker run -p 8001:8001 -e UI_GRPC_URL=https://node-clarity-delta.local/rpc -e JSON_RPC_URL=https://node-clarity-delta.local/rpc -e REACT_APP_EVENT_STORE_URL=https://event-store-api-clarity-delta.local make/clarity/web-app
+```
