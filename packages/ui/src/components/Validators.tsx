@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import {RefreshableComponent, Loading, CSPR, motesToCspr} from './Utils';
+import {RefreshableComponent, Loading, CSPR, motesToMegaCspr} from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -85,7 +85,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                     stakeStr: stake,
                     stakeNum: BigNumber.from(stake),
                     reward: bid.bid.reward,
-                    stakePerc: (motesToCspr(stake) / motesToCspr(totalStakedAmount)) * 100
+                    stakePerc: (motesToMegaCspr(stake) / motesToMegaCspr(totalStakedAmount)) * 100
                 };
             })
             .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -143,7 +143,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                         validatorId: validator_weight.public_key,
                         stakeStr: stake,
                         stakeNum: BigNumber.from(stake),
-                        stakePerc: (motesToCspr(stake)  / motesToCspr(totalValidatorWeight)) * 100
+                        stakePerc: (motesToMegaCspr(stake)  / motesToMegaCspr(totalValidatorWeight)) * 100
                     };
                 })
                 .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));

@@ -241,3 +241,11 @@ export const CSPR = (props: { motes: BigNumber }) => {
 export const motesToCspr = (motesStr: BigNumber | String) => {
   return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000)).toNumber();
 }
+
+export const motesToKiloCspr = (motesStr: BigNumber | String) => {
+  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000_000)).toNumber();
+}
+
+export const motesToMegaCspr = (motesStr: BigNumber | String) => {
+  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000_000_000)).toNumber();
+}
