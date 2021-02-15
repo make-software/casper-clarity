@@ -233,19 +233,87 @@ export const Title = (props: { title: string }) => (
   </Helmet>
 );
 
-export const CSPR = (props: { motes: BigNumber }) => {
-  let val = props.motes.div(BigNumber.from(1000_000_000));
-  return <span>{val.toString()} CSPR</span>;
+/**
+ * Note, that since we are dealing with money-like entity using float mey be dangerous
+ * and tools). Depending on the domain it may be need to use a decimal-like type.
+ * See here for the reference https://dev.mysql.com/doc/refman/5.7/en/precision-math-decimal-characteristics.html
+ *
+ * @param numerator
+ * @param denominator
+ * @param precision
+ */
+export const divBigNumbersWithPrecision = (
+    numerator: BigNumber | String,
+    denominator: BigNumber | String,
+    precision: number
+): number => {
+    const convertedNumerator = BigNumber.from(numerator);
+    const convertedDenominator = BigNumber.from(denominator);
+    const precisionMultiplier = Math.pow(10, precision);
+
+    let wholeQuotient,
+        fractionQuotient,
+        remainder;
+
+    if (convertedDenominator.gte(convertedDenominator)) {
+        wholeQuotient = convertedNumerator.div(convertedDenominator);
+        if (wholeQuotient.gte(Number.MAX_SAFE_INTEGER - 1)) {
+            throw new Error("Couldn't divide with precision because the result doesn't fit into the Number type. Returning BigNumber.");
+        }
+
+        remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
+        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+
+        return wholeQuotient.toNumber() + fractionQuotient.toNumber() / precisionMultiplier;
+    }
+    else {
+        remainder = convertedNumerator.sub(convertedDenominator);
+        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+
+        return fractionQuotient.toNumber() / precisionMultiplier;
+    }
 };
 
-export const motesToCspr = (motesStr: BigNumber | String) => {
-  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000)).toNumber();
-}
+export const divBigNumbersWithPrecisionAsString = (
+    numerator: BigNumber | String,
+    denominator: BigNumber | String,
+    precision: number
+): String => {
+    const convertedNumerator = BigNumber.from(numerator);
+    const convertedDenominator = BigNumber.from(denominator);
+    const precisionMultiplier = Math.pow(10, precision);
 
-export const motesToKiloCspr = (motesStr: BigNumber | String) => {
-  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000_000)).toNumber();
-}
+    let wholeQuotient,
+        fractionQuotient,
+        remainder;
 
-export const motesToMegaCspr = (motesStr: BigNumber | String) => {
-  return BigNumber.from(motesStr).div(BigNumber.from(1000_000_000_000_000)).toNumber();
-}
+    if (convertedDenominator.gte(convertedDenominator)) {
+        wholeQuotient = convertedNumerator.div(convertedDenominator);
+
+        remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
+        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+
+        return wholeQuotient.toString() + (fractionQuotient.eq(0) ? '' : '.' +  fractionQuotient.toString());
+    }
+    else {
+        remainder = convertedNumerator.sub(convertedDenominator);
+        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+
+        return '0' + (fractionQuotient.eq(0) ? '' : '.' +  fractionQuotient.toString());
+    }
+};
+
+export const motesToCspr = (motes: BigNumber | String, precision: number = 0): number => {
+    const motesToCrspRate = BigNumber.from(1000_000_000);
+
+    return precision === 0
+        ? BigNumber.from(motes).div(motesToCrspRate).toNumber()
+        : divBigNumbersWithPrecision(BigNumber.from(motes), motesToCrspRate, precision)
+};
+
+export const CSPR = (props: { motes: BigNumber, precision?: number }) => {
+    const motesToCrspRate = BigNumber.from(1000_000_000);
+    const crspStr = divBigNumbersWithPrecisionAsString(props.motes, motesToCrspRate, props.precision ? props.precision : 0);
+
+    return <span>{crspStr} CSPR</span>;
+};

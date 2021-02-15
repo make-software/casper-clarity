@@ -148,7 +148,6 @@ const deployAttrs: (deploy: DeployResult) => Array<[string, any]> = (
     ['Block Hash', deploy.blockHash],
     ['Account Hash', deploy.account],
     ['Cost', deploy.cost],
-    ['State', deploy.state],
     ['Status', deploy.errorMessage ? <FailIcon /> : <SuccessIcon />],
     ['Error Message', deploy.errorMessage]
   ];

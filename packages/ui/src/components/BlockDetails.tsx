@@ -123,7 +123,7 @@ const DeploysTable = observer(
               </td>
               <td>{shortHash(accountId)}</td>
               <td className="text-right">
-                <CSPR motes={BigNumber.from(deploy.cost)} />
+                <CSPR motes={BigNumber.from(deploy.cost)} precision={2} />
               </td>
               <td className="text-right">
                 <span>{deploy.state}</span>

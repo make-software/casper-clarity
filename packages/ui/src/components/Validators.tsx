@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import {RefreshableComponent, Loading, CSPR, motesToMegaCspr} from './Utils';
+import {RefreshableComponent, Loading, CSPR, divBigNumbersWithPrecision} from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -74,18 +74,19 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             navElement(true, 'validators-bids-nav', 'validators-bids-tab', 'Bids')
         );
 
-
         // Prepare bids rows.
         let rows = data.bids
             .map(bid => {
                 let stake = bid.bid.staked_amount;
+                let stakeNum = BigNumber.from(stake);
+
                 return {
                     validatorId: bid.public_key,
                     delegation_rate: bid.bid.delegation_rate,
                     stakeStr: stake,
-                    stakeNum: BigNumber.from(stake),
+                    stakeNum: stakeNum,
                     reward: bid.bid.reward,
-                    stakePerc: (motesToMegaCspr(stake) / motesToMegaCspr(totalStakedAmount)) * 100
+                    stakePerc: divBigNumbersWithPrecision(stakeNum, totalStakedAmount, 4) * 100
                 };
             })
             .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
@@ -139,11 +140,12 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             let rows = era.validator_weights
                 .map(validator_weight => {
                     let stake = validator_weight.weight;
+                    let stakeNum = BigNumber.from(stake);
                     return {
                         validatorId: validator_weight.public_key,
                         stakeStr: stake,
-                        stakeNum: BigNumber.from(stake),
-                        stakePerc: (motesToMegaCspr(stake)  / motesToMegaCspr(totalValidatorWeight)) * 100
+                        stakeNum,
+                        stakePerc: divBigNumbersWithPrecision(stakeNum, totalValidatorWeight, 4) * 100
                     };
                 })
                 .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
