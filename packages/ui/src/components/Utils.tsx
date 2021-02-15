@@ -304,16 +304,16 @@ export const divBigNumbersWithPrecisionAsString = (
 };
 
 export const motesToCspr = (motes: BigNumber | String, precision: number = 0): number => {
-    const motesToCrspRate = BigNumber.from(1000_000_000);
+    const motesToCsprRate = BigNumber.from(1000_000_000);
 
     return precision === 0
-        ? BigNumber.from(motes).div(motesToCrspRate).toNumber()
-        : divBigNumbersWithPrecision(BigNumber.from(motes), motesToCrspRate, precision)
+        ? BigNumber.from(motes).div(motesToCsprRate).toNumber()
+        : divBigNumbersWithPrecision(BigNumber.from(motes), motesToCsprRate, precision)
 };
 
 export const CSPR = (props: { motes: BigNumber, precision?: number }) => {
-    const motesToCrspRate = BigNumber.from(1000_000_000);
-    const crspStr = divBigNumbersWithPrecisionAsString(props.motes, motesToCrspRate, props.precision ? props.precision : 0);
+    const motesToCsprRate = BigNumber.from(1000_000_000);
+    const csprStr = divBigNumbersWithPrecisionAsString(props.motes, motesToCsprRate, props.precision ? props.precision : 0);
 
-    return <span>{crspStr} CSPR</span>;
+    return <span>{csprStr} CSPR</span>;
 };
