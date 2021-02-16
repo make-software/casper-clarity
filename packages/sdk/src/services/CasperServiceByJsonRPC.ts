@@ -131,7 +131,19 @@ export interface Bid {
   staked_amount: string;
   delegation_rate: number;
   reward: string;
-  // delegators: [],
+  delegators: Delegators[];
+}
+
+export interface Delegators {
+  delegator: DelegatorInfo;
+  public_key: string;
+}
+
+export interface DelegatorInfo {
+  bonding_purse: string;
+  delegatee: string;
+  reward: string;
+  staked_amount: string;
 }
 
 export interface ValidatorBid {
