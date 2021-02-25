@@ -122,34 +122,67 @@ class Storage {
     }
 
     async onBlockAddedEvent(event) {
-        let deploysStr = event.block_header.deploy_hashes.join(', ');
-        let deployCount = event.block_header.deploy_hashes.length;
-        console.log(
-            `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
-            `Deploys: [${deploysStr}].`
-        );
+        // If after https://github.com/CasperLabs/casper-node/pull/978 (note that version remained the same 1.0.0)
+        if (event.block) {
+            let deploysStr = event.block.header.deploy_hashes.join(', ');
+            let deployCount = event.block.header.deploy_hashes.length;
+            console.log(
+                `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
+                `Deploys: [${deploysStr}].`
+            );
 
-        await this.storeEntity('Block', {
-            blockHash: event.block_hash,
-            blockHeight: event.block_header.height,
-            parentHash: event.block_header.parent_hash,
-            timestamp: event.block_header.timestamp,
-            state: event.block_header.state_root_hash,
-            deployCount: deployCount,
-            eraId: event.block_header.era_id,
-            proposer: event.block_header.proposer,
-        });
+            await this.storeEntity('Block', {
+                blockHash: event.block.hash,
+                blockHeight: event.block.header.height,
+                parentHash: event.block.header.parent_hash,
+                timestamp: event.block.header.timestamp,
+                state: event.block.header.state_root_hash,
+                deployCount: deployCount,
+                eraId: event.block.header.era_id,
+                proposer: event.block.body.proposer,
+            });
 
-        // Update deploys.
-        // @todo Remove this with the next release (backward compatibility)
-        await this.models.Deploy.update({
-            timestamp: event.block_header.timestamp,
-            blockHash: event.block_hash
-        }, {
-            where: {
-                deployHash: event.block_header.deploy_hashes
-            }
-        });
+            // Update deploys.
+            // @todo Remove this with the next release (backward compatibility)
+            await this.models.Deploy.update({
+                timestamp: event.block.header.timestamp,
+                blockHash: event.block.hash
+            }, {
+                where: {
+                    deployHash: event.block.header.deploy_hashes
+                }
+            });
+        }
+        else {
+            let deploysStr = event.block_header.deploy_hashes.join(', ');
+            let deployCount = event.block_header.deploy_hashes.length;
+            console.log(
+                `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
+                `Deploys: [${deploysStr}].`
+            );
+
+            await this.storeEntity('Block', {
+                blockHash: event.block_hash,
+                blockHeight: event.block_header.height,
+                parentHash: event.block_header.parent_hash,
+                timestamp: event.block_header.timestamp,
+                state: event.block_header.state_root_hash,
+                deployCount: deployCount,
+                eraId: event.block_header.era_id,
+                proposer: event.block_header.proposer,
+            });
+
+            // Update deploys.
+            // @todo Remove this with the next release (backward compatibility)
+            await this.models.Deploy.update({
+                timestamp: event.block_header.timestamp,
+                blockHash: event.block_hash
+            }, {
+                where: {
+                    deployHash: event.block_header.deploy_hashes
+                }
+            });
+        }
 
         if(this.pubsub !== null) {
             this.pubsub.broadcast_block(await block.toJSON());
