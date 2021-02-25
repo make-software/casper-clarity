@@ -108,7 +108,6 @@ const DeploysTable = observer(
           'Deploy Hash',
           'Account',
           'Gas Price',
-          'State',
           'Status',
           'Error Message'
         ]}
@@ -124,9 +123,6 @@ const DeploysTable = observer(
               <td>{shortHash(accountId)}</td>
               <td className="text-right">
                 <CSPR motes={BigNumber.from(deploy.cost)} precision={2} />
-              </td>
-              <td className="text-right">
-                <span>{deploy.state}</span>
               </td>
               <td className="text-center">
                 {deploy.errorMessage ? <FailIcon /> : <SuccessIcon />}
@@ -150,7 +146,6 @@ const blockAttrs: (block: BlockResult) => Array<[string, any]> = (
     ['Block Hash', block.blockHash],
     ['Parent Hash', <Link to={parent}>{parent}</Link>],
     ['Timestamp', block.timestamp],
-    ['State root hash', block.state],
     ['Proposer', block.proposer]
   ];
 };
