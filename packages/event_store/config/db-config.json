@@ -7,7 +7,7 @@
     "development": {
         "dialect": "sqlite",
         "logging": false,
-        "uri": "sqlite:db/local_sqlite.db"
+        "uri": "sqlite:db/development_sqlite.db"
     },
     "production": {
         "uri": "mysql://root@127.0.0.1:3306/clarity",

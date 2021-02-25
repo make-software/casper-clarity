@@ -61,7 +61,7 @@ typings/
 .next
 
 # dev db
-local_sqlite.db
+development_sqlite.db
 
 # packages list
 package-lock.json
