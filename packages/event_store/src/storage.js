@@ -19,6 +19,7 @@ class Storage {
                 return false;
             }
             else {
+                console.warn(err);
                 throw err;
             }
         }
@@ -69,17 +70,12 @@ class Storage {
 
     async onDeployProcessedEvent(event) {
         console.log(`Info: Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
-        let deploy = await this.findDeployByHash(event.deploy_hash);
-        if (deploy !== null){
-            // logs msg
-            console.warn(`Deploy ${event.deploy_hash} already exists. Skipping.`);
-            return;
-        }
 
         let deployData = {
+            blockHash: event.block_hash,
             deployHash: event.deploy_hash,
             account: event.account,
-            timestamp: null, // BlockAdded event will have that info.
+            timestamp: event.timestamp,
         };
 
         if (event.execution_result.Success) {
@@ -92,17 +88,18 @@ class Storage {
             deployData.cost = result.cost;
         }
 
-        await this.models.Deploy.create(deployData);
+        const result = await this.storeEntity('Deploy', deployData);
 
-        if (event.execution_result.Success) {
+        if (result !== false && event.execution_result.Success) {
             let result = event.execution_result.Success;
             result.transfers.forEach(transferHash => {
                 result.effect.transforms.forEach(async transform => {
                     if(transform.key != transferHash) {
                         return;
                     }
+
                     let transferEvent = transform.transform.WriteTransfer;
-                    await this.models.Transfer.create({
+                    await this.storeEntity('Transfer', {
                         transferHash: transferHash,
                         deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
@@ -131,14 +128,7 @@ class Storage {
             `Deploys: [${deploysStr}].`
         );
 
-        let block = await this.findBlockByHash(event.block_hash);
-        if (block !== null) {
-            // logs msg
-            console.warn(`Block ${event.block_header.height} already exists. Skipping`);
-            return;
-        }
-
-        await this.models.Block.create({
+        await this.storeEntity('Block', {
             blockHash: event.block_hash,
             blockHeight: event.block_header.height,
             parentHash: event.block_header.parent_hash,
@@ -150,6 +140,7 @@ class Storage {
         });
 
         // Update deploys.
+        // @todo Remove this with the next release (backward compatibility)
         await this.models.Deploy.update({
             timestamp: event.block_header.timestamp,
             blockHash: event.block_hash
@@ -159,7 +150,7 @@ class Storage {
             }
         });
 
-        if(this.pubsub !== null){
+        if(this.pubsub !== null) {
             this.pubsub.broadcast_block(await block.toJSON());
         }
     }
