@@ -598,12 +598,12 @@ const isOrphaned = (block: JsonBlock) => false;
 // block.getStatus()!.getFinality() === BlockInfo.Status.Finality.ORPHANED;
 
 /** Shorten lines by a fixed amount so that the line doesn't stick out from under the arrows tip. */
-const shorten = (d: any, by: number) => {
-  let length = Math.sqrt(
-    Math.pow(d.target.x - d.source.x, 2) + Math.pow(d.target.y - d.source.y, 2)
-  );
-  return Math.max(0, (length - by) / length);
-};
+// const shorten = (d: any, by: number) => {
+//   let length = Math.sqrt(
+//     Math.pow(d.target.x - d.source.x, 2) + Math.pow(d.target.y - d.source.y, 2)
+//   );
+//   return Math.max(0, (length - by) / length);
+// };
 
 /** String hash for consistent colors. Same as Java. */
 const hashCode = (s: string) => {

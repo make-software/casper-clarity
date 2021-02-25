@@ -22,7 +22,6 @@ import AuthService from '../services/AuthService';
 import { SimpleType, AccessRights } from 'casper-client-sdk';
 import { decodeBase64 } from 'tweetnacl-ts';
 import MetricsService from '../services/MetricsService';
-import JSBI from 'jsbi';
 
 export const BytesTypeStr = 'Bytes';
 export const BytesFixedTypeStr = 'Bytes (Fixed Length)';

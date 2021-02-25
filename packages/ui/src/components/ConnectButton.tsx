@@ -12,11 +12,16 @@ class ConnectButton extends RefreshableComponent<{ auth: AuthContainer }, {}> {
     this.refreshIntervalMillis = 1000;
   }
 
+  failedToConnect: Boolean = false;
+
   async refresh() {
     try {
       this.props.auth.connectedToSigner = !!(await Signer?.isConnected());
     } catch (err) {
-      console.error(err);
+      if (!this.failedToConnect) {
+        console.error(err);
+        this.failedToConnect = true;
+      }
     }
   }
 

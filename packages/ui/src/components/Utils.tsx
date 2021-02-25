@@ -182,7 +182,9 @@ export const Card = (props: {
 }) => {
   let cardHeader = (
     <div>
-      <a className="card-title">{props.title}</a>
+      <a className="card-title" href={'/#'}>
+        {props.title}
+      </a>
       <div className="float-right">
         {props.refresh && <RefreshButton refresh={() => props.refresh!()} />}
       </div>
@@ -243,77 +245,100 @@ export const Title = (props: { title: string }) => (
  * @param precision
  */
 export const divBigNumbersWithPrecision = (
-    numerator: BigNumber | String,
-    denominator: BigNumber | String,
-    precision: number
+  numerator: BigNumber | String,
+  denominator: BigNumber | String,
+  precision: number
 ): number => {
-    const convertedNumerator = BigNumber.from(numerator);
-    const convertedDenominator = BigNumber.from(denominator);
-    const precisionMultiplier = Math.pow(10, precision);
+  const convertedNumerator = BigNumber.from(numerator);
+  const convertedDenominator = BigNumber.from(denominator);
+  const precisionMultiplier = Math.pow(10, precision);
 
-    let wholeQuotient,
-        fractionQuotient,
-        remainder;
+  let wholeQuotient, fractionQuotient, remainder;
 
-    if (convertedDenominator.gte(convertedDenominator)) {
-        wholeQuotient = convertedNumerator.div(convertedDenominator);
-        if (wholeQuotient.gte(Number.MAX_SAFE_INTEGER - 1)) {
-            throw new Error("Couldn't divide with precision because the result doesn't fit into the Number type. Returning BigNumber.");
-        }
-
-        remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
-        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
-
-        return wholeQuotient.toNumber() + fractionQuotient.toNumber() / precisionMultiplier;
+  if (convertedDenominator.gte(convertedDenominator)) {
+    wholeQuotient = convertedNumerator.div(convertedDenominator);
+    if (wholeQuotient.gte(Number.MAX_SAFE_INTEGER - 1)) {
+      throw new Error(
+        "Couldn't divide with precision because the result doesn't fit into the Number type. Returning BigNumber."
+      );
     }
-    else {
-        remainder = convertedNumerator.sub(convertedDenominator);
-        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
 
-        return fractionQuotient.toNumber() / precisionMultiplier;
-    }
+    remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
+    fractionQuotient = remainder
+      .mul(precisionMultiplier)
+      .div(convertedDenominator);
+
+    return (
+      wholeQuotient.toNumber() +
+      fractionQuotient.toNumber() / precisionMultiplier
+    );
+  } else {
+    remainder = convertedNumerator.sub(convertedDenominator);
+    fractionQuotient = remainder
+      .mul(precisionMultiplier)
+      .div(convertedDenominator);
+
+    return fractionQuotient.toNumber() / precisionMultiplier;
+  }
 };
 
 export const divBigNumbersWithPrecisionAsString = (
-    numerator: BigNumber | String,
-    denominator: BigNumber | String,
-    precision: number
+  numerator: BigNumber | String,
+  denominator: BigNumber | String,
+  precision: number
 ): String => {
-    const convertedNumerator = BigNumber.from(numerator);
-    const convertedDenominator = BigNumber.from(denominator);
-    const precisionMultiplier = Math.pow(10, precision);
+  const convertedNumerator = BigNumber.from(numerator);
+  const convertedDenominator = BigNumber.from(denominator);
+  const precisionMultiplier = Math.pow(10, precision);
 
-    let wholeQuotient,
-        fractionQuotient,
-        remainder;
+  let wholeQuotient, fractionQuotient, remainder;
 
-    if (convertedDenominator.gte(convertedDenominator)) {
-        wholeQuotient = convertedNumerator.div(convertedDenominator);
+  if (convertedDenominator.gte(convertedDenominator)) {
+    wholeQuotient = convertedNumerator.div(convertedDenominator);
 
-        remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
-        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+    remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
+    fractionQuotient = remainder
+      .mul(precisionMultiplier)
+      .div(convertedDenominator);
 
-        return wholeQuotient.toString() + (fractionQuotient.eq(0) ? '' : '.' +  fractionQuotient.toString());
-    }
-    else {
-        remainder = convertedNumerator.sub(convertedDenominator);
-        fractionQuotient = remainder.mul(precisionMultiplier).div(convertedDenominator);
+    return (
+      wholeQuotient.toString() +
+      (fractionQuotient.eq(0) ? '' : '.' + fractionQuotient.toString())
+    );
+  } else {
+    remainder = convertedNumerator.sub(convertedDenominator);
+    fractionQuotient = remainder
+      .mul(precisionMultiplier)
+      .div(convertedDenominator);
 
-        return '0' + (fractionQuotient.eq(0) ? '' : '.' +  fractionQuotient.toString());
-    }
+    return (
+      '0' + (fractionQuotient.eq(0) ? '' : '.' + fractionQuotient.toString())
+    );
+  }
 };
 
-export const motesToCspr = (motes: BigNumber | String, precision: number = 0): number => {
-    const motesToCsprRate = BigNumber.from(1000_000_000);
+export const motesToCspr = (
+  motes: BigNumber | String,
+  precision: number = 0
+): number => {
+  const motesToCsprRate = BigNumber.from(1000_000_000);
 
-    return precision === 0
-        ? BigNumber.from(motes).div(motesToCsprRate).toNumber()
-        : divBigNumbersWithPrecision(BigNumber.from(motes), motesToCsprRate, precision)
+  return precision === 0
+    ? BigNumber.from(motes).div(motesToCsprRate).toNumber()
+    : divBigNumbersWithPrecision(
+        BigNumber.from(motes),
+        motesToCsprRate,
+        precision
+      );
 };
 
-export const CSPR = (props: { motes: BigNumber, precision?: number }) => {
-    const motesToCsprRate = BigNumber.from(1000_000_000);
-    const csprStr = divBigNumbersWithPrecisionAsString(props.motes, motesToCsprRate, props.precision ? props.precision : 0);
+export const CSPR = (props: { motes: BigNumber; precision?: number }) => {
+  const motesToCsprRate = BigNumber.from(1000_000_000);
+  const csprStr = divBigNumbersWithPrecisionAsString(
+    props.motes,
+    motesToCsprRate,
+    props.precision ? props.precision : 0
+  );
 
-    return <span>{csprStr} CSPR</span>;
+  return <span>{csprStr} CSPR</span>;
 };

@@ -79,7 +79,7 @@ class GroupedMenuItem {
       <li className="nav-item" key={this.id}>
         <a
           className="nav-link collapsed"
-          href="#"
+          href="/#"
           data-toggle="collapse"
           aria-expanded="false"
           data-target={`#${this.id}`}
@@ -270,7 +270,11 @@ const NavLink = (props: { item: MenuItem }) => {
             <Link to={item.path} className="nav-link">
               <div style={{ margin: '0 10px 0 20px' }}>{item.icon}</div>
               <span className="nav-link-text">{item.label}</span>
-              <img className="svg-additional" src={item.additionalIcon} />
+              <img
+                alt=""
+                className="svg-additional"
+                src={item.additionalIcon}
+              />
             </Link>
           </li>
         );
@@ -354,7 +358,11 @@ class _Navigation extends RefreshableComponent<
           {/* Side Bar Toggle */}
           <ul className="navbar-nav sidenav-toggler">
             <li className="nav-item">
-              <a className="nav-link text-center" id="sidenavToggler">
+              <a
+                className="nav-link text-center"
+                id="sidenavToggler"
+                href={'/#'}
+              >
                 <i className="fa fa-fw fa-angle-left"></i>
               </a>
             </li>
@@ -372,6 +380,7 @@ class _Navigation extends RefreshableComponent<
             <li className="nav-item">
               {this.props.auth.user ? (
                 <a
+                  href={'/#'}
                   className="nav-link text-white"
                   onClick={_ => this.props.auth.logout()}
                 >
@@ -379,6 +388,7 @@ class _Navigation extends RefreshableComponent<
                 </a>
               ) : (
                 <a
+                  href={'/#'}
                   className="nav-link text-center"
                   onClick={_ => this.props.auth.login()}
                 >
