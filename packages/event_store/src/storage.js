@@ -73,6 +73,7 @@ class Storage {
 
         let deployData = {
             blockHash: event.block_hash,
+            blockHeight: event.height,
             deployHash: event.deploy_hash,
             account: event.account,
             timestamp: event.timestamp,
