@@ -68,4 +68,6 @@ clean:
 	lerna clean -y || true
 	rm -rf node_modules
 	rm -rf packages/event_store/node_modules
+	rm -rf packages/server/dist
+	rm -rf packages/ui/build
 	rm -rf .make
