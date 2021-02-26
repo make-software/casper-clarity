@@ -168,9 +168,9 @@ export class PrivateRoute extends React.Component<PrivateRouteProps, {}> {
   }
 }
 
-export const shortHash = (hash: string | ByteArray) => {
+export const shortHash = (hash: string | ByteArray, length = 10) => {
   const h = typeof hash === 'string' ? hash : encodeBase16(hash);
-  return h.length > 10 ? h.substr(0, 10) + '...' : h;
+  return h.length > length ? h.substr(0, length) + '...' : h;
 };
 
 export const Card = (props: {

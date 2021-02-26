@@ -4,11 +4,14 @@ import {
   RefreshableComponent,
   Loading,
   CSPR,
-  divBigNumbersWithPrecision
+  divBigNumbersWithPrecision,
+  shortHash,
+  IconButton
 } from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { BigNumber } from '@ethersproject/bignumber';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 interface Props {
   validatorsContainer: ValidatorsContainer;
@@ -57,6 +60,10 @@ export default class Validators extends RefreshableComponent<Props, {}> {
     this.props.validatorsContainer.refresh();
   }
 
+  componentDidUpdate() {
+    $('[data-toggle="tooltip"]').tooltip();
+  }
+
   render() {
     // If data is not there, display loader.
     let data = this.props.validatorsContainer.validatorsInfo;
@@ -84,18 +91,39 @@ export default class Validators extends RefreshableComponent<Props, {}> {
       .map(bid => {
         let stake = bid.bid.staked_amount;
         let stakeNum = BigNumber.from(stake);
+        let validatorTotalDelegatedStake = BigNumber.from(0);
+        if (bid.bid.delegators.length > 0) {
+          validatorTotalDelegatedStake = bid.bid.delegators.reduce(
+            (acc, val) => acc.add(BigNumber.from(val.delegator.staked_amount)),
+            BigNumber.from(0)
+          );
+        }
+        let totalValidatorWeight = validatorTotalDelegatedStake.add(stakeNum);
 
         return {
           validatorId: bid.public_key,
           delegation_rate: bid.bid.delegation_rate,
           stakeStr: stake,
           stakeNum: stakeNum,
+          delegatorCount: bid.bid.delegators.length,
+          delegatedStake: validatorTotalDelegatedStake,
+          delegatedStakePerc:
+            divBigNumbersWithPrecision(
+              validatorTotalDelegatedStake,
+              totalValidatorWeight,
+              4
+            ) * 100,
+          selfStakePerc:
+            divBigNumbersWithPrecision(stakeNum, totalValidatorWeight, 4) * 100,
+          totalValidatorWeight: totalValidatorWeight,
           reward: bid.bid.reward,
           stakePerc:
             divBigNumbersWithPrecision(stakeNum, totalStakedAmount, 4) * 100
         };
       })
-      .sort((a, b) => compareBigNumbers(a.stakeNum, b.stakeNum));
+      .sort((a, b) =>
+        compareBigNumbers(a.totalValidatorWeight, b.totalValidatorWeight)
+      );
 
     // Build bids data table.
     tables.push(
@@ -104,19 +132,47 @@ export default class Validators extends RefreshableComponent<Props, {}> {
         'validators-bids-tab',
         <DataTable
           title="Bids"
-          headers={['Validator ID', 'Slot', 'Delegation Rate', 'Stake']}
+          headers={[
+            'Slot',
+            'Validator ID',
+            'Fee',
+            'Delegators',
+            'Total Weight (Self %)'
+          ]}
+          // version with 3 columns for Delegated Stake, Self Stake, Total Stake
+          // headers={['Slot', 'Validator ID', 'Fee', 'Delegators','Delegated Stake', 'Self Staked (Self %)', 'Total Weight']}
           rows={rows}
           renderRow={(bidInfo, index) => {
             let key = `bids-${bidInfo.validatorId}`;
             return (
               <tr key={key}>
-                <td>{bidInfo.validatorId}</td>
                 <td>{index! + 1}</td>
-                <td>{bidInfo.delegation_rate}</td>
-                <td>
-                  <CSPR motes={bidInfo.stakeNum} />
+                <td title={bidInfo.validatorId} data-toggle="tooltip">
+                  <div className={'validatorId'}>
+                    {shortHash(bidInfo.validatorId, 100)}
+                  </div>
+                  <div className={'copyButton'}>
+                    <CopyToClipboard text={bidInfo.validatorId}>
+                      <IconButton title="" onClick={() => null} icon="copy" />
+                    </CopyToClipboard>
+                  </div>
+                </td>
+                <td>{bidInfo.delegation_rate} %</td>
+                <td>{bidInfo.delegatorCount}</td>
+                {/*Version with 3 columns*/}
+                {/*<td className={'rightAligned'}>*/}
+                {/*  <CSPR motes={bidInfo.delegatedStake} />*/}
+                {/*</td>*/}
+                {/*<td className={'rightAligned'}>*/}
+                {/*  <CSPR motes={bidInfo.stakeNum} />*/}
+                {/*  <span className="stakePerc">*/}
+                {/*    ({bidInfo.selfStakePerc.toFixed(2)}%)*/}
+                {/*  </span>*/}
+                {/*</td>*/}
+                <td className={'rightAligned'}>
+                  <CSPR motes={bidInfo.totalValidatorWeight} />
                   <span className="stakePerc">
-                    ({bidInfo.stakePerc.toFixed(2)}%)
+                    ({bidInfo.selfStakePerc.toFixed(2)}%)
                   </span>
                 </td>
               </tr>

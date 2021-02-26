@@ -264,7 +264,7 @@ const NavLink = (props: { item: MenuItem }) => {
           <li
             className={['nav-item', cls].filter(x => x).join(' ')}
             title={item.label}
-            data-toggle="tooltip"
+            // data-toggle="tooltip"
             data-placement="right"
           >
             <Link to={item.path} className="nav-link">

@@ -217,3 +217,19 @@ span.stakePerc {
   padding-left: 0.5rem;
   color: fade-out($black, 0.5);
 }
+
+td.rightAligned {
+  text-align: right;
+}
+
+div.validatorId {
+  float: left;
+}
+
+div.copyButton {
+  float: right;
+}
+
+div.copyButton a {
+  color: fade-out($black, 0.5);
+}

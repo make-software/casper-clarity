@@ -43,6 +43,7 @@
     "prettier": "^1.18.2",
     "react": "latest",
     "react-chartjs-2": "^2.9.0",
+    "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^16.8.6",
     "react-ga": "^2.7.0",
     "react-helmet": "^5.2.1",
