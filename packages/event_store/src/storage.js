@@ -25,47 +25,43 @@ class Storage {
         }
     }
 
-    async onEventId(id) {
-        console.log(`Info: Processing id ${id}`);
-        await this.storeEntity('EventId', {id});
+    async onEventId(sourceNodeId, id) {
+        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}`);
+        this.storeEntity('EventId', { sourceNodeId, id });
     }
 
-    async onEvent(jsonBody) {
+    async onEvent(sourceNodeId, apiVersionId, jsonBody) {
         const event = JSON.parse(jsonBody);
 
         let eventType,
-            primaryEntityHash,
-            entityProcessing;
+            primaryEntityHash;
 
         if (event.DeployProcessed) {
             eventType = 'DeployProcessed';
             primaryEntityHash = event.DeployProcessed.deploy_hash;
-            entityProcessing = this.onDeployProcessedEvent(event.DeployProcessed);
+            this.onDeployProcessedEvent(event.DeployProcessed);
         } else if (event.BlockAdded) {
             eventType = 'BlockAdded';
             primaryEntityHash = event.BlockAdded.block_hash;
-            entityProcessing = this.onBlockAddedEvent(event.BlockAdded);
+            this.onBlockAddedEvent(event.BlockAdded);
         } else if (event.FinalitySignature) {
             eventType = 'FinalitySignature';
             primaryEntityHash = event.FinalitySignature.signature;
-            entityProcessing = this.onFinalitySignatureEvent(event.FinalitySignature);
+            this.onFinalitySignatureEvent(event.FinalitySignature);
         }
 
         const eventHash = crypto.createHash('sha256')
             .update(jsonBody, 'utf8')
             .digest('hex');
 
-        const storingRawEvent = this.storeEntity('RawEvent', {
+        this.storeEntity('RawEvent', {
+            sourceNodeId,
+            apiVersionId,
             eventHash,
             eventType,
             primaryEntityHash,
             jsonBody
         });
-
-        await Promise.all([
-            storingRawEvent,
-            entityProcessing
-        ]);
     }
 
     async onDeployProcessedEvent(event) {
@@ -89,7 +85,7 @@ class Storage {
             deployData.cost = result.cost;
         }
 
-        const result = await this.storeEntity('Deploy', deployData);
+        const result = this.storeEntity('Deploy', deployData);
 
         if (result !== false && event.execution_result.Success) {
             let result = event.execution_result.Success;
@@ -100,7 +96,7 @@ class Storage {
                     }
 
                     let transferEvent = transform.transform.WriteTransfer;
-                    await this.storeEntity('Transfer', {
+                    this.storeEntity('Transfer', {
                         transferHash: transferHash,
                         deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
@@ -131,7 +127,7 @@ class Storage {
                 `Deploys: [${deploysStr}].`
             );
 
-            await this.storeEntity('Block', {
+            this.storeEntity('Block', {
                 blockHash: event.block.hash,
                 blockHeight: event.block.header.height,
                 parentHash: event.block.header.parent_hash,
@@ -161,7 +157,7 @@ class Storage {
                 `Deploys: [${deploysStr}].`
             );
 
-            await this.storeEntity('Block', {
+            this.storeEntity('Block', {
                 blockHash: event.block_hash,
                 blockHeight: event.block_header.height,
                 parentHash: event.block_header.parent_hash,
@@ -192,7 +188,7 @@ class Storage {
     async onFinalitySignatureEvent(event) {
         console.log(`Info: Processing FinalitySignature event. Signature: ${event.signature}.`);
 
-        await this.storeEntity('FinalitySignature', {
+        this.storeEntity('FinalitySignature', {
             signature: event.signature,
             blockHash: event.block_hash,
             publicKey: event.public_key,
@@ -204,16 +200,33 @@ class Storage {
         return this.models.Block.findByPk(height);
     }
 
-    async findEventId(id) {
-        return this.models.EventId.findOne({
-            where: {
-                id: id
-            }
+    async findSourceNodeByAddressOrCreate(address) {
+        const found = await this.models.SourceNode.findOne({
+            where: { address }
         });
+
+        if (found) {
+            return found;
+        }
+
+        return await this.storeEntity('SourceNode', { address });
     }
 
-    async getLastEventId() {
+    async findApiVersionByVersionOrCreate(version) {
+        const found = await this.models.ApiVersion.findOne({
+            where: { version }
+        });
+
+        if (found) {
+            return found;
+        }
+
+        return await this.storeEntity('ApiVersion', { version });
+    }
+
+    async getLastEventId(sourceNodeId) {
         const eventId = await this.models.EventId.findOne({
+            where: { sourceNodeId },
             order: [[ 'id', 'DESC' ]],
         });
 

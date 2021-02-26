@@ -34,7 +34,13 @@ async function runEventHandler() {
 
         const storage = new Storage(models);
 
-        const lastEventId = await storage.getLastEventId();
+        const sourceNodeAddress = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
+        const sourceNode = await storage.findSourceNodeByAddressOrCreate(sourceNodeAddress);
+
+        const apiVersionVersion = process.env.API_VERSION ? process.env.API_VERSION : '1.0.0';
+        const apiVersion = await storage.findApiVersionByVersionOrCreate(apiVersionVersion);
+
+        const lastEventId = await storage.getLastEventId(sourceNode.id);
 
         // @todo Retry on failed connection
         const stream = readline.createInterface({
@@ -47,10 +53,10 @@ async function runEventHandler() {
 
             try {
                 if (eventString.startsWith('id')) {
-                    await storage.onEventId(eventString.substr(3));
+                    await storage.onEventId(sourceNode.id, eventString.substr(3));
                 }
                 else if (eventString.startsWith('data')) {
-                    await storage.onEvent(eventString.substr(5));
+                    await storage.onEvent(sourceNode.id, apiVersion.id, eventString.substr(5));
                 }
             } catch (err) {
                 console.log(`Error: Error while processing an event.\nEvent: ${eventString}\nError: ${err}`);

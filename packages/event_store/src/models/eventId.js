@@ -7,15 +7,20 @@ module.exports = (sequelize, DataTypes) => {
         toJSON() {
             return {
                 "id": this.id,
+                "sourceNodeId": this.sourceNodeId,
             }
         }
     };
 
     EventId.init({
+        sourceNodeId: {
+            type: DataTypes.INTEGER,
+            primaryKey: true
+        },
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true
-        }
+        },
     }, {
         sequelize,
         modelName: 'EventId',

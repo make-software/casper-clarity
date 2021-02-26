@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
         toJSON() {
             return {
                 eventHash: this.eventHash,
+                sourceNodeId: this.sourceNodeId,
+                apiVersionId: this.apiVersionId,
                 eventType: this.eventType,
                 primaryEntityHash: this.primaryEntityHash,
                 jsonBody: this.jsonBody,
@@ -19,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(64),
             primaryKey: true
         },
+        sourceNodeId: DataTypes.INTEGER,
+        apiVersionId: DataTypes.INTEGER,
         eventType: DataTypes.STRING(32),
         primaryEntityHash: DataTypes.STRING(130),
         jsonBody: DataTypes.TEXT,
