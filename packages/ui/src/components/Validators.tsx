@@ -59,7 +59,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
 
   render() {
     // If data is not there, display loader.
-    let data = this.props.validatorsContainer.validatorsInfo;
+    let data = this.props.validatorsContainer.validatorsInfo?.auction_state;
 
     if (!data) {
       return <Loading />;
