@@ -14,13 +14,13 @@ setup: .make/bootstrap
 
 docker-build-all: \
 	docker-build/explorer \
-	docker-build/nginx \
+	docker-build/build-node-proxy \
 	docker-build/event-web-server \
 	docker-build/event-handler
 
 docker-build/explorer: .make/docker-build/explorer
 
-docker-build/nginx: .make/docker-build/nginx
+docker-build/build-node-proxy: .make/docker-build/build-node-proxy
 
 docker-build/event-web-server: .make/docker-build/event-web-server
 
@@ -50,7 +50,7 @@ test:
 	docker build -t make/clarity/web-app .
 	mkdir -p $(dir $@) && touch $@
 
-.make/docker-build/nginx: build-node-proxy
+.make/docker-build/build-node-proxy:
 	docker build -t make/clarity/node-proxy .
 	mkdir -p $(dir $@) && touch $@
 
