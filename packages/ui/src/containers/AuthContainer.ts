@@ -176,16 +176,22 @@ export class AuthContainer {
 
   async createAccount(): Promise<boolean> {
     let form = this.accountForm!;
+
+    const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+
     if (form instanceof NewAccountFormData && form.clean()) {
       // Save the private and public keys to disk.
       saveToFile(
         form.getKeys.exportPrivateKeyInPem(),
         `${form.name.$}_secret_key.pem`
       );
+      await sleep(2000);
       saveToFile(
         form.getKeys.exportPublicKeyInPem(),
         `${form.name.$}_public_key.pem`
       );
+
+      await sleep(2000);
       const publicKeyBase16 = encodeBase16(
         decodeBase64(form.publicKeyBase64.$!)
       );
