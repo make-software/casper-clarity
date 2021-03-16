@@ -167,6 +167,7 @@ export class DeployArgumentParser {
       case 10:
       case 11:
       case 12:
+      case 22:
       case 'Bytes':
       case 'Bytes (Fixed Length)':
         return DeployArgumentParser.validateSimpleType(
@@ -225,6 +226,7 @@ export class DeployArgumentParser {
         return DeployArgumentParser.validateBoolean(argValueInJson);
       case SimpleType.Key:
       case SimpleType.URef:
+      case SimpleType.PublicKey:
         return DeployArgumentParser.validateBase16String(argValueInJson);
       case 'Bytes':
         return DeployArgumentParser.validateBase16String(argValueInJson);
@@ -426,7 +428,9 @@ export class DeployArgumentParser {
         );
         break;
       case SimpleType.PublicKey:
-        clValueInstance = CLValue.publicKey(PublicKey.fromEd25519(decodeBase16(argValueInJson)));
+        clValueInstance = CLValue.publicKey(
+          PublicKey.fromEd25519(decodeBase16(argValueInJson))
+        );
         break;
     }
     return clValueInstance;
@@ -469,6 +473,7 @@ export class DeployArgumentParser {
       case 10:
       case 11:
       case 12:
+      case 22:
       case 'Bytes':
       case 'Bytes (Fixed Length)':
         // Simple Type
