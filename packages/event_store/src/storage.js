@@ -293,6 +293,19 @@ class Storage {
             }
         });
     }
+
+    async getDeploys(limit, offset) {
+        let deploys = await this.models.Deploy.findAll({
+            limit: limit,
+            offset: offset,
+            order: [['blockHeight', 'DESC'],['deployHash','ASC']] // deployHash added in order to have deterministic order
+        });
+        let count = await this.models.Deploy.count();
+        return {
+            rows: deploys,
+            count: count
+        }
+    }
 }
 
 module.exports = Storage;
