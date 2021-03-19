@@ -11,9 +11,10 @@ function formNodeURL(lastEventId) {
     const domain = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
     const port = config.EH_STREAM_PORT;
     const path = process.env.NODE_PATH ? process.env.NODE_PATH : config.EH_STREAM_PATH;
-    const bufferSize = process.env.BUFFER_SIZE ? process.env.BUFFER_SIZE : 100;
+    const bufferSize = process.env.BUFFER_SIZE ? process.env.BUFFER_SIZE : 25000;
 
     if (false === lastEventId) {
+        console.log('Info: Not catching up. Reading event stream from now.');
         return protocol + '://' + domain +
             (port ? ':' + port : '') +
             (path ? '/' + path : '');
@@ -67,7 +68,7 @@ async function runEventHandler() {
         }
 
         const apiVersion = await storage.findApiVersionByVersionOrCreate(apiVersionVersion);
-        const lastEventId = await storage.getLastEventId(sourceNode.id);
+        const lastEventId = await storage.getLastEventId(sourceNode.id, apiVersion.id);
 
         // @todo Retry on failed connection
         console.log('Info: Connecting to the event stream');

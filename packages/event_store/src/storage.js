@@ -302,9 +302,9 @@ class Storage {
         return await this.storeEntity('ApiVersion', { version });
     }
 
-    async getLastEventId(sourceNodeId) {
+    async getLastEventId(sourceNodeId, apiVersionId) {
         const eventId = await this.models.EventId.findOne({
-            where: { sourceNodeId },
+            where: { sourceNodeId, apiVersionId },
             order: [[ 'id', 'DESC' ]],
         });
 
