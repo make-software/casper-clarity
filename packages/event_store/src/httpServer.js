@@ -82,9 +82,35 @@ let httpServer = (models) => {
     app.get('/transfers/:accountHash', async (req, res, next) => {
         let transfers = await storage.findTransfers(req.params.accountHash);
         if (transfers.length == 0) {
-            res.status(404).send("Transferts not found.");
+            res.status(404).send("Transfers not found.");
         } else {
             res.send(transfers.map(t => t.toJSON()));
+        }
+    });
+
+    app.get('/era-validators', async (req, res, next) => {
+        let eraValidators = await storage.findEraValidators(req.query, req.query.limit, req.skip);
+
+        const itemCount = eraValidators.count;
+        const pageCount = Math.ceil(eraValidators.count / req.query.limit);
+        let result = {
+            data: await Promise.all(eraValidators.rows.map(deploy => {
+                return deploy.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        };
+        res.send(result);
+    });
+
+    app.get('/validators/:publicKeyHex/rewards', async (req, res, next) => {
+        const result = await storage.getTotalValidatorRewards(req.params.publicKeyHex);
+        if (Number.isNaN(result)) {
+            res.status(404).send('Validator not found.');
+        }
+        else {
+            res.send(result.toString());
         }
     });
 

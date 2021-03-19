@@ -138,16 +138,85 @@ class Storage {
                 proposer: event.block.body.proposer,
             });
 
+            if (event.block.header.era_end) {
+                this.storeEntity('Era', {
+                    id: event.block.header.era_id,
+                    endBlockHeight: event.block.header.height,
+                    endTimestamp: event.block.header.timestamp,
+                    protocolVersion: event.block.header.protocol_version,
+                });
+
+                for (let publicKeyHex in event.block.header.era_end.next_era_validator_weights) {
+                    this.storeEntity('EraValidator', {
+                        eraId: event.block.header.era_id + 1,
+                        publicKeyHex: publicKeyHex,
+                        weight: event.block.header.era_end.next_era_validator_weights[publicKeyHex],
+                        rewards: 0,
+                        hasEquivocation: 0,
+                        wasActive: 0,
+                    });
+                }
+
+                const updatedValidators = [];
+                for (let publicKeyHex in event.block.header.era_end.era_report.rewards) {
+                    updatedValidators.push(publicKeyHex);
+
+                    this.models.EraValidator.update({
+                        rewards: event.block.header.era_end.era_report.rewards[publicKeyHex],
+                        hasEquivocation: event.block.header.era_end.era_report.equivocators.includes(publicKeyHex),
+                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+
+                for (let publicKeyHex of event.block.header.era_end.era_report.equivocators) {
+                    if (updatedValidators.includes(publicKeyHex)) {
+                        continue;
+                    }
+
+                    updatedValidators.push(publicKeyHex);
+
+                    this.models.EraValidator.update({
+                        hasEquivocation: true,
+                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+
+                for (let publicKeyHex of event.block.header.era_end.era_report.inactive_validators) {
+                    if (updatedValidators.includes(publicKeyHex)) {
+                        continue;
+                    }
+
+                    this.models.EraValidator.update({
+                        wasActive: false,
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+            }
+
             // Update deploys.
             // @todo Remove this with the next release (backward compatibility)
-            await this.models.Deploy.update({
-                timestamp: event.block.header.timestamp,
-                blockHash: event.block.hash
-            }, {
-                where: {
-                    deployHash: event.block.body.deploy_hashes
-                }
-            });
+            // await this.models.Deploy.update({
+            //     timestamp: event.block.header.timestamp,
+            //     blockHash: event.block.hash
+            // }, {
+            //     where: {
+            //         deployHash: event.block.body.deploy_hashes
+            //     }
+            // });
         }
         else {
             let deploysStr = event.block_header.deploy_hashes.join(', ');
@@ -170,19 +239,28 @@ class Storage {
 
             // Update deploys.
             // @todo Remove this with the next release (backward compatibility)
-            await this.models.Deploy.update({
-                timestamp: event.block_header.timestamp,
-                blockHash: event.block_hash
-            }, {
-                where: {
-                    deployHash: event.block_header.deploy_hashes
-                }
-            });
+            // await this.models.Deploy.update({
+            //     timestamp: event.block_header.timestamp,
+            //     blockHash: event.block_hash
+            // }, {
+            //     where: {
+            //         deployHash: event.block_header.deploy_hashes
+            //     }
+            // });
         }
 
         if(this.pubsub !== null) {
             this.pubsub.broadcast_block(await block.toJSON());
         }
+    }
+
+    async onEraEnd(eraEnd) {
+        this.storeEntity('Era', {
+            eraId: eraEnd.era_id,
+            eraEndBlockHeight: eraEnd.era_end_block_height,
+            eraEndTimestamp: eraEnd.era_end_timestamp,
+            eraProtocolVersion: eraEnd.era_protocol_version,
+        });
     }
 
     async onFinalitySignatureEvent(event) {
@@ -242,16 +320,11 @@ class Storage {
     }
 
     async findBlocks(limit, offset) {
-        let blocks = await this.models.Block.findAll({
+        return await this.models.Block.findAndCountAll({
             limit: limit,
             offset: offset,
             order: [['blockHeight', 'DESC']]
         });
-        let count = await this.models.Block.count();
-        return {
-            rows: blocks,
-            count: count
-        }
     }
 
     async findDeployByHash(deployHash) {
@@ -295,16 +368,35 @@ class Storage {
     }
 
     async getDeploys(limit, offset) {
-        let deploys = await this.models.Deploy.findAll({
+        return await this.models.Deploy.findAndCountAll({
             limit: limit,
             offset: offset,
             order: [['blockHeight', 'DESC'],['deployHash','ASC']] // deployHash added in order to have deterministic order
         });
-        let count = await this.models.Deploy.count();
-        return {
-            rows: deploys,
-            count: count
+    }
+
+    async findEraValidators(criteria, limit, offset) {
+        const availableCriteria = [
+            'eraId',
+            'publicKeyHex',
+            'hasEquivocation',
+            'wasActive',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
         }
+
+        return await this.models.EraValidator
+            .findAndCountAll({where, limit, offset});
+    }
+
+    async getTotalValidatorRewards(publicKeyHex) {
+        return await this.models.EraValidator
+            .sum('rewards', {where: {publicKeyHex}});
     }
 }
 

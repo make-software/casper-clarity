@@ -1,0 +1,1 @@
+ALTER TABLE `FinalitySignatures` MODIFY `publicKey` VARCHAR(66) NOT NULL;
