@@ -13,19 +13,22 @@ function formNodeURL(lastEventId) {
     const path = process.env.NODE_PATH ? process.env.NODE_PATH : config.EH_STREAM_PATH;
     const bufferSize = process.env.BUFFER_SIZE ? process.env.BUFFER_SIZE : 100;
 
-    const startFromEventId = lastEventId
-        ? Math.max(1, lastEventId - bufferSize)
-        : 1;
-
-    if (startFromEventId) {
-        console.log('Info: Catching up from event id ' + startFromEventId);
+    if (false === lastEventId) {
+        return protocol + '://' + domain +
+            (port ? ':' + port : '') +
+            (path ? '/' + path : '');
     }
+
+    const startFromEventId = lastEventId
+        ? Math.max(0, lastEventId - bufferSize)
+        : 0;
+
+    console.log('Info: Catching up from event id ' + startFromEventId);
 
     return protocol + '://' + domain +
         (port ? ':' + port : '') +
         (path ? '/' + path : '') +
-        '?start_from=0';
-        // (startFromEventId ? '?start_from=' + startFromEventId : '');
+        '?start_from=' + startFromEventId;
 }
 
 async function runEventHandler() {
@@ -38,12 +41,36 @@ async function runEventHandler() {
         const sourceNodeAddress = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
         const sourceNode = await storage.findSourceNodeByAddressOrCreate(sourceNodeAddress);
 
-        const apiVersionVersion = process.env.API_VERSION ? process.env.API_VERSION : '1.0.0';
-        const apiVersion = await storage.findApiVersionByVersionOrCreate(apiVersionVersion);
+        const prefetchStream = readline.createInterface({
+            input: got.stream(formNodeURL(false)),
+            crlfDelay: Infinity
+        });
 
+        console.log('Info: Pre-fetching protocol version');
+        let firstEvent,
+            apiVersionVersion;
+
+        // Dear reader, I have no idea why I can't do prefetchStream.next() as on normal iterator
+        for await (let eventString of prefetchStream) {
+            if (!eventString.startsWith('data')) {
+                throw new Error('Error: First event is not data event');
+            }
+
+            firstEvent = JSON.parse(eventString.substr(5));
+            if (!firstEvent.ApiVersion) {
+                throw new Error('Error: First event is not ApiVersion');
+            }
+
+            apiVersionVersion = firstEvent.ApiVersion;
+            console.log('Info: Protocol version is ' + apiVersionVersion);
+            break;
+        }
+
+        const apiVersion = await storage.findApiVersionByVersionOrCreate(apiVersionVersion);
         const lastEventId = await storage.getLastEventId(sourceNode.id);
 
         // @todo Retry on failed connection
+        console.log('Info: Connecting to the event stream');
         const stream = readline.createInterface({
             input: got.stream(formNodeURL(lastEventId)),
             crlfDelay: Infinity
@@ -57,7 +84,7 @@ async function runEventHandler() {
 
             try {
                 if (eventString.startsWith('id')) {
-                    await storage.onEventId(sourceNode.id, eventString.substr(3));
+                    await storage.onEventId(sourceNode.id, apiVersion.id, eventString.substr(3));
                 }
                 else if (eventString.startsWith('data')) {
                     await storage.onEvent(sourceNode.id, apiVersion.id, eventString.substr(5));

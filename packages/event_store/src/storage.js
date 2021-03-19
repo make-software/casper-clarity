@@ -25,9 +25,9 @@ class Storage {
         }
     }
 
-    async onEventId(sourceNodeId, id) {
-        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}`);
-        this.storeEntity('EventId', { sourceNodeId, id });
+    async onEventId(sourceNodeId, apiVersionId, id) {
+        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}, protocol version ${apiVersionId}`);
+        this.storeEntity('EventId', { sourceNodeId, apiVersionId, id });
     }
 
     async onEvent(sourceNodeId, apiVersionId, jsonBody) {

@@ -8,12 +8,17 @@ module.exports = (sequelize, DataTypes) => {
             return {
                 "id": this.id,
                 "sourceNodeId": this.sourceNodeId,
+                "apiVersionId": this.apiVersionId,
             }
         }
     };
 
     EventId.init({
         sourceNodeId: {
+            type: DataTypes.INTEGER,
+            primaryKey: true
+        },
+        apiVersionId: {
             type: DataTypes.INTEGER,
             primaryKey: true
         },
