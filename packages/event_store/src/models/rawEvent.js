@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         apiVersionId: DataTypes.INTEGER,
         eventType: DataTypes.STRING(32),
         primaryEntityHash: DataTypes.STRING(130),
-        jsonBody: DataTypes.TEXT,
+        jsonBody: DataTypes.TEXT('medium'),
     }, {
         sequelize,
         modelName: 'RawEvent',
