@@ -479,7 +479,7 @@ const Content = (props: AppProps) => {
               <Title title="Account Keys" />
               <Accounts {...props} />
             </PrivateRoute>
-            {window.config.withFaucet || (
+            {window.config.withFaucet && (
               <PrivateRoute path={Pages.Faucet} auth={props.auth}>
                 <Title title="Faucet" />
                 <Faucet {...props} />
