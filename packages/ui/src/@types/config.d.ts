@@ -20,6 +20,7 @@ interface Config {
     url?: string;
   };
   eventStoreUrl: string;
+  withFaucet: boolean;
 }
 
 interface Auth0Config {

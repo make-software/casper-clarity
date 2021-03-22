@@ -181,7 +181,8 @@ app.get('/config.js', (_, res) => {
       // connect to window.origin and be handled by nginx.
       url: process.env.UI_GRPC_URL
     },
-    eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL
+    eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL,
+    withFaucet: process.env.NO_FAUCET !== '1'
   };
   res.header('Content-Type', 'application/javascript');
   res.send(`var config = ${JSON.stringify(conf, null, 2)};`);
