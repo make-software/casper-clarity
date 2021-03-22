@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
                 "proposer": this.proposer,
                 "state": this.state,
                 "deployCount": this.deployCount,
+                "transferCount": this.transferCount,
                 "height": this.blockHeight,
             };
 
@@ -105,6 +106,7 @@ module.exports = (sequelize, DataTypes) => {
                 }
             }
         },
+        transferCount: DataTypes.INTEGER,
         proposer: {
             type: DataTypes.STRING,
             validate: {

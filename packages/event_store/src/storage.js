@@ -120,12 +120,10 @@ class Storage {
     async onBlockAddedEvent(event) {
         // If after https://github.com/CasperLabs/casper-node/pull/978 (note that version remained the same 1.0.0)
         if (event.block) {
-            let deploysStr = event.block.body.deploy_hashes.join(', ');
-            let deployCount = event.block.body.deploy_hashes.length;
-            console.log(
-                `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
-                `Deploys: [${deploysStr}].`
-            );
+            const deployCount = event.block.body.deploy_hashes.length;
+            const transferCount = event.block.body.transfer_hashes.length;
+
+            console.log(`Info: Processing BlockAdded event. BlockHash: ${event.block_hash}`);
 
             this.storeEntity('Block', {
                 blockHash: event.block.hash,
@@ -134,6 +132,7 @@ class Storage {
                 timestamp: event.block.header.timestamp,
                 state: event.block.header.state_root_hash,
                 deployCount: deployCount,
+                transferCount: transferCount,
                 eraId: event.block.header.era_id,
                 proposer: event.block.body.proposer,
             });
