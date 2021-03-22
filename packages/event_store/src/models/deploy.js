@@ -12,7 +12,6 @@ module.exports = (sequelize, DataTypes) => {
             let result = {
                 "deployHash": this.deployHash,
                 "blockHash": this.blockHash,
-                "blockHeight": this.blockHeight,
                 "account": this.account,
                 "cost": this.cost,
                 "errorMessage": this.errorMessage,
@@ -36,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         blockHash: DataTypes.STRING,
-        blockHeight: DataTypes.INTEGER,
         account: DataTypes.STRING,
         cost: DataTypes.INTEGER,
         errorMessage: DataTypes.STRING,
@@ -47,7 +45,6 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [ 
             { fields: [ 'deployHash' ] },
             { fields: [ 'account' ] },
-            { fields: [ 'blockHeight' ] }
         ]
     });
     

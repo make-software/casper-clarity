@@ -371,7 +371,7 @@ class Storage {
         return await this.models.Deploy.findAndCountAll({
             limit: limit,
             offset: offset,
-            order: [['blockHeight', 'DESC'],['deployHash','ASC']] // deployHash added in order to have deterministic order
+            order: [['deployHash','ASC']] // deployHash added in order to have deterministic order
         });
     }
 
