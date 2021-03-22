@@ -28,7 +28,7 @@ let httpServer = (models) => {
         if (deploy === null) {
             res.status(404).send("Deploy not found.");
         } else {
-            res.send(await deploy.toJSON(skipTransfers = false));
+            res.send(await deploy.toJSON());
         }
     });
 

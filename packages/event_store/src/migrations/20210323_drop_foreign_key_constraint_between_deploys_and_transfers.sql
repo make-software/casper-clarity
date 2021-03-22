@@ -1,0 +1,1 @@
+ALTER TABLE `Transfers` DROP FOREIGN KEY `transfers_ibfk_1`

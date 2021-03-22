@@ -2,14 +2,8 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Deploy extends Model {
-        static associate(models) {
-            models.Deploy.Transfers = models.Deploy.hasMany(models.Transfer, {
-                foreignKey: 'deployHash'
-            });
-        }
-
-        async toJSON(skipTransfers = false) {
-            let result = {
+        async toJSON() {
+            return {
                 "deployHash": this.deployHash,
                 "blockHash": this.blockHash,
                 "account": this.account,
@@ -17,15 +11,6 @@ module.exports = (sequelize, DataTypes) => {
                 "errorMessage": this.errorMessage,
                 "timestamp": this.timestamp,
             };
-
-            if (!skipTransfers) {
-                let transfers = await this.getTransfers();
-                result['transfers'] = transfers.map(transfer => {
-                    return transfer.toJSON()
-                });
-            }
-
-            return result;
         }
     }
 
