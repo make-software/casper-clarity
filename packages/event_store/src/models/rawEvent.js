@@ -6,7 +6,6 @@ module.exports = (sequelize, DataTypes) => {
 
         toJSON() {
             return {
-                eventHash: this.eventHash,
                 sourceNodeId: this.sourceNodeId,
                 apiVersionId: this.apiVersionId,
                 eventType: this.eventType,
@@ -17,20 +16,22 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     RawEvent.init({
-        eventHash: {
-            type: DataTypes.STRING(64),
-            primaryKey: true
-        },
         sourceNodeId: DataTypes.INTEGER,
         apiVersionId: DataTypes.INTEGER,
-        eventType: DataTypes.STRING(32),
-        primaryEntityHash: DataTypes.STRING(130),
+        eventType: {
+            type: DataTypes.STRING(32),
+            primaryKey: true
+        },
+        primaryEntityHash: {
+            type: DataTypes.STRING(130),
+            primaryKey: true
+        },
         jsonBody: DataTypes.TEXT('medium'),
     }, {
         sequelize,
         modelName: 'RawEvent',
         indexes: []
     });
-    
+
     return RawEvent;
 };

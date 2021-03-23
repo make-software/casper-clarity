@@ -36,7 +36,10 @@ class Storage {
         let eventType,
             primaryEntityHash;
 
-        if (event.DeployProcessed) {
+        if (event.ApiVersion) {
+            eventType = 'ApiVersion';
+            primaryEntityHash = event.ApiVersion;
+        } else if (event.DeployProcessed) {
             eventType = 'DeployProcessed';
             primaryEntityHash = event.DeployProcessed.deploy_hash;
             this.onDeployProcessedEvent(event.DeployProcessed);
@@ -50,14 +53,9 @@ class Storage {
             this.onFinalitySignatureEvent(event.FinalitySignature);
         }
 
-        const eventHash = crypto.createHash('sha256')
-            .update(jsonBody, 'utf8')
-            .digest('hex');
-
         this.storeEntity('RawEvent', {
             sourceNodeId,
             apiVersionId,
-            eventHash,
             eventType,
             primaryEntityHash,
             jsonBody
