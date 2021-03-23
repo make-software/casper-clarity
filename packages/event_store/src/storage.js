@@ -366,8 +366,20 @@ class Storage {
         });
     }
 
-    async getDeploys(limit, offset) {
+    async getDeploys(criteria, limit, offset) {
+        const availableCriteria = [
+            'blockHash',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
         return await this.models.Deploy.findAndCountAll({
+            where: where,
             limit: limit,
             offset: offset,
             order: [['deployHash','ASC']] // deployHash added in order to have deterministic order

@@ -50,7 +50,22 @@ let httpServer = (models) => {
     });
 
     app.get('/deploys', async (req, res, next) => {
-        let deploys = await storage.getDeploys(req.query.limit, req.skip);
+        let deploys = await storage.getDeploys({}, req.query.limit, req.skip);
+        const itemCount = deploys.count;
+        const pageCount = Math.ceil(deploys.count / req.query.limit);
+        let result = {
+            data: await Promise.all(deploys.rows.map(deploy => {
+                return deploy.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
+    });
+
+    app.get('/blocks/:blockHash/deploys', async (req, res, next) => {
+        let deploys = await storage.getDeploys({blockHash: req.params.blockHash}, req.query.limit, req.skip);
         const itemCount = deploys.count;
         const pageCount = Math.ceil(deploys.count / req.query.limit);
         let result = {
