@@ -94,13 +94,19 @@ let httpServer = (models) => {
         res.send(result);
     });
 
-    app.get('/transfers/:accountHash', async (req, res, next) => {
-        let transfers = await storage.findTransfers(req.params.accountHash);
-        if (transfers.length == 0) {
-            res.status(404).send("Transfers not found.");
-        } else {
-            res.send(transfers.map(t => t.toJSON()));
-        }
+    app.get('/accounts/:accountHash/transfers', async (req, res, next) => {
+        let transfers = await storage.findAccountTransfers(req.params.accountHash, req.query.limit, req.skip);
+        const itemCount = transfers.count;
+        const pageCount = Math.ceil(transfers.count / req.query.limit);
+        let result = {
+            data: await Promise.all(transfers.rows.map(transfer => {
+                return transfer.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        };
+        res.send(result);
     });
 
     app.get('/era-validators', async (req, res, next) => {

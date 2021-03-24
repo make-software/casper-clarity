@@ -379,8 +379,8 @@ class Storage {
         });
     }
 
-    async findTransfers(purseUref) {
-        return this.models.Transfer.findAll({
+    async findAccountTransfers(purseUref, limit, offset) {
+        return this.models.Transfer.findAndCountAll({
             where: {
                 [Op.or]: [
                     {
