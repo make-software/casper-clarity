@@ -1,5 +1,4 @@
 const sequelize = require("sequelize");
-const crypto = require('crypto')
 
 const { Op } = sequelize;
 
@@ -87,15 +86,13 @@ class Storage {
 
         if (result !== false && event.execution_result.Success) {
             let result = event.execution_result.Success;
-            result.transfers.forEach(transferHash => {
-                result.effect.transforms.forEach(async transform => {
-                    if(transform.key != transferHash) {
-                        return;
-                    }
+            let transferHashes = result.transfers;
 
+            for (let transform of result.effect.transforms) {
+                if (transferHashes.includes(transform.key)) {
                     let transferEvent = transform.transform.WriteTransfer;
                     this.storeEntity('Transfer', {
-                        transferHash: transferHash,
+                        transferHash: transform.key,
                         deployHash: deployData.deployHash,
                         fromAccount: transferEvent.from.substring(13),
                         toAccount: transferEvent.to
@@ -106,8 +103,40 @@ class Storage {
                         amount: transferEvent.amount,
                         id: transferEvent.id
                     });
-                });
-            });
+                }
+
+                if (transform.transform) {
+                    if (transform.transform.WriteBid) {
+                        let bidEvent = transform.transform.WriteBid;
+                        this.storeEntity('Bid', {
+                            key: transform.key,
+                            deployHash: event.deploy_hash,
+                            validatorPublicKey: bidEvent.validator_public_key,
+                            bondingPurse: bidEvent.bonding_purse,
+                            stakedAmount: bidEvent.staked_amount,
+                            delegationRate: bidEvent.delegation_rate,
+                            inactive: bidEvent.inactive,
+                            vestingSchedule: bidEvent.vesting_schedule,
+                            delegators: bidEvent.delegators,
+                            timestamp: event.timestamp,
+                        });
+                    }
+                    // else if (transform.transform.WriteWithdraw) {
+                    //     for (let withdrawalEvent of transform.transform.WriteWithdraw) {
+                    //         this.storeEntity('Withdrawal', {
+                    //             key: transform.key,
+                    //             deployHash: event.deploy_hash,
+                    //             validatorPublicKey: withdrawalEvent.validator_public_key,
+                    //             unbonderPublicKey: withdrawalEvent.unbonder_public_key,
+                    //             bondingPurse: withdrawalEvent.bonding_purse,
+                    //             amount: withdrawalEvent.amount,
+                    //             eraOfCreation: withdrawalEvent.era_of_creation,
+                    //             timestamp: event.timestamp,
+                    //         });
+                    //     }
+                    // }
+                }
+            }
         }
 
         if(this.pubsub !== null) {
