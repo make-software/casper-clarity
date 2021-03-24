@@ -345,7 +345,18 @@ class Storage {
         });
     }
 
-    async findBlocks(limit, offset) {
+    async findBlocks(criteria, limit, offset) {
+        const availableCriteria = [
+            'proposer',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
         return await this.models.Block.findAndCountAll({
             limit: limit,
             offset: offset,

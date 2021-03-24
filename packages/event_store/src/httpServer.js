@@ -35,7 +35,7 @@ let httpServer = (models) => {
     app.use(paginate.middleware(10, 20));
 
     app.get('/blocks', async (req, res, next) => {
-        let blocks = await storage.findBlocks(req.query.limit, req.skip);
+        let blocks = await storage.findBlocks({}, req.query.limit, req.skip);
         const itemCount = blocks.count;
         const pageCount = Math.ceil(blocks.count / req.query.limit);
         let result = {
@@ -133,6 +133,21 @@ let httpServer = (models) => {
         else {
             res.send(result.toString());
         }
+    });
+
+    app.get('/validators/:publicKeyHex/blocks', async (req, res, next) => {
+        let blocks = await storage.findBlocks({proposer: req.params.publicKeyHex}, req.query.limit, req.skip);
+        const itemCount = blocks.count;
+        const pageCount = Math.ceil(blocks.count / req.query.limit);
+        let result = {
+            data: await Promise.all(blocks.rows.map(block => {
+                return block.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
     });
 
     app.use(function (req,res,next){
