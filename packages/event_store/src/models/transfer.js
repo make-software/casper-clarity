@@ -11,7 +11,6 @@ module.exports = (sequelize, DataTypes) => {
                 "sourcePurse": this.sourcePurse,
                 "targetPurse": this.targetPurse,
                 "amount": this.amount,
-                "id": this.id,
                 "fromAccount": this.fromAccount,
                 "toAccount": this.toAccount
             }
@@ -19,10 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Transfer.init({
-        transferHash: {
-            type: DataTypes.STRING,
-            primaryKey: true
-        },
+        transferHash: DataTypes.STRING,
         deployHash: DataTypes.STRING,
         blockHash: DataTypes.STRING(64),
         fromAccount: DataTypes.STRING,
@@ -30,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
         sourcePurse: DataTypes.STRING,
         targetPurse: DataTypes.STRING,
         amount: DataTypes.STRING,
-        id: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'Transfer',
@@ -41,6 +36,8 @@ module.exports = (sequelize, DataTypes) => {
             { fields: [ 'toAccount' ] }
         ]
     });
+
+    Transfer.removeAttribute('id');
     
     return Transfer;
 };
