@@ -63,22 +63,13 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Withdrawal.init({
-        deployHash: {
-            type: DataTypes.STRING(64),
-            primaryKey: true
-        },
-        key: {
-            type: DataTypes.STRING(74),
-            primaryKey: true
-        },
+        deployHash: DataTypes.STRING(64),
+        key: DataTypes.STRING(74),
         validatorPublicKey: DataTypes.STRING(67),
         unbonderPublicKey: DataTypes.STRING(67),
         bondingPurse: DataTypes.STRING(74),
         amount: DataTypes.BIGINT,
-        eraOfCreation: {
-            type: DataTypes.INTEGER,
-            primaryKey: true
-        },
+        eraOfCreation: DataTypes.INTEGER,
         timestamp: DataTypes.DATE
     }, {
         sequelize,
@@ -87,6 +78,8 @@ module.exports = (sequelize, DataTypes) => {
             { fields: [ 'validatorPublicKey' ] },
         ]
     });
+
+    Withdrawal.removeAttribute('id');
     
     return Withdrawal;
 };

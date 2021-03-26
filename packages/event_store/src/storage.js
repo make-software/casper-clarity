@@ -121,25 +121,25 @@ class Storage {
                             timestamp: event.timestamp,
                         });
                     }
-                    // else if (transform.transform.WriteWithdraw) {
-                    //     for (let withdrawalEvent of transform.transform.WriteWithdraw) {
-                    //         this.storeEntity('Withdrawal', {
-                    //             key: transform.key,
-                    //             deployHash: event.deploy_hash,
-                    //             validatorPublicKey: withdrawalEvent.validator_public_key,
-                    //             unbonderPublicKey: withdrawalEvent.unbonder_public_key,
-                    //             bondingPurse: withdrawalEvent.bonding_purse,
-                    //             amount: withdrawalEvent.amount,
-                    //             eraOfCreation: withdrawalEvent.era_of_creation,
-                    //             timestamp: event.timestamp,
-                    //         });
-                    //     }
-                    // }
+                    else if (transform.transform.WriteWithdraw) {
+                        for (let withdrawalEvent of transform.transform.WriteWithdraw) {
+                            this.storeEntity('Withdrawal', {
+                                key: transform.key,
+                                deployHash: event.deploy_hash,
+                                validatorPublicKey: withdrawalEvent.validator_public_key,
+                                unbonderPublicKey: withdrawalEvent.unbonder_public_key,
+                                bondingPurse: withdrawalEvent.bonding_purse,
+                                amount: withdrawalEvent.amount,
+                                eraOfCreation: withdrawalEvent.era_of_creation,
+                                timestamp: event.timestamp,
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        if(this.pubsub !== null) {
+        if (this.pubsub !== null) {
             this.pubsub.broadcast_deploy(await deploy.toJSON());
         }
     }
