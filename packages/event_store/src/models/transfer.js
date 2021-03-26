@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
         toJSON() {
             return {
                 "deployHash": this.deployHash,
+                "blockHash": this.blockHash,
                 "sourcePurse": this.sourcePurse,
                 "targetPurse": this.targetPurse,
                 "amount": this.amount,
@@ -23,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         deployHash: DataTypes.STRING,
+        blockHash: DataTypes.STRING(64),
         fromAccount: DataTypes.STRING,
         toAccount: DataTypes.STRING,
         sourcePurse: DataTypes.STRING,
@@ -34,8 +36,7 @@ module.exports = (sequelize, DataTypes) => {
         modelName: 'Transfer',
         indexes: [ 
             { fields: [ 'deployHash' ] },
-            { fields: [ 'sourcePurse' ] },
-            { fields: [ 'targetPurse' ] },
+            { fields: [ 'blockHash' ] },
             { fields: [ 'fromAccount' ] },
             { fields: [ 'toAccount' ] }
         ]

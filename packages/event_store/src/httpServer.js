@@ -79,6 +79,21 @@ let httpServer = (models) => {
         res.send(result);
     });
 
+    app.get('/blocks/:blockHash/transfers', async (req, res, next) => {
+        let transfers = await storage.findTransfers({blockHash: req.params.blockHash}, req.query.limit, req.skip);
+        const itemCount = transfers.count;
+        const pageCount = Math.ceil(transfers.count / req.query.limit);
+        let result = {
+            data: await Promise.all(transfers.rows.map(transfer => {
+                return transfer.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
+    });
+
     app.get('/accountDeploys/:account', async (req, res, next) => {
         let deploys = await storage.findDeploysByAccount(req.params.account, req.query.limit, req.skip);
         const itemCount = deploys.count;

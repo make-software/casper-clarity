@@ -66,7 +66,6 @@ class Storage {
 
         let deployData = {
             blockHash: event.block_hash,
-            blockHeight: event.height,
             deployHash: event.deploy_hash,
             account: event.account,
             timestamp: event.timestamp,
@@ -94,6 +93,7 @@ class Storage {
                     this.storeEntity('Transfer', {
                         transferHash: transform.key,
                         deployHash: deployData.deployHash,
+                        blockHash: deployData.blockHash,
                         fromAccount: transferEvent.from.substring(13),
                         toAccount: transferEvent.to
                             ? transferEvent.to.substring(13)
@@ -421,6 +421,26 @@ class Storage {
             limit: limit,
             offset: offset,
             order: [['deployHash','ASC']] // deployHash added in order to have deterministic order
+        });
+    }
+
+    async findTransfers(criteria, limit, offset) {
+        const availableCriteria = [
+            'blockHash',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.Transfer.findAndCountAll({
+            where: where,
+            limit: limit,
+            offset: offset,
+            order: [['transferHash','ASC']] // deployHash added in order to have deterministic order
         });
     }
 
