@@ -255,7 +255,7 @@ export const divBigNumbersWithPrecision = (
 
   let wholeQuotient, fractionQuotient, remainder;
 
-  if (convertedDenominator.gte(convertedDenominator)) {
+  if (convertedNumerator.gte(convertedDenominator)) {
     wholeQuotient = convertedNumerator.div(convertedDenominator);
     if (wholeQuotient.gte(Number.MAX_SAFE_INTEGER - 1)) {
       throw new Error(
@@ -273,8 +273,7 @@ export const divBigNumbersWithPrecision = (
       fractionQuotient.toNumber() / precisionMultiplier
     );
   } else {
-    remainder = convertedNumerator.sub(convertedDenominator);
-    fractionQuotient = remainder
+    fractionQuotient = convertedNumerator
       .mul(precisionMultiplier)
       .div(convertedDenominator);
 
@@ -291,9 +290,9 @@ export const divBigNumbersWithPrecisionAsString = (
   const convertedDenominator = BigNumber.from(denominator);
   const precisionMultiplier = Math.pow(10, precision);
 
-  let wholeQuotient, fractionQuotient, remainder;
+  let wholeQuotient, fractionQuotient, remainder, fractionContainer;
 
-  if (convertedDenominator.gte(convertedDenominator)) {
+  if (convertedNumerator.gte(convertedDenominator)) {
     wholeQuotient = convertedNumerator.div(convertedDenominator);
 
     remainder = convertedNumerator.sub(convertedDenominator.mul(wholeQuotient));
@@ -301,18 +300,27 @@ export const divBigNumbersWithPrecisionAsString = (
       .mul(precisionMultiplier)
       .div(convertedDenominator);
 
+    fractionContainer = BigNumber.from(precisionMultiplier).add(
+      fractionQuotient
+    );
+
     return (
       wholeQuotient.toString() +
-      (fractionQuotient.eq(0) ? '' : '.' + fractionQuotient.toString())
+      (fractionQuotient.eq(0)
+        ? ''
+        : '.' + fractionContainer.toString().slice(1))
     );
   } else {
-    remainder = convertedNumerator.sub(convertedDenominator);
-    fractionQuotient = remainder
+    fractionQuotient = convertedNumerator
       .mul(precisionMultiplier)
       .div(convertedDenominator);
 
     return (
-      '0' + (fractionQuotient.eq(0) ? '' : '.' + fractionQuotient.toString())
+      '0.' +
+      BigNumber.from(precisionMultiplier)
+        .add(fractionQuotient)
+        .toString()
+        .slice(1)
     );
   }
 };
