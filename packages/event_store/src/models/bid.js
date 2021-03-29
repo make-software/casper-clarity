@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(74),
             primaryKey: true
         },
-        validatorPublicKey: DataTypes.STRING(67),
+        validatorPublicKey: DataTypes.STRING(68),
         bondingPurse: DataTypes.STRING(74),
         stakedAmount: DataTypes.BIGINT,
         delegationRate: DataTypes.INTEGER,

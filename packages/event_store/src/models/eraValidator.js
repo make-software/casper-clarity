@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
         },
         publicKeyHex: {
-            type: DataTypes.STRING(66),
+            type: DataTypes.STRING(68),
             primaryKey: true,
         },
         weight: DataTypes.BIGINT,

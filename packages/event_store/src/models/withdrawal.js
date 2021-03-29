@@ -65,8 +65,8 @@ module.exports = (sequelize, DataTypes) => {
     Withdrawal.init({
         deployHash: DataTypes.STRING(64),
         key: DataTypes.STRING(74),
-        validatorPublicKey: DataTypes.STRING(67),
-        unbonderPublicKey: DataTypes.STRING(67),
+        validatorPublicKey: DataTypes.STRING(68),
+        unbonderPublicKey: DataTypes.STRING(68),
         bondingPurse: DataTypes.STRING(74),
         amount: DataTypes.BIGINT,
         eraOfCreation: DataTypes.INTEGER,

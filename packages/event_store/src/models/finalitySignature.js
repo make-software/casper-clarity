@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         blockHash: DataTypes.STRING(64),
-        publicKey: DataTypes.STRING(66),
+        publicKey: DataTypes.STRING(68),
         eraId: DataTypes.INTEGER,
     }, {
         sequelize,
