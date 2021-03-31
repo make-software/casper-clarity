@@ -1,0 +1,1 @@
+ALTER TABLE `Deploys` DROP COLUMN `blockHeight`;

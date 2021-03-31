@@ -1,0 +1,2 @@
+ALTER TABLE `Transfers` DROP PRIMARY KEY;
+ALTER TABLE `Transfers` DROP COLUMN `id`;

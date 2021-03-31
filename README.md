@@ -12,7 +12,7 @@ The purpose of the explorer is to help users interact with the blockchain:
 
 You need to have a Casperlabs node to run the Clarity against.
 
-You can spin up an [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl) network of nodes locally, or, if you have a running node, you can a proxy in front of it. This repository offers a docker image you can build to use as the proxy. To build the image execute the following command from the repository root:
+You can spin up an [nctl](https://github.com/CasperLabs/casper-node/tree/master/utils/nctl) network of nodes locally, or, if you have a running node, you can add a proxy in front of it. This repository offers a docker image you can build to use as the proxy. To build the image execute the following command from the repository root:
 
 ```
 docker build -t clarity-node-proxy -f Dockerfile.node-proxy .

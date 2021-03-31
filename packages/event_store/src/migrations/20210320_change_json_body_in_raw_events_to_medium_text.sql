@@ -1,0 +1,1 @@
+ALTER TABLE `RawEvents` MODIFY `jsonBody` MEDIUMTEXT NOT NULL;

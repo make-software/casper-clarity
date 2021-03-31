@@ -1,5 +1,4 @@
 const sequelize = require("sequelize");
-const crypto = require('crypto')
 
 const { Op } = sequelize;
 
@@ -25,47 +24,41 @@ class Storage {
         }
     }
 
-    async onEventId(id) {
-        console.log(`Info: Processing id ${id}`);
-        await this.storeEntity('EventId', {id});
+    async onEventId(sourceNodeId, apiVersionId, id) {
+        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}, protocol version ${apiVersionId}`);
+        this.storeEntity('EventId', { sourceNodeId, apiVersionId, id });
     }
 
-    async onEvent(jsonBody) {
+    async onEvent(sourceNodeId, apiVersionId, jsonBody) {
         const event = JSON.parse(jsonBody);
 
         let eventType,
-            primaryEntityHash,
-            entityProcessing;
+            primaryEntityHash;
 
-        if (event.DeployProcessed) {
+        if (event.ApiVersion) {
+            eventType = 'ApiVersion';
+            primaryEntityHash = event.ApiVersion;
+        } else if (event.DeployProcessed) {
             eventType = 'DeployProcessed';
             primaryEntityHash = event.DeployProcessed.deploy_hash;
-            entityProcessing = this.onDeployProcessedEvent(event.DeployProcessed);
+            this.onDeployProcessedEvent(event.DeployProcessed);
         } else if (event.BlockAdded) {
             eventType = 'BlockAdded';
             primaryEntityHash = event.BlockAdded.block_hash;
-            entityProcessing = this.onBlockAddedEvent(event.BlockAdded);
+            this.onBlockAddedEvent(event.BlockAdded);
         } else if (event.FinalitySignature) {
             eventType = 'FinalitySignature';
             primaryEntityHash = event.FinalitySignature.signature;
-            entityProcessing = this.onFinalitySignatureEvent(event.FinalitySignature);
+            this.onFinalitySignatureEvent(event.FinalitySignature);
         }
 
-        const eventHash = crypto.createHash('sha256')
-            .update(jsonBody, 'utf8')
-            .digest('hex');
-
-        const storingRawEvent = this.storeEntity('RawEvent', {
-            eventHash,
+        this.storeEntity('RawEvent', {
+            sourceNodeId,
+            apiVersionId,
             eventType,
             primaryEntityHash,
             jsonBody
         });
-
-        await Promise.all([
-            storingRawEvent,
-            entityProcessing
-        ]);
     }
 
     async onDeployProcessedEvent(event) {
@@ -73,7 +66,6 @@ class Storage {
 
         let deployData = {
             blockHash: event.block_hash,
-            blockHeight: event.height,
             deployHash: event.deploy_hash,
             account: event.account,
             timestamp: event.timestamp,
@@ -89,20 +81,19 @@ class Storage {
             deployData.cost = result.cost;
         }
 
-        const result = await this.storeEntity('Deploy', deployData);
+        const result = this.storeEntity('Deploy', deployData);
 
         if (result !== false && event.execution_result.Success) {
             let result = event.execution_result.Success;
-            result.transfers.forEach(transferHash => {
-                result.effect.transforms.forEach(async transform => {
-                    if(transform.key != transferHash) {
-                        return;
-                    }
+            let transferHashes = result.transfers;
 
+            for (let transform of result.effect.transforms) {
+                if (transferHashes.includes(transform.key)) {
                     let transferEvent = transform.transform.WriteTransfer;
-                    await this.storeEntity('Transfer', {
-                        transferHash: transferHash,
+                    this.storeEntity('Transfer', {
+                        transferHash: transform.key,
                         deployHash: deployData.deployHash,
+                        blockHash: deployData.blockHash,
                         fromAccount: transferEvent.from.substring(13),
                         toAccount: transferEvent.to
                             ? transferEvent.to.substring(13)
@@ -112,11 +103,43 @@ class Storage {
                         amount: transferEvent.amount,
                         id: transferEvent.id
                     });
-                });
-            });
+                }
+
+                if (transform.transform) {
+                    if (transform.transform.WriteBid) {
+                        let bidEvent = transform.transform.WriteBid;
+                        this.storeEntity('Bid', {
+                            key: transform.key,
+                            deployHash: event.deploy_hash,
+                            validatorPublicKey: bidEvent.validator_public_key,
+                            bondingPurse: bidEvent.bonding_purse,
+                            stakedAmount: bidEvent.staked_amount,
+                            delegationRate: bidEvent.delegation_rate,
+                            inactive: bidEvent.inactive,
+                            vestingSchedule: bidEvent.vesting_schedule,
+                            delegators: bidEvent.delegators,
+                            timestamp: event.timestamp,
+                        });
+                    }
+                    else if (transform.transform.WriteWithdraw) {
+                        for (let withdrawalEvent of transform.transform.WriteWithdraw) {
+                            this.storeEntity('Withdrawal', {
+                                key: transform.key,
+                                deployHash: event.deploy_hash,
+                                validatorPublicKey: withdrawalEvent.validator_public_key,
+                                unbonderPublicKey: withdrawalEvent.unbonder_public_key,
+                                bondingPurse: withdrawalEvent.bonding_purse,
+                                amount: withdrawalEvent.amount,
+                                eraOfCreation: withdrawalEvent.era_of_creation,
+                                timestamp: event.timestamp,
+                            });
+                        }
+                    }
+                }
+            }
         }
 
-        if(this.pubsub !== null) {
+        if (this.pubsub !== null) {
             this.pubsub.broadcast_deploy(await deploy.toJSON());
         }
     }
@@ -124,34 +147,102 @@ class Storage {
     async onBlockAddedEvent(event) {
         // If after https://github.com/CasperLabs/casper-node/pull/978 (note that version remained the same 1.0.0)
         if (event.block) {
-            let deploysStr = event.block.header.deploy_hashes.join(', ');
-            let deployCount = event.block.header.deploy_hashes.length;
-            console.log(
-                `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
-                `Deploys: [${deploysStr}].`
-            );
+            const deployCount = event.block.body.deploy_hashes.length;
+            const transferCount = event.block.body.transfer_hashes.length;
 
-            await this.storeEntity('Block', {
+            console.log(`Info: Processing BlockAdded event. BlockHash: ${event.block_hash}`);
+
+            this.storeEntity('Block', {
                 blockHash: event.block.hash,
                 blockHeight: event.block.header.height,
                 parentHash: event.block.header.parent_hash,
                 timestamp: event.block.header.timestamp,
                 state: event.block.header.state_root_hash,
                 deployCount: deployCount,
+                transferCount: transferCount,
                 eraId: event.block.header.era_id,
                 proposer: event.block.body.proposer,
             });
 
+            if (event.block.header.era_end) {
+                this.storeEntity('Era', {
+                    id: event.block.header.era_id,
+                    endBlockHeight: event.block.header.height,
+                    endTimestamp: event.block.header.timestamp,
+                    protocolVersion: event.block.header.protocol_version,
+                });
+
+                for (let publicKeyHex in event.block.header.era_end.next_era_validator_weights) {
+                    this.storeEntity('EraValidator', {
+                        eraId: event.block.header.era_id + 1,
+                        publicKeyHex: publicKeyHex,
+                        weight: event.block.header.era_end.next_era_validator_weights[publicKeyHex],
+                        rewards: 0,
+                        hasEquivocation: 0,
+                        wasActive: 0,
+                    });
+                }
+
+                const updatedValidators = [];
+                for (let publicKeyHex in event.block.header.era_end.era_report.rewards) {
+                    updatedValidators.push(publicKeyHex);
+
+                    this.models.EraValidator.update({
+                        rewards: event.block.header.era_end.era_report.rewards[publicKeyHex],
+                        hasEquivocation: event.block.header.era_end.era_report.equivocators.includes(publicKeyHex),
+                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+
+                for (let publicKeyHex of event.block.header.era_end.era_report.equivocators) {
+                    if (updatedValidators.includes(publicKeyHex)) {
+                        continue;
+                    }
+
+                    updatedValidators.push(publicKeyHex);
+
+                    this.models.EraValidator.update({
+                        hasEquivocation: true,
+                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+
+                for (let publicKeyHex of event.block.header.era_end.era_report.inactive_validators) {
+                    if (updatedValidators.includes(publicKeyHex)) {
+                        continue;
+                    }
+
+                    this.models.EraValidator.update({
+                        wasActive: false,
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: publicKeyHex,
+                        }
+                    });
+                }
+            }
+
             // Update deploys.
             // @todo Remove this with the next release (backward compatibility)
-            await this.models.Deploy.update({
-                timestamp: event.block.header.timestamp,
-                blockHash: event.block.hash
-            }, {
-                where: {
-                    deployHash: event.block.header.deploy_hashes
-                }
-            });
+            // await this.models.Deploy.update({
+            //     timestamp: event.block.header.timestamp,
+            //     blockHash: event.block.hash
+            // }, {
+            //     where: {
+            //         deployHash: event.block.body.deploy_hashes
+            //     }
+            // });
         }
         else {
             let deploysStr = event.block_header.deploy_hashes.join(', ');
@@ -161,7 +252,7 @@ class Storage {
                 `Deploys: [${deploysStr}].`
             );
 
-            await this.storeEntity('Block', {
+            this.storeEntity('Block', {
                 blockHash: event.block_hash,
                 blockHeight: event.block_header.height,
                 parentHash: event.block_header.parent_hash,
@@ -174,14 +265,14 @@ class Storage {
 
             // Update deploys.
             // @todo Remove this with the next release (backward compatibility)
-            await this.models.Deploy.update({
-                timestamp: event.block_header.timestamp,
-                blockHash: event.block_hash
-            }, {
-                where: {
-                    deployHash: event.block_header.deploy_hashes
-                }
-            });
+            // await this.models.Deploy.update({
+            //     timestamp: event.block_header.timestamp,
+            //     blockHash: event.block_hash
+            // }, {
+            //     where: {
+            //         deployHash: event.block_header.deploy_hashes
+            //     }
+            // });
         }
 
         if(this.pubsub !== null) {
@@ -189,10 +280,19 @@ class Storage {
         }
     }
 
+    async onEraEnd(eraEnd) {
+        this.storeEntity('Era', {
+            eraId: eraEnd.era_id,
+            eraEndBlockHeight: eraEnd.era_end_block_height,
+            eraEndTimestamp: eraEnd.era_end_timestamp,
+            eraProtocolVersion: eraEnd.era_protocol_version,
+        });
+    }
+
     async onFinalitySignatureEvent(event) {
         console.log(`Info: Processing FinalitySignature event. Signature: ${event.signature}.`);
 
-        await this.storeEntity('FinalitySignature', {
+        this.storeEntity('FinalitySignature', {
             signature: event.signature,
             blockHash: event.block_hash,
             publicKey: event.public_key,
@@ -204,16 +304,33 @@ class Storage {
         return this.models.Block.findByPk(height);
     }
 
-    async findEventId(id) {
-        return this.models.EventId.findOne({
-            where: {
-                id: id
-            }
+    async findSourceNodeByAddressOrCreate(address) {
+        const found = await this.models.SourceNode.findOne({
+            where: { address }
         });
+
+        if (found) {
+            return found;
+        }
+
+        return await this.storeEntity('SourceNode', { address });
     }
 
-    async getLastEventId() {
+    async findApiVersionByVersionOrCreate(version) {
+        const found = await this.models.ApiVersion.findOne({
+            where: { version }
+        });
+
+        if (found) {
+            return found;
+        }
+
+        return await this.storeEntity('ApiVersion', { version });
+    }
+
+    async getLastEventId(sourceNodeId, apiVersionId) {
         const eventId = await this.models.EventId.findOne({
+            where: { sourceNodeId, apiVersionId },
             order: [[ 'id', 'DESC' ]],
         });
 
@@ -228,17 +345,23 @@ class Storage {
         });
     }
 
-    async findBlocks(limit, offset) {
-        let blocks = await this.models.Block.findAll({
+    async findBlocks(criteria, limit, offset) {
+        const availableCriteria = [
+            'proposer',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.Block.findAndCountAll({
             limit: limit,
             offset: offset,
             order: [['blockHeight', 'DESC']]
         });
-        let count = await this.models.Block.count();
-        return {
-            rows: blocks,
-            count: count
-        }
     }
 
     async findDeployByHash(deployHash) {
@@ -267,8 +390,8 @@ class Storage {
         });
     }
 
-    async findTransfers(purseUref) {
-        return this.models.Transfer.findAll({
+    async findAccountTransfers(purseUref, limit, offset) {
+        return this.models.Transfer.findAndCountAll({
             where: {
                 [Op.or]: [
                     {
@@ -279,6 +402,70 @@ class Storage {
                 ]
             }
         });
+    }
+
+    async getDeploys(criteria, limit, offset) {
+        const availableCriteria = [
+            'blockHash',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.Deploy.findAndCountAll({
+            where: where,
+            limit: limit,
+            offset: offset,
+            order: [['deployHash','ASC']] // deployHash added in order to have deterministic order
+        });
+    }
+
+    async findTransfers(criteria, limit, offset) {
+        const availableCriteria = [
+            'blockHash',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.Transfer.findAndCountAll({
+            where: where,
+            limit: limit,
+            offset: offset,
+            order: [['transferHash','ASC']] // deployHash added in order to have deterministic order
+        });
+    }
+
+    async findEraValidators(criteria, limit, offset) {
+        const availableCriteria = [
+            'eraId',
+            'publicKeyHex',
+            'hasEquivocation',
+            'wasActive',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.EraValidator
+            .findAndCountAll({where, limit, offset});
+    }
+
+    async getTotalValidatorRewards(publicKeyHex) {
+        return await this.models.EraValidator
+            .sum('rewards', {where: {publicKeyHex}});
     }
 }
 

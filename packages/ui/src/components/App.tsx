@@ -108,19 +108,21 @@ class GroupedMenuItem {
 
 const SideMenuIconSize = 18;
 
+const faucetMenuItem = new MenuItem(
+  Pages.Faucet,
+  'Faucet',
+  <IoIosWater fontSize={SideMenuIconSize} />,
+  false,
+  FaucetAsterix
+);
+
 const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   new MenuItem(
     Pages.Accounts,
     'Accounts',
     <IoMdKey fontSize={SideMenuIconSize} />
   ),
-  new MenuItem(
-    Pages.Faucet,
-    'Faucet',
-    <IoIosWater fontSize={SideMenuIconSize} />,
-    false,
-    FaucetAsterix
-  ),
+  faucetMenuItem,
   new MenuItem(
     Pages.DeployContracts,
     'Deploy Contract',
@@ -159,6 +161,13 @@ const SideMenuItems: (MenuItem | GroupedMenuItem)[] = [
   //   [new MenuItem(Pages.Vesting, 'Vesting')]
   // )
 ];
+
+if (!window.config.withFaucet) {
+  const index = SideMenuItems.indexOf(faucetMenuItem);
+  if (index > -1) {
+    SideMenuItems.splice(index, 1);
+  }
+}
 
 export interface AppProps {
   errors: ErrorContainer;
@@ -470,10 +479,12 @@ const Content = (props: AppProps) => {
               <Title title="Account Keys" />
               <Accounts {...props} />
             </PrivateRoute>
-            <PrivateRoute path={Pages.Faucet} auth={props.auth}>
-              <Title title="Faucet" />
-              <Faucet {...props} />
-            </PrivateRoute>
+            {window.config.withFaucet && (
+              <PrivateRoute path={Pages.Faucet} auth={props.auth}>
+                <Title title="Faucet" />
+                <Faucet {...props} />
+              </PrivateRoute>
+            )}
             <Route path={Pages.Explorer}>
               <Title title="Explorer" />
               <Explorer

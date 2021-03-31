@@ -73,7 +73,7 @@ class _BlockList extends React.Component<Props, {}> {
             <tr key={id}>
               <td>{block.height}</td>
               <td>{block.eraId}</td>
-              <td>{block.deployCount || 0}</td>
+              <td>{block.deployCount + (block as any).transferCount}</td>
               <td>
                 <Link to={Pages.block(id)}>{id}</Link>
               </td>

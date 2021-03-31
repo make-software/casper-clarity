@@ -104,13 +104,7 @@ const DeploysTable = observer(
     return (
       <DataTable
         title={`Deploys in block ${props.blockHashBase16}`}
-        headers={[
-          'Deploy Hash',
-          'Account',
-          'Gas Price',
-          'Status',
-          'Error Message'
-        ]}
+        headers={['Deploy Hash', 'Account', 'Cost', 'Status', 'Error Message']}
         rows={props.deploys}
         renderRow={(deploy: DeployResult, i) => {
           const id = deploy.deployHash;
@@ -122,7 +116,7 @@ const DeploysTable = observer(
               </td>
               <td>{shortHash(accountId)}</td>
               <td className="text-right">
-                <CSPR motes={BigNumber.from(deploy.cost)} precision={2} />
+                <CSPR motes={BigNumber.from(deploy.cost)} precision={5} />
               </td>
               <td className="text-center">
                 {deploy.errorMessage ? <FailIcon /> : <SuccessIcon />}
