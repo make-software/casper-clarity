@@ -213,8 +213,8 @@ footer.sticky-footer {
   background-color: lightgrey;
 }
 
-span.stakePerc {
-  padding-left: 0.5rem;
+span.stakePerc,
+div.stakePerc {
   color: fade-out($black, 0.5);
 }
 
@@ -236,4 +236,12 @@ div.copyButton a {
 
 .monospace {
   font-family: 'Segoe UI Mono W10 Regular' !important;
+}
+
+div.delegators {
+  display: none;
+}
+
+.clickable {
+  cursor: pointer;
 }

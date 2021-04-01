@@ -5,13 +5,14 @@ import {
   Loading,
   CSPR,
   divBigNumbersWithPrecision,
-  shortHash,
-  IconButton
+  shortHash
+  // IconButton
 } from './Utils';
 import DataTable from './DataTable';
 import ValidatorsContainer from '../containers/ValidatorsContainer';
 import { BigNumber } from '@ethersproject/bignumber';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+// import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Delegators } from 'casper-client-sdk';
 
 interface Props {
   validatorsContainer: ValidatorsContainer;
@@ -116,6 +117,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
           delegation_rate: bid.bid.delegation_rate,
           stakeStr: stake,
           stakeNum: stakeNum,
+          delegators: bid.bid.delegators,
           delegatorCount: bid.bid.delegators.length,
           delegatedStake: validatorTotalDelegatedStake,
           delegatedStakePerc:
@@ -160,23 +162,38 @@ export default class Validators extends RefreshableComponent<Props, {}> {
           rows={rows}
           renderRow={(bidInfo, index) => {
             let key = `bids-${bidInfo.validatorId}`;
+
+            function showDelegators() {
+              $('#' + key + ' .delegators').toggle();
+            }
+
             return (
-              <tr key={key}>
+              <tr
+                className={'clickable'}
+                id={key}
+                key={key}
+                onClick={showDelegators}
+              >
                 <td>{index! + 1}</td>
-                <td title={bidInfo.validatorId} data-toggle="tooltip">
-                  <div className={'validatorId monospace'}>
-                    {shortHash(bidInfo.validatorId, 100)}
+                <td>
+                  <div className={'monospace'}>
+                    {shortHash(bidInfo.validatorId, 100)}&nbsp;&nbsp;
                   </div>
-                  <div className={'copyButton'}>
-                    <CopyToClipboard text={bidInfo.validatorId}>
-                      <IconButton title="" onClick={() => null} icon="copy" />
-                    </CopyToClipboard>
-                  </div>
+                  {bidInfo.delegators.map((value: Delegators) => (
+                    <div className={'stakePerc monospace delegators'}>
+                      {shortHash(value.public_key, 100)}
+                    </div>
+                  ))}
                 </td>
                 <td className={'rightAligned'}>{bidInfo.delegation_rate} %</td>
                 <td className={'rightAligned'}>{bidInfo.delegatorCount}</td>
                 <td className={'rightAligned monospace'}>
                   <CSPR motes={bidInfo.totalValidatorWeight} />
+                  {bidInfo.delegators.map((value: Delegators) => (
+                    <div className={'stakePerc delegators'}>
+                      <CSPR motes={BigNumber.from(value.staked_amount)} />
+                    </div>
+                  ))}
                 </td>
                 <td className={'rightAligned'}>
                   <span className="stakePerc">
