@@ -4,8 +4,8 @@ import {
   RefreshableComponent,
   Loading,
   CSPR,
-  divBigNumbersWithPrecision,
-  shortHash
+  divBigNumbersWithPrecision
+  // shortHash
   // IconButton
 } from './Utils';
 import DataTable from './DataTable';
@@ -180,11 +180,14 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                 <td>{index! + 1}</td>
                 <td>
                   <div className={'monospace'}>
-                    {shortHash(bidInfo.validatorId, 100)}&nbsp;&nbsp;
+                    {bidInfo.validatorId}&nbsp;&nbsp;
+                  </div>
+                  <div className={'stakePerc monospace delegators'}>
+                    self staked
                   </div>
                   {bidInfo.delegators.map((value: Delegators) => (
                     <div className={'stakePerc monospace delegators'}>
-                      {shortHash(value.public_key, 100)}
+                      {value.public_key}
                     </div>
                   ))}
                 </td>
@@ -192,6 +195,9 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                 <td className={'rightAligned'}>{bidInfo.delegatorCount}</td>
                 <td className={'rightAligned monospace'}>
                   <CSPR motes={bidInfo.totalValidatorWeight} />
+                  <div className={'stakePerc delegators'}>
+                    <CSPR motes={BigNumber.from(bidInfo.stakeNum)} />
+                  </div>
                   {bidInfo.delegators.map((value: Delegators) => (
                     <div className={'stakePerc delegators'}>
                       <CSPR motes={BigNumber.from(value.staked_amount)} />
