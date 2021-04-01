@@ -183,7 +183,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                     {bidInfo.validatorId}&nbsp;&nbsp;
                   </div>
                   <div className={'stakePerc monospace delegators'}>
-                    self staked
+                    {bidInfo.validatorId}
                   </div>
                   {bidInfo.delegators.map((value: Delegators) => (
                     <div className={'stakePerc monospace delegators'}>
