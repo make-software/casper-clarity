@@ -120,14 +120,17 @@ export default class Validators extends RefreshableComponent<Props, {}> {
           delegators: bid.bid.delegators,
           delegatorCount: bid.bid.delegators.length,
           delegatedStake: validatorTotalDelegatedStake,
-          delegatedStakePerc:
-            divBigNumbersWithPrecision(
-              validatorTotalDelegatedStake,
-              totalValidatorWeight,
-              4
-            ) * 100,
-          selfStakePerc:
-            divBigNumbersWithPrecision(stakeNum, totalValidatorWeight, 4) * 100,
+          delegatedStakePerc: totalValidatorWeight.eq(0)
+            ? 0
+            : divBigNumbersWithPrecision(
+                validatorTotalDelegatedStake,
+                totalValidatorWeight,
+                4
+              ) * 100,
+          selfStakePerc: totalValidatorWeight.eq(0)
+            ? 100
+            : divBigNumbersWithPrecision(stakeNum, totalValidatorWeight, 4) *
+              100,
           totalValidatorWeight: totalValidatorWeight,
           reward: bid.bid.reward,
           stakePerc:
@@ -153,7 +156,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             'Validator ID',
             'Fee',
             'Delegators',
-            'Weight)',
+            'Weight',
             'Network %',
             'Self %'
           ]}
