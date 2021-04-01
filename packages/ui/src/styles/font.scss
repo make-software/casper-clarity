@@ -29,3 +29,11 @@
   src: local('../fonts/Segoe UI Bold Italic'),
     url('../fonts/Segoe UI Bold Italic.woff') format('woff');
 }
+
+@font-face {
+  font-family: 'Segoe UI Mono W10 Regular';
+  font-style: normal;
+  font-weight: normal;
+  src: local('../fonts/Segoe UI Mono W10 Regular'),
+    url('../fonts/Segoe UI Mono W10 Regular.woff') format('woff');
+}

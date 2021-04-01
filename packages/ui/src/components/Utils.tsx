@@ -348,5 +348,5 @@ export const CSPR = (props: { motes: BigNumber; precision?: number }) => {
     props.precision ? props.precision : 0
   );
 
-  return <span>{csprStr} CSPR</span>;
+  return <span>{Number(csprStr).toLocaleString()} CSPR</span>;
 };

@@ -77,6 +77,17 @@ export default class Validators extends RefreshableComponent<Props, {}> {
       BigNumber.from(0)
     );
 
+    const delegations = data.bids.flatMap((value, index) => {
+      return value.bid.delegators;
+    });
+
+    const totalDelegatedAmount = delegations.reduce(
+      (acc, val) => acc.add(BigNumber.from(val.staked_amount)),
+      BigNumber.from(0)
+    );
+
+    const totalWeight = totalStakedAmount.add(totalDelegatedAmount);
+
     // Contaners for tabs.
     let navs = [];
     let tables = [];
@@ -94,7 +105,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
         let validatorTotalDelegatedStake = BigNumber.from(0);
         if (bid.bid.delegators.length > 0) {
           validatorTotalDelegatedStake = bid.bid.delegators.reduce(
-            (acc, val) => acc.add(BigNumber.from(val.delegator.staked_amount)),
+            (acc, val) => acc.add(BigNumber.from(val.staked_amount)),
             BigNumber.from(0)
           );
         }
@@ -118,7 +129,10 @@ export default class Validators extends RefreshableComponent<Props, {}> {
           totalValidatorWeight: totalValidatorWeight,
           reward: bid.bid.reward,
           stakePerc:
-            divBigNumbersWithPrecision(stakeNum, totalStakedAmount, 4) * 100
+            divBigNumbersWithPrecision(stakeNum, totalStakedAmount, 4) * 100,
+          totalPerc:
+            divBigNumbersWithPrecision(totalValidatorWeight, totalWeight, 4) *
+            100
         };
       })
       .sort((a, b) =>
@@ -137,7 +151,9 @@ export default class Validators extends RefreshableComponent<Props, {}> {
             'Validator ID',
             'Fee',
             'Delegators',
-            'Total Weight (Self %)'
+            'Weight)',
+            'Network %',
+            'Self %'
           ]}
           // version with 3 columns for Delegated Stake, Self Stake, Total Stake
           // headers={['Slot', 'Validator ID', 'Fee', 'Delegators','Delegated Stake', 'Self Staked (Self %)', 'Total Weight']}
@@ -148,7 +164,7 @@ export default class Validators extends RefreshableComponent<Props, {}> {
               <tr key={key}>
                 <td>{index! + 1}</td>
                 <td title={bidInfo.validatorId} data-toggle="tooltip">
-                  <div className={'validatorId'}>
+                  <div className={'validatorId monospace'}>
                     {shortHash(bidInfo.validatorId, 100)}
                   </div>
                   <div className={'copyButton'}>
@@ -157,22 +173,19 @@ export default class Validators extends RefreshableComponent<Props, {}> {
                     </CopyToClipboard>
                   </div>
                 </td>
-                <td>{bidInfo.delegation_rate} %</td>
-                <td>{bidInfo.delegatorCount}</td>
-                {/*Version with 3 columns*/}
-                {/*<td className={'rightAligned'}>*/}
-                {/*  <CSPR motes={bidInfo.delegatedStake} />*/}
-                {/*</td>*/}
-                {/*<td className={'rightAligned'}>*/}
-                {/*  <CSPR motes={bidInfo.stakeNum} />*/}
-                {/*  <span className="stakePerc">*/}
-                {/*    ({bidInfo.selfStakePerc.toFixed(2)}%)*/}
-                {/*  </span>*/}
-                {/*</td>*/}
-                <td className={'rightAligned'}>
+                <td className={'rightAligned'}>{bidInfo.delegation_rate} %</td>
+                <td className={'rightAligned'}>{bidInfo.delegatorCount}</td>
+                <td className={'rightAligned monospace'}>
                   <CSPR motes={bidInfo.totalValidatorWeight} />
+                </td>
+                <td className={'rightAligned'}>
                   <span className="stakePerc">
-                    ({bidInfo.selfStakePerc.toFixed(2)}%)
+                    {bidInfo.totalPerc.toFixed(2)}%
+                  </span>
+                </td>
+                <td className={'rightAligned'}>
+                  <span className="stakePerc">
+                    {bidInfo.selfStakePerc.toFixed(2)}%
                   </span>
                 </td>
               </tr>
@@ -221,18 +234,20 @@ export default class Validators extends RefreshableComponent<Props, {}> {
           tabName,
           <DataTable
             title={eraName}
-            headers={['Validator ID', 'Slot', 'Stake']}
+            headers={['Validator ID', 'Slot', 'Stake', 'Network %']}
             rows={rows}
             renderRow={(validatorInfo, index) => {
               let key = `${era.era_id}-${validatorInfo.validatorId}`;
               return (
                 <tr key={key}>
-                  <td>{validatorInfo.validatorId}</td>
+                  <td className={'monospace'}>{validatorInfo.validatorId}</td>
                   <td>{index! + 1}</td>
-                  <td>
+                  <td className={'monospace rightAligned'}>
                     <CSPR motes={validatorInfo.stakeNum} />
+                  </td>
+                  <td className={'rightAligned'}>
                     <span className="stakePerc">
-                      ({validatorInfo.stakePerc.toFixed(2)}%)
+                      {validatorInfo.stakePerc.toFixed(2)}%
                     </span>
                   </td>
                 </tr>
