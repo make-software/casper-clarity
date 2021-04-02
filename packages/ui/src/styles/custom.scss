@@ -245,3 +245,6 @@ div.delegators {
 .clickable {
   cursor: pointer;
 }
+tr.clickable:hover {
+  background-color: #e9ecef;
+}
