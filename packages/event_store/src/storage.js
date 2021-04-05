@@ -360,6 +360,7 @@ class Storage {
         return await this.models.Block.findAndCountAll({
             limit: limit,
             offset: offset,
+            where: where,
             order: [['blockHeight', 'DESC']]
         });
     }
