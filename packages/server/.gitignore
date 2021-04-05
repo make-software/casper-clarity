@@ -2,3 +2,4 @@ node_modules
 dist
 nonce.txt
 faucet-keys
+faucet-keys-testnet
