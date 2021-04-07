@@ -9,6 +9,23 @@ const config = require(__dirname + '/../../config/db-config.json')[env];
 const db = {};
   
 let sequelize;
+
+config.dialectOptions = {
+    connectTimeout: 60000
+};
+
+// A hacky way to figure out if the running process is the event handler
+if (process.env.NODE_ADDRESS) {
+    config.pool = {
+        max: process.env.MAX_DATABASE_CONNECTIONS
+            ? process.env.MAX_DATABASE_CONNECTIONS
+            : 85,
+        min: 15,
+        acquire: 60000,
+        idle: 15000
+    };
+}
+
 if (process.env['DATABASE_URI']) {
   sequelize = new Sequelize(process.env['DATABASE_URI'], config);
 } else {
