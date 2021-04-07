@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BIGINT,
             primaryKey: true
         },
     }, {

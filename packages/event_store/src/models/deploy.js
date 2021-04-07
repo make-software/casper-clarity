@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         blockHash: DataTypes.STRING,
         account: DataTypes.STRING,
-        cost: DataTypes.INTEGER,
+        cost: DataTypes.BIGINT,
         errorMessage: DataTypes.STRING,
         timestamp: DataTypes.DATE
     }, {
