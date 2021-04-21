@@ -366,7 +366,7 @@ class Storage {
         });
     }
 
-    async findBlocks(criteria, limit, offset) {
+    async findBlocks(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'proposer',
         ];
@@ -378,11 +378,17 @@ class Storage {
             }
         }
 
+        let order = [['blockHeight', 'DESC']];
+        const availableOrderFields = ['blockHeight', 'deployCount', 'transferCount', 'timestamp', 'eraId'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return await this.models.Block.findAndCountAll({
             limit: limit,
             offset: offset,
             where: where,
-            order: [['blockHeight', 'DESC']]
+            order: order,
         });
     }
 
@@ -390,11 +396,17 @@ class Storage {
         return this.models.Deploy.findByPk(deployHash);
     }
 
-    async findDeploysByAccount(account, limit, offset) {
+    async findDeploysByAccount(account, limit, offset, orderBy, orderDirection) {
+        let order = [['timestamp', 'DESC']];
+        const availableOrderFields = ['cost', 'timestamp', 'errorMessage'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return this.models.Deploy.findAndCountAll({
             limit: limit,
             offset: offset,
-            order: [['timestamp', 'DESC']],
+            order: order,
             where: {
                 account: account
             }
@@ -412,21 +424,30 @@ class Storage {
         });
     }
 
-    async findAccountTransfers(purseUref, limit, offset) {
+    async findAccountTransfers(accountHash, limit, offset, orderBy, orderDirection) {
+        let order = [['createdAt', 'DESC']];
+        const availableOrderFields = ['amount', 'createdAt'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return this.models.Transfer.findAndCountAll({
             where: {
                 [Op.or]: [
                     {
-                        fromAccount: purseUref
+                        fromAccount: accountHash
                     },{
-                        toAccount: purseUref
+                        toAccount: accountHash
                     }
                 ]
-            }
+            },
+            limit: limit,
+            offset: offset,
+            order: order,
         });
     }
 
-    async getDeploys(criteria, limit, offset) {
+    async getDeploys(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'blockHash',
         ];
@@ -436,17 +457,23 @@ class Storage {
             if (availableCriteria.includes(criterion)) {
                 where[criterion] = criteria[criterion]
             }
+        }
+
+        let order = [['timestamp', 'DESC']];
+        const availableOrderFields = ['cost', 'timestamp', 'errorMessage'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
         }
 
         return await this.models.Deploy.findAndCountAll({
             where: where,
             limit: limit,
             offset: offset,
-            order: [['deployHash','ASC']] // deployHash added in order to have deterministic order
+            order: order
         });
     }
 
-    async findTransfers(criteria, limit, offset) {
+    async findTransfers(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'blockHash',
         ];
@@ -458,15 +485,21 @@ class Storage {
             }
         }
 
+        let order = [['createdAt', 'DESC']];
+        const availableOrderFields = ['amount', 'createdAt'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return await this.models.Transfer.findAndCountAll({
             where: where,
             limit: limit,
             offset: offset,
-            order: [['transferHash','ASC']] // deployHash added in order to have deterministic order
+            order: order,
         });
     }
 
-    async findEraValidators(criteria, limit, offset) {
+    async findEraValidators(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'eraId',
             'publicKeyHex',
@@ -481,8 +514,14 @@ class Storage {
             }
         }
 
+        let order = [['eraId', 'DESC']];
+        const availableOrderFields = ['eraId', 'weight', 'rewards', 'hasEquivocation', 'wasActive', 'createdAt'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return await this.models.EraValidator
-            .findAndCountAll({where, limit, offset});
+            .findAndCountAll({where, limit, offset, order});
     }
 
     async getTotalValidatorRewards(publicKey) {
@@ -495,7 +534,7 @@ class Storage {
             .sum('amount', {where: {validatorPublicKey}});
     }
 
-    async findValidatorRewards(criteria, limit, offset) {
+    async findValidatorRewards(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'publicKey',
         ];
@@ -507,15 +546,21 @@ class Storage {
             }
         }
 
+        let order = [['eraId', 'DESC']];
+        const availableOrderFields = ['amount', 'eraId'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return await this.models.ValidatorReward.findAndCountAll({
             limit: limit,
             offset: offset,
             where: where,
-            order: [['eraId', 'DESC']]
+            order: order
         });
     }
 
-    async findDelegatorRewards(criteria, limit, offset) {
+    async findDelegatorRewards(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'publicKey',
             'validatorPublicKey',
@@ -528,11 +573,17 @@ class Storage {
             }
         }
 
+        let order = [['eraId', 'DESC']];
+        const availableOrderFields = ['amount', 'eraId'];
+        if (orderBy && availableOrderFields.includes(orderBy)) {
+            order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
+        }
+
         return await this.models.DelegatorReward.findAndCountAll({
             limit: limit,
             offset: offset,
             where: where,
-            order: [['eraId', 'DESC']]
+            order: order
         });
     }
 }

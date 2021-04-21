@@ -35,7 +35,14 @@ let httpServer = (models) => {
     app.use(paginate.middleware(10, 20));
 
     app.get('/blocks', async (req, res, next) => {
-        let blocks = await storage.findBlocks({}, req.query.limit, req.skip);
+        let blocks = await storage.findBlocks(
+            {},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = blocks.count;
         const pageCount = Math.ceil(blocks.count / req.query.limit);
         let result = {
@@ -50,7 +57,14 @@ let httpServer = (models) => {
     });
 
     app.get('/deploys', async (req, res, next) => {
-        let deploys = await storage.getDeploys({}, req.query.limit, req.skip);
+        let deploys = await storage.getDeploys(
+            {},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = deploys.count;
         const pageCount = Math.ceil(deploys.count / req.query.limit);
         let result = {
@@ -65,7 +79,14 @@ let httpServer = (models) => {
     });
 
     app.get('/blocks/:blockHash/deploys', async (req, res, next) => {
-        let deploys = await storage.getDeploys({blockHash: req.params.blockHash}, req.query.limit, req.skip);
+        let deploys = await storage.getDeploys(
+            {blockHash: req.params.blockHash},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = deploys.count;
         const pageCount = Math.ceil(deploys.count / req.query.limit);
         let result = {
@@ -80,7 +101,14 @@ let httpServer = (models) => {
     });
 
     app.get('/blocks/:blockHash/transfers', async (req, res, next) => {
-        let transfers = await storage.findTransfers({blockHash: req.params.blockHash}, req.query.limit, req.skip);
+        let transfers = await storage.findTransfers(
+            {blockHash: req.params.blockHash},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = transfers.count;
         const pageCount = Math.ceil(transfers.count / req.query.limit);
         let result = {
@@ -95,7 +123,14 @@ let httpServer = (models) => {
     });
 
     app.get('/accountDeploys/:account', async (req, res, next) => {
-        let deploys = await storage.findDeploysByAccount(req.params.account, req.query.limit, req.skip);
+        let deploys = await storage.findDeploysByAccount(
+            req.params.account,
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = deploys.count;
         const pageCount = Math.ceil(deploys.count / req.query.limit);
         let result = {
@@ -110,7 +145,14 @@ let httpServer = (models) => {
     });
 
     app.get('/accounts/:accountHash/transfers', async (req, res, next) => {
-        let transfers = await storage.findAccountTransfers(req.params.accountHash, req.query.limit, req.skip);
+        let transfers = await storage.findAccountTransfers(
+            req.params.accountHash,
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = transfers.count;
         const pageCount = Math.ceil(transfers.count / req.query.limit);
         let result = {
@@ -125,7 +167,13 @@ let httpServer = (models) => {
     });
 
     app.get('/era-validators', async (req, res, next) => {
-        let eraValidators = await storage.findEraValidators(req.query, req.query.limit, req.skip);
+        let eraValidators = await storage.findEraValidators(
+            req.query,
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
 
         const itemCount = eraValidators.count;
         const pageCount = Math.ceil(eraValidators.count / req.query.limit);
@@ -161,7 +209,14 @@ let httpServer = (models) => {
     });
 
     app.get('/validators/:publicKeyHex/blocks', async (req, res, next) => {
-        let blocks = await storage.findBlocks({proposer: req.params.publicKeyHex}, req.query.limit, req.skip);
+        let blocks = await storage.findBlocks(
+            {proposer: req.params.publicKeyHex},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = blocks.count;
         const pageCount = Math.ceil(blocks.count / req.query.limit);
         let result = {
@@ -176,7 +231,14 @@ let httpServer = (models) => {
     });
 
     app.get('/validators/:publicKey/rewards', async (req, res, next) => {
-        let rewards = await storage.findValidatorRewards({publicKey: req.params.publicKey}, req.query.limit, req.skip);
+        let rewards = await storage.findValidatorRewards(
+            {publicKey: req.params.publicKey},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = rewards.count;
         const pageCount = Math.ceil(rewards.count / req.query.limit);
         let result = {
@@ -191,7 +253,14 @@ let httpServer = (models) => {
     });
 
     app.get('/delegators/:publicKey/rewards', async (req, res, next) => {
-        let rewards = await storage.findDelegatorRewards({publicKey: req.params.publicKey}, req.query.limit, req.skip);
+        let rewards = await storage.findDelegatorRewards(
+            {publicKey: req.params.publicKey},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
         const itemCount = rewards.count;
         const pageCount = Math.ceil(rewards.count / req.query.limit);
         let result = {
