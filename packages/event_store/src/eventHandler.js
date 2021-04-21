@@ -1,6 +1,7 @@
 const got = require('got');
 const readline = require('readline');
 const Storage = require('./storage');
+const CasperClient = require('./casperClient');
 const models = require('../src/models/index');
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/eh-config.json')[env];
@@ -36,7 +37,8 @@ async function runEventHandler() {
         console.log('Info: Syncing database schema');
         await models.sequelize.sync({ force: false, logging: false });
 
-        const storage = new Storage(models);
+        const casperClient = new CasperClient(process.env.NODE_ADDRESS);
+        const storage = new Storage(models, casperClient);
 
         const sourceNodeAddress = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
         const sourceNode = await storage.findSourceNodeByAddressOrCreate(sourceNodeAddress);

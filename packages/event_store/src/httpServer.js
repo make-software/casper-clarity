@@ -140,10 +140,20 @@ let httpServer = (models) => {
         res.send(result);
     });
 
-    app.get('/validators/:publicKeyHex/rewards', async (req, res, next) => {
-        const result = await storage.getTotalValidatorRewards(req.params.publicKeyHex);
+    app.get('/validators/:publicKey/total-rewards', async (req, res, next) => {
+        const result = await storage.getTotalValidatorRewards(req.params.publicKey);
         if (Number.isNaN(result)) {
-            res.status(404).send('Validator not found.');
+            res.send('0');
+        }
+        else {
+            res.send(result.toString());
+        }
+    });
+
+    app.get('/validators/:publicKey/total-delegator-rewards', async (req, res, next) => {
+        const result = await storage.getTotalValidatorDelegatorRewards(req.params.publicKey);
+        if (Number.isNaN(result)) {
+            res.send('0');
         }
         else {
             res.send(result.toString());
@@ -156,6 +166,36 @@ let httpServer = (models) => {
         const pageCount = Math.ceil(blocks.count / req.query.limit);
         let result = {
             data: await Promise.all(blocks.rows.map(block => {
+                return block.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
+    });
+
+    app.get('/validators/:publicKey/rewards', async (req, res, next) => {
+        let rewards = await storage.findValidatorRewards({publicKey: req.params.publicKey}, req.query.limit, req.skip);
+        const itemCount = rewards.count;
+        const pageCount = Math.ceil(rewards.count / req.query.limit);
+        let result = {
+            data: await Promise.all(rewards.rows.map(block => {
+                return block.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
+    });
+
+    app.get('/delegators/:publicKey/rewards', async (req, res, next) => {
+        let rewards = await storage.findDelegatorRewards({publicKey: req.params.publicKey}, req.query.limit, req.skip);
+        const itemCount = rewards.count;
+        const pageCount = Math.ceil(rewards.count / req.query.limit);
+        let result = {
+            data: await Promise.all(rewards.rows.map(block => {
                 return block.toJSON();
             })),
             pageCount: pageCount,

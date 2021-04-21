@@ -3,8 +3,9 @@ const sequelize = require("sequelize");
 const { Op } = sequelize;
 
 class Storage {
-    constructor(models, pubsub = null) {
+    constructor(models, casperClient, pubsub = null) {
         this.models = models;
+        this.casperClient = casperClient;
         this.pubsub = pubsub;
     }
 
@@ -171,6 +172,26 @@ class Storage {
                     endTimestamp: event.block.header.timestamp,
                     protocolVersion: event.block.header.protocol_version,
                 });
+
+                const eraSummary = await this.casperClient.getEraInfoBySwitchBlockHeight(event.block.header.height);
+
+                for (const reward of eraSummary.stored_value.EraInfo.seigniorage_allocations) {
+                    if (reward.Validator) {
+                        this.storeEntity('ValidatorReward', {
+                            eraId: eraSummary.era_id,
+                            publicKey: reward.Validator.validator_public_key,
+                            amount: reward.Validator.amount,
+                        });
+                    }
+                    else if (reward.Delegator) {
+                        this.storeEntity('DelegatorReward', {
+                            eraId: eraSummary.era_id,
+                            publicKey: reward.Delegator.delegator_public_key,
+                            validatorPublicKey: reward.Delegator.validator_public_key,
+                            amount: reward.Delegator.amount,
+                        });
+                    }
+                }
 
                 for (let publicKeyHex in event.block.header.era_end.next_era_validator_weights) {
                     this.storeEntity('EraValidator', {
@@ -464,9 +485,55 @@ class Storage {
             .findAndCountAll({where, limit, offset});
     }
 
-    async getTotalValidatorRewards(publicKeyHex) {
-        return await this.models.EraValidator
-            .sum('rewards', {where: {publicKeyHex}});
+    async getTotalValidatorRewards(publicKey) {
+        return await this.models.ValidatorReward
+            .sum('amount', {where: {publicKey}});
+    }
+
+    async getTotalValidatorDelegatorRewards(validatorPublicKey) {
+        return await this.models.DelegatorReward
+            .sum('amount', {where: {validatorPublicKey}});
+    }
+
+    async findValidatorRewards(criteria, limit, offset) {
+        const availableCriteria = [
+            'publicKey',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.ValidatorReward.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            where: where,
+            order: [['eraId', 'DESC']]
+        });
+    }
+
+    async findDelegatorRewards(criteria, limit, offset) {
+        const availableCriteria = [
+            'publicKey',
+            'validatorPublicKey',
+        ];
+
+        const where = {};
+        for (let criterion in criteria) {
+            if (availableCriteria.includes(criterion)) {
+                where[criterion] = criteria[criterion]
+            }
+        }
+
+        return await this.models.DelegatorReward.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            where: where,
+            order: [['eraId', 'DESC']]
+        });
     }
 }
 
