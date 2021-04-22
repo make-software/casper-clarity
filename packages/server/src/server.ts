@@ -124,6 +124,35 @@ const storedFaucetService = new StoredFaucetService(
 
 const app = express();
 
+if (process.env.ALLOWED_ORIGINS) {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+  app.use((req, res, next) => {
+    if (req.headers.origin) {
+      for (const allowedOrigin of allowedOrigins) {
+        if (req.headers.origin.startsWith(allowedOrigin)) {
+          res.header('Access-Control-Allow-Origin', req.headers.origin);
+          res.header(
+            'Access-Control-Allow-Headers',
+            'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+          );
+
+          if (req.method === 'OPTIONS') {
+            res.header(
+              'Access-Control-Allow-Methods',
+              'PUT, POST, PATCH, DELETE, GET'
+            );
+            return res.status(200).json({});
+          }
+
+          break;
+        }
+      }
+    }
+
+    return next();
+  });
+}
+
 // Support using the faucet in offline mode with the mock.
 const isMock = process.env.AUTH_MOCK_ENABLED === 'true';
 
