@@ -102,7 +102,8 @@ class Storage {
                         sourcePurse: transferEvent.source,
                         targetPurse: transferEvent.target,
                         amount: transferEvent.amount,
-                        id: transferEvent.id
+                        id: transferEvent.id,
+                        timestamp: event.timestamp,
                     });
                 }
 
@@ -425,8 +426,8 @@ class Storage {
     }
 
     async findAccountTransfers(accountHash, limit, offset, orderBy, orderDirection) {
-        let order = [['createdAt', 'DESC']];
-        const availableOrderFields = ['amount', 'createdAt'];
+        let order = [['timestamp', 'DESC']];
+        const availableOrderFields = ['amount', 'timestamp'];
         if (orderBy && availableOrderFields.includes(orderBy)) {
             order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
         }
@@ -485,8 +486,8 @@ class Storage {
             }
         }
 
-        let order = [['createdAt', 'DESC']];
-        const availableOrderFields = ['amount', 'createdAt'];
+        let order = [['timestamp', 'DESC']];
+        const availableOrderFields = ['amount', 'timestamp'];
         if (orderBy && availableOrderFields.includes(orderBy)) {
             order = [[orderBy, orderDirection ? orderDirection : 'DESC']];
         }

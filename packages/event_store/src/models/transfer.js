@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
                 "targetPurse": this.targetPurse,
                 "amount": this.amount,
                 "fromAccount": this.fromAccount,
-                "toAccount": this.toAccount
+                "toAccount": this.toAccount,
+                "timestamp": this.timestamp
             }
         }
     };
@@ -26,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
         sourcePurse: DataTypes.STRING,
         targetPurse: DataTypes.STRING,
         amount: DataTypes.STRING,
+        timestamp: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'Transfer',
