@@ -250,7 +250,7 @@ app.post('/api/collect', checkJwt, (req, res) => {
 });
 
 // Faucet endpoint.
-app.post('/api/faucet', checkJwt, (req, res) => {
+app.post('/api/faucet', (req, res) => {
   // express-jwt put the token in res.user
   // const userId = (req as any).user.sub;
   const accountPublicKeyHashBase64 = req.body.accountPublicKeyHashBase64 || '';
