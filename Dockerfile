@@ -9,11 +9,11 @@ COPY package.json lerna.json /app/
 ADD packages /app/packages
 ADD node_modules /app/node_modules
 
-ARG CHAIN_NAME=release-test-16
+ARG CHAIN_NAME=delta-11
 ENV CHAIN_NAME=$CHAIN_NAME
 
 # The name display in the header of clarity
-ARG NETWORK_NAME=TestNet
+ARG NETWORK_NAME=delta-11
 ENV NETWORK_NAME=$NETWORK_NAME
 
 ARG FAUCET_ACCOUNT_PRIVATE_KEY_PATH=/app/packages/server/faucet-keys/private.key
