@@ -21,7 +21,7 @@ function formNodeURL(lastEventId) {
     }
 
     const startFromEventId = lastEventId
-        ? Math.max(0, lastEventId - 100) // Little buffer just in case
+        ? Math.max(0, lastEventId - 250) // Little buffer just in case
         : 0;
 
     console.log('Info: Catching up from event id ' + startFromEventId);
