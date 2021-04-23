@@ -480,7 +480,7 @@ const Content = (props: AppProps) => {
                 </button>
                 <span>
                   We have launched a new block explorer for the Casper Network.
-                  To try {window.config.csprLiveName},{' '}
+                  To try CSPR.live,{' '}
                   <a href={window.config.csprLiveUrl}>click here</a>
                 </span>
               </div>
