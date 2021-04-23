@@ -23,7 +23,9 @@ const Home = observer((props: Props) => {
             hesitate to let us know on{' '}
             <a href="https://discordapp.com/invite/Q38s3Vh">Discord</a>,{' '}
             <a href="https://t.me/casperlabs">Telegram</a> or{' '}
-            <a href="https://github.com/CasperLabs/CasperLabs/issues">Github</a>
+            <a href="https://github.com/make-software/casper-clarity/issues">
+              Github
+            </a>
           </p>
 
           <div className="row">
