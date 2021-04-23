@@ -21,6 +21,10 @@ interface Config {
   };
   eventStoreUrl: string;
   withFaucet: boolean;
+  withCsprLiveNotice: boolean;
+  csprLiveName: string;
+  csprLiveUrl: string;
+  clarityUrl: string;
 }
 
 interface Auth0Config {

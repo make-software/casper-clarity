@@ -211,7 +211,11 @@ app.get('/config.js', (_, res) => {
       url: process.env.UI_GRPC_URL
     },
     eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL,
-    withFaucet: process.env.NO_FAUCET !== '1'
+    withFaucet: process.env.NO_FAUCET !== '1',
+    withCsprLiveNotice: process.env.WITH_CSPR_LIVE_NOTICE === '1',
+    csprLiveName: process.env.CSPR_LIVE_NAME,
+    csprLiveUrl: process.env.CSPR_LIVE_URL,
+    clarityUrl: process.env.CLARITY_URL
   };
   res.header('Content-Type', 'application/javascript');
   res.send(`var config = ${JSON.stringify(conf, null, 2)};`);

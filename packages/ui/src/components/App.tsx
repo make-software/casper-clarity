@@ -460,6 +460,33 @@ const Content = (props: AppProps) => {
     <main>
       <div className="content-wrapper">
         <div className="container-fluid">
+          {window.config.withCsprLiveNotice && (
+            <div id="alert-message">
+              <div
+                className="alert alert-info alert-dismissible fade show"
+                id="cspr_live_alert"
+              >
+                <button
+                  type="button"
+                  className="close"
+                  aria-label="Close"
+                  onClick={_ => {
+                    // @ts-ignore
+                    document.getElementById('cspr_live_alert').style.display =
+                      'none';
+                  }}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <span>
+                  We have launched a new block explorer for the Casper Network.
+                  To try {window.config.csprLiveName},{' '}
+                  <a href={window.config.csprLiveUrl}>click here</a>
+                </span>
+              </div>
+            </div>
+          )}
+
           <Alerts {...props} />
           <Switch>
             <Route exact path={Pages.Home}>
