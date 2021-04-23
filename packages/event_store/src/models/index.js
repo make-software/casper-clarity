@@ -19,12 +19,12 @@ if (process.env.NODE_ADDRESS) {
     config.pool = {
         max: process.env.MAX_DATABASE_CONNECTIONS
             ? process.env.MAX_DATABASE_CONNECTIONS
-            : 400,
+            : 450,
         min: process.env.MIN_DATABASE_CONNECTIONS
             ? process.env.MIN_DATABASE_CONNECTIONS
-            : 50,
+            : 150,
         acquire: 60000,
-        idle: 65000
+        idle: 75000
     };
 }
 
