@@ -230,10 +230,6 @@ const staticRoot = path.isAbsolute(process.env.STATIC_ROOT!)
 
 app.use(express.static(staticRoot));
 
-app.get('/', (_, res) => {
-  res.sendFile(path.join(staticRoot, 'index.html'));
-});
-
 // Parse JSON sent in the body.
 app.use(express.json());
 
@@ -280,6 +276,10 @@ app.post('/api/faucet', (req, res) => {
       // The service already logged it.
       res.status(500).send({ error: msg });
     });
+});
+
+app.get('*', (_, res) => {
+  res.sendFile(path.join(staticRoot, 'index.html'));
 });
 
 // Error report in JSON.
