@@ -215,14 +215,19 @@ app.get('/config.js', (_, res) => {
     withCsprLiveNotice: process.env.WITH_CSPR_LIVE_NOTICE === '1',
     csprLiveName: process.env.CSPR_LIVE_NAME,
     csprLiveUrl: process.env.CSPR_LIVE_URL,
-    clarityUrl: process.env.CLARITY_URL
+    clarityUrl: process.env.CLARITY_URL,
+    transfer_cost: process.env.TRANSFER_COST,
+    delegate_cost: process.env.DELEGATE_COST,
+    delegate_delay: process.env.DELEGATE_DELAY,
+    undelegate_cost: process.env.UNDELEGATE_COST,
+    undelegate_delay: process.env.UNDELEGATE_DELAY,
+    era_duration: process.env.ERA_DURATION
   };
   res.header('Content-Type', 'application/javascript');
   res.send(`var config = ${JSON.stringify(conf, null, 2)};`);
 });
 
 // Serve the static files of the UI
-// Serve the static files of the UI.
 // STATIC_ROOT needs to be an absolute path, otherwise we assume we'll use the `ui` projec's build output.
 const staticRoot = path.isAbsolute(process.env.STATIC_ROOT!)
   ? process.env.STATIC_ROOT!
