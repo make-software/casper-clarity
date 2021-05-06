@@ -221,7 +221,8 @@ app.get('/config.js', (_, res) => {
     delegate_delay: process.env.DELEGATE_DELAY,
     undelegate_cost: process.env.UNDELEGATE_COST,
     undelegate_delay: process.env.UNDELEGATE_DELAY,
-    era_duration: process.env.ERA_DURATION
+    era_duration: process.env.ERA_DURATION,
+    auction_manager_contract_hash: process.env.AUCTION_MANAGER_CONTRACT_HASH
   };
   res.header('Content-Type', 'application/javascript');
   res.send(`var config = ${JSON.stringify(conf, null, 2)};`);
