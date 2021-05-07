@@ -477,6 +477,7 @@ class Storage {
     async findTransfers(criteria, limit, offset, orderBy, orderDirection) {
         const availableCriteria = [
             'blockHash',
+            'deployHash',
         ];
 
         const where = {};

@@ -122,6 +122,28 @@ let httpServer = (models) => {
         res.send(result);
     });
 
+    app.get('/deploys/:deployHash/transfers', async (req, res, next) => {
+        let transfers = await storage.findTransfers(
+            {deployHash: req.params.deployHash},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        );
+
+        const itemCount = transfers.count;
+        const pageCount = Math.ceil(transfers.count / req.query.limit);
+        let result = {
+            data: await Promise.all(transfers.rows.map(transfer => {
+                return transfer.toJSON();
+            })),
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        }
+        res.send(result);
+    });
+
     app.get('/accountDeploys/:account', async (req, res, next) => {
         let deploys = await storage.findDeploysByAccount(
             req.params.account,
