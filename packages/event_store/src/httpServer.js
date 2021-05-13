@@ -1,19 +1,47 @@
-var express = require('express');
-var paginate = require('express-paginate');
-var cors = require('cors');
+const express = require('express');
+const paginate = require('express-paginate');
+const cors = require('cors');
 const Storage = require('./storage');
-var storage = null;
+
+const sendPreparedPaginatedResponse = async (req, res, paginatedResult) => {
+    const itemCount = paginatedResult.count;
+    const pageCount = Math.ceil(paginatedResult.count / req.query.limit);
+
+    res.send({
+        data: await Promise.all(paginatedResult.rows.map(row => {
+            return row.toJSON();
+        })),
+        pageCount: pageCount,
+        itemCount: itemCount,
+        pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+    })
+};
 
 let httpServer = (models) => {
-    var app = express();
-    app.use(cors());
-    storage = new Storage(models);
-    
+    const app = express();
+    const storage = new Storage(models);
+
     // app.use(logger('dev'));
+    app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
-    
-    app.get('/block/:blockHash', async (req, res, next) => {
+    app.use(paginate.middleware(10, 20));
+
+    // Blocks
+    app.get('/blocks', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.findBlocks(
+            {},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
+    app.get([
+        '/block/:blockHash', // @deprecated
+        '/blocks/:blockHash',
+    ], async (req, res, next) => {
         let block = await storage.findBlockByHash(req.params.blockHash);
         if (block === null) {
             res.status(404).send("Block not found.");
@@ -23,7 +51,41 @@ let httpServer = (models) => {
         }
     });
 
-    app.get('/deploy/:deployHash', async (req, res, next) => {
+    app.get('/blocks/:blockHash/deploys', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.getDeploys(
+            {blockHash: req.params.blockHash},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
+    app.get('/blocks/:blockHash/transfers', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
+            {blockHash: req.params.blockHash},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
+    // Deploys
+    app.get('/deploys', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.getDeploys(
+            {},
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
+    app.get([
+        '/deploy/:deployHash', // @deprecated
+        '/deploys/:deployHash',
+    ], async (req, res, next) => {
         let deploy = await storage.findDeployByHash(req.params.deployHash);
         if (deploy === null) {
             res.status(404).send("Deploy not found.");
@@ -32,184 +94,52 @@ let httpServer = (models) => {
         }
     });
 
-    app.use(paginate.middleware(10, 20));
-
-    app.get('/blocks', async (req, res, next) => {
-        let blocks = await storage.findBlocks(
-            {},
-            req.query.limit,
-            req.skip,
-            req.query.order_by,
-            req.query.order_direction
-        );
-
-        const itemCount = blocks.count;
-        const pageCount = Math.ceil(blocks.count / req.query.limit);
-        let result = {
-            data: await Promise.all(blocks.rows.map(block => {
-                return block.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
-    });
-
-    app.get('/deploys', async (req, res, next) => {
-        let deploys = await storage.getDeploys(
-            {},
-            req.query.limit,
-            req.skip,
-            req.query.order_by,
-            req.query.order_direction
-        );
-
-        const itemCount = deploys.count;
-        const pageCount = Math.ceil(deploys.count / req.query.limit);
-        let result = {
-            data: await Promise.all(deploys.rows.map(deploy => {
-                return deploy.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
-    });
-
-    app.get('/blocks/:blockHash/deploys', async (req, res, next) => {
-        let deploys = await storage.getDeploys(
-            {blockHash: req.params.blockHash},
-            req.query.limit,
-            req.skip,
-            req.query.order_by,
-            req.query.order_direction
-        );
-
-        const itemCount = deploys.count;
-        const pageCount = Math.ceil(deploys.count / req.query.limit);
-        let result = {
-            data: await Promise.all(deploys.rows.map(deploy => {
-                return deploy.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
-    });
-
-    app.get('/blocks/:blockHash/transfers', async (req, res, next) => {
-        let transfers = await storage.findTransfers(
-            {blockHash: req.params.blockHash},
-            req.query.limit,
-            req.skip,
-            req.query.order_by,
-            req.query.order_direction
-        );
-
-        const itemCount = transfers.count;
-        const pageCount = Math.ceil(transfers.count / req.query.limit);
-        let result = {
-            data: await Promise.all(transfers.rows.map(transfer => {
-                return transfer.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
-    });
-
     app.get('/deploys/:deployHash/transfers', async (req, res, next) => {
-        let transfers = await storage.findTransfers(
+        await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
             {deployHash: req.params.deployHash},
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = transfers.count;
-        const pageCount = Math.ceil(transfers.count / req.query.limit);
-        let result = {
-            data: await Promise.all(transfers.rows.map(transfer => {
-                return transfer.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
+        ));
     });
 
-    app.get('/accountDeploys/:account', async (req, res, next) => {
-        let deploys = await storage.findDeploysByAccount(
+    // Accounts
+    app.get([
+        '/accountDeploys/:account', // @deprecated
+        '/accounts/:account/deploys',
+    ], async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.findDeploysByAccount(
             req.params.account,
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = deploys.count;
-        const pageCount = Math.ceil(deploys.count / req.query.limit);
-        let result = {
-            data: await Promise.all(deploys.rows.map(deploy => {
-                return deploy.toJSON(skipTransfers = true);
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
+        ));
     });
 
     app.get('/accounts/:accountHash/transfers', async (req, res, next) => {
-        let transfers = await storage.findAccountTransfers(
+        await sendPreparedPaginatedResponse(req, res, await storage.findAccountTransfers(
             req.params.accountHash,
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = transfers.count;
-        const pageCount = Math.ceil(transfers.count / req.query.limit);
-        let result = {
-            data: await Promise.all(transfers.rows.map(transfer => {
-                return transfer.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        };
-        res.send(result);
+        ));
     });
 
+    // Era validators
     app.get('/era-validators', async (req, res, next) => {
-        let eraValidators = await storage.findEraValidators(
+        await sendPreparedPaginatedResponse(req, res, await storage.findEraValidators(
             req.query,
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = eraValidators.count;
-        const pageCount = Math.ceil(eraValidators.count / req.query.limit);
-        let result = {
-            data: await Promise.all(eraValidators.rows.map(deploy => {
-                return deploy.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        };
-        res.send(result);
+        ));
     });
 
+    // Validators
     app.get('/validators/:publicKey/total-rewards', async (req, res, next) => {
         const result = await storage.getTotalValidatorRewards(req.params.publicKey);
         if (Number.isNaN(result)) {
@@ -231,69 +161,34 @@ let httpServer = (models) => {
     });
 
     app.get('/validators/:publicKeyHex/blocks', async (req, res, next) => {
-        let blocks = await storage.findBlocks(
+        await sendPreparedPaginatedResponse(req, res, await storage.findBlocks(
             {proposer: req.params.publicKeyHex},
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = blocks.count;
-        const pageCount = Math.ceil(blocks.count / req.query.limit);
-        let result = {
-            data: await Promise.all(blocks.rows.map(block => {
-                return block.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
+        ));
     });
 
     app.get('/validators/:publicKey/rewards', async (req, res, next) => {
-        let rewards = await storage.findValidatorRewards(
+        await sendPreparedPaginatedResponse(req, res, await storage.findValidatorRewards(
             {publicKey: req.params.publicKey},
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = rewards.count;
-        const pageCount = Math.ceil(rewards.count / req.query.limit);
-        let result = {
-            data: await Promise.all(rewards.rows.map(block => {
-                return block.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
+        ));
     });
 
+    // Delegators
     app.get('/delegators/:publicKey/rewards', async (req, res, next) => {
-        let rewards = await storage.findDelegatorRewards(
+        await sendPreparedPaginatedResponse(req, res, await storage.findDelegatorRewards(
             {publicKey: req.params.publicKey},
             req.query.limit,
             req.skip,
             req.query.order_by,
             req.query.order_direction
-        );
-
-        const itemCount = rewards.count;
-        const pageCount = Math.ceil(rewards.count / req.query.limit);
-        let result = {
-            data: await Promise.all(rewards.rows.map(block => {
-                return block.toJSON();
-            })),
-            pageCount: pageCount,
-            itemCount: itemCount,
-            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        }
-        res.send(result);
+        ));
     });
 
     app.use(function (req,res,next){
