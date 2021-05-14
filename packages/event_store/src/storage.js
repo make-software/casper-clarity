@@ -533,6 +533,23 @@ class Storage {
             ),
         });
     }
+
+    async findCurrencyRatesInDateRange(currencyId, from, to) {
+        return await this.models.Rate.findAll({
+            where: {
+                currency_id: currencyId,
+                [Op.and]: [
+                    {
+                        created: {[Op.gt]: from}
+                    },
+                    {
+                        created: {[Op.lt]: to}
+                    }
+                ]
+            },
+            order: [['created', 'DESC']]
+        });
+    }
 }
 
 module.exports = Storage;

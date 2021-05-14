@@ -28,6 +28,10 @@ if (process.env.NODE_ADDRESS) {
     };
 }
 
+config.dialectOptions = {
+    supportBigNumbers: true
+};
+
 if (process.env['DATABASE_URI']) {
   sequelize = new Sequelize(process.env['DATABASE_URI'], config);
 } else {

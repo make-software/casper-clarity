@@ -3,23 +3,111 @@ const paginate = require('express-paginate');
 const cors = require('cors');
 const Storage = require('./storage');
 
-const sendPreparedPaginatedResponse = async (req, res, paginatedResult) => {
-    const itemCount = paginatedResult.count;
-    const pageCount = Math.ceil(paginatedResult.count / req.query.limit);
-
-    res.send({
-        data: await Promise.all(paginatedResult.rows.map(row => {
-            return row.toJSON();
-        })),
-        pageCount: pageCount,
-        itemCount: itemCount,
-        pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-    })
-};
-
 let httpServer = (models) => {
     const app = express();
     const storage = new Storage(models);
+
+    const sendPreparedPaginatedResponse = async (req, res, paginatedResult) => {
+        const itemCount = paginatedResult.count;
+        const pageCount = Math.ceil(paginatedResult.count / req.query.limit);
+
+        const jsonRecords = await Promise.all(paginatedResult.rows.map(row => {
+            return row.toJSON();
+        }));
+
+        if (req.query.with_amounts_in_currency_id && paginatedResult.rows.length > 0) {
+            // Adding amounts in requested currency @todo Extract into a separate function
+            if (!paginatedResult.rows[0].timestamp) {
+                res.status(404).send('Cannot added ');
+                return;
+            }
+
+            let minTimestamp, maxTimestamp;
+            for (let row of paginatedResult.rows) {
+                if (!minTimestamp || row.timestamp < minTimestamp) {
+                    minTimestamp = row.timestamp;
+                }
+
+                if (!maxTimestamp || row.timestamp > maxTimestamp) {
+                    maxTimestamp = row.timestamp;
+                }
+            }
+
+            minTimestamp.setMinutes(minTimestamp.getMinutes() - 5);
+            maxTimestamp.setMinutes(maxTimestamp.getMinutes() + 5);
+
+            const rates = await storage.findCurrencyRatesInDateRange(
+                req.query.with_amounts_in_currency_id,
+                minTimestamp,
+                maxTimestamp
+            );
+
+            let fiveMinutes = 1000 * 60 * 5;
+            const latestRates = await storage.findCurrencyRatesInDateRange(
+                req.query.with_amounts_in_currency_id,
+                new Date( Date.now() - fiveMinutes),
+                Date.now()
+            );
+
+            const currentRate = latestRates.length > 0 ? latestRates[0] : null;
+
+            let currentDiff, bestDiff;
+
+            let amountField;
+            const availableAmountFields = [
+                'amount',
+                'cost',
+                'stakedAmount'
+            ];
+
+            for (let field of availableAmountFields) {
+                if (jsonRecords[0][field]) {
+                    amountField = field;
+                }
+            }
+
+            let amount, csprAmount;
+            for (let i in paginatedResult.rows) {
+                amount = jsonRecords[i][amountField];
+                if (typeof amount === 'string') {
+                    csprAmount = parseFloat(
+                        amount.substr(0, amount.length  - 9) + '.' + amount.substr(-9)
+                    )
+                }
+                else {
+                    csprAmount = amount / 1000000000; // motes to CSPR rate
+                }
+
+                currentDiff = 0;
+                bestDiff = -(new Date(0,0,0)).valueOf();
+                for (let j = 0; j < rates.length; ++j) {
+                    currentDiff = Math.abs(paginatedResult.rows[i].timestamp - rates[j].created);
+                    if (currentDiff < bestDiff && currentDiff < fiveMinutes) {
+                        bestDiff = currentDiff;
+                        jsonRecords[i]['currency_' + amountField] = csprAmount * rates[j].rate;
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                if (!jsonRecords[i]['currency_' + amountField]) {
+                    jsonRecords[i]['currency_' + amountField] = null;
+                }
+
+                jsonRecords[i]['current_currency_' + amountField] = currentRate !== null
+                    ? csprAmount * currentRate.rate
+                    : null;
+            }
+        }
+
+        res.send({
+            data: jsonRecords,
+            pageCount: pageCount,
+            itemCount: itemCount,
+            pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+        })
+    };
 
     // app.use(logger('dev'));
     app.use(cors());
