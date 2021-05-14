@@ -11,17 +11,17 @@ const db = {};
 let sequelize;
 
 config.dialectOptions = {
-    connectTimeout: 60000
+    connectTimeout: 60000 * 2
 };
 
 // A hacky way to figure out if the running process is the event handler
 if (process.env.NODE_ADDRESS) {
     config.pool = {
         max: process.env.MAX_DATABASE_CONNECTIONS
-            ? process.env.MAX_DATABASE_CONNECTIONS
+            ? parseInt(process.env.MAX_DATABASE_CONNECTIONS)
             : 450,
         min: process.env.MIN_DATABASE_CONNECTIONS
-            ? process.env.MIN_DATABASE_CONNECTIONS
+            ? parseInt(process.env.MIN_DATABASE_CONNECTIONS)
             : 150,
         acquire: 60000,
         idle: 75000
