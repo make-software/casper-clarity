@@ -7,21 +7,40 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/eh-config.json')[env];
 
 // Tagging test
-function formNodeURL(lastEventId) {
+function formNodeURL(lastEventId, sourceNode) {
     const protocol = config.EH_STREAM_PROTOCOL;
     const domain = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
     const port = config.EH_STREAM_PORT;
     const path = process.env.NODE_PATH ? process.env.NODE_PATH : config.EH_STREAM_PATH;
 
+    // @todo Remove duplicate code
     if (false === lastEventId) {
-        console.log('Info: Not catching up. Reading event stream from now.');
+        console.log('Info: Not catching up. Reading event stream from now for the version prefetch request.');
         return protocol + '://' + domain +
             (port ? ':' + port : '') +
             (path ? '/' + path : '');
     }
 
+    if (process.env.NODE_SWITCH_START_FROM_EVENT_ID && (lastEventId === null || lastEventId.sourceNodeId !== sourceNode.id)) {
+        console.log('Info: Catching up from event provided in the node switch configuration ' + process.env.NODE_SWITCH_START_FROM_EVENT_ID);
+
+        return protocol + '://' + domain +
+            (port ? ':' + port : '') +
+            (path ? '/' + path : '') +
+            '?start_from=' + process.env.NODE_SWITCH_START_FROM_EVENT_ID;
+    }
+
+    if (process.env.FORCED_START_FROM_EVENT_ID) {
+        console.log('Info: Catching up from event provided in the forced configuration ' + process.env.FORCED_START_FROM_EVENT_ID);
+
+        return protocol + '://' + domain +
+            (port ? ':' + port : '') +
+            (path ? '/' + path : '') +
+            '?start_from=' + process.env.FORCED_START_FROM_EVENT_ID;
+    }
+
     const startFromEventId = lastEventId
-        ? Math.max(0, lastEventId - 250) // Little buffer just in case
+        ? Math.max(0, lastEventId.id - 1000) // Little buffer just in case
         : 0;
 
     console.log('Info: Catching up from event id ' + startFromEventId);
@@ -74,7 +93,7 @@ async function runEventHandler() {
         // @todo Retry on failed connection
         console.log('Info: Connecting to the event stream');
         const stream = readline.createInterface({
-            input: got.stream(formNodeURL(lastEventId)),
+            input: got.stream(formNodeURL(lastEventId, sourceNode)),
             crlfDelay: Infinity
         });
 

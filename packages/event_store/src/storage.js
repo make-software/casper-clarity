@@ -356,7 +356,7 @@ class Storage {
             order: [[ 'id', 'DESC' ]],
         });
 
-        return eventId ? eventId.id : null;
+        return eventId;
     }
 
     async findBlockByHash(blockHash) {

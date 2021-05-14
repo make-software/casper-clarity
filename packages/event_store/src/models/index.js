@@ -11,7 +11,8 @@ const db = {};
 let sequelize;
 
 config.dialectOptions = {
-    connectTimeout: 60000 * 2
+    connectTimeout: 60000,
+    supportBigNumbers: true
 };
 
 // A hacky way to figure out if the running process is the event handler
@@ -23,14 +24,10 @@ if (process.env.NODE_ADDRESS) {
         min: process.env.MIN_DATABASE_CONNECTIONS
             ? parseInt(process.env.MIN_DATABASE_CONNECTIONS)
             : 150,
-        acquire: 60000,
+        acquire: 60000 * 3,
         idle: 75000
     };
 }
-
-config.dialectOptions = {
-    supportBigNumbers: true
-};
 
 if (process.env['DATABASE_URI']) {
   sequelize = new Sequelize(process.env['DATABASE_URI'], config);
