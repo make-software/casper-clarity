@@ -25,7 +25,7 @@ if (process.env.NODE_ADDRESS) {
             ? parseInt(process.env.MIN_DATABASE_CONNECTIONS)
             : 150,
         acquire: 60000 * 3,
-        idle: 75000
+        idle: 5000
     };
 }
 

@@ -30,7 +30,7 @@ class Storage {
         this.storeEntity('EventId', { sourceNodeId, apiVersionId, id });
     }
 
-    async onEvent(sourceNodeId, apiVersionId, jsonBody) {
+    async onEvent(sourceNodeId, apiVersion, jsonBody) {
         const event = JSON.parse(jsonBody);
 
         let eventType,
@@ -46,16 +46,19 @@ class Storage {
         } else if (event.BlockAdded) {
             eventType = 'BlockAdded';
             primaryEntityHash = event.BlockAdded.block_hash;
-            this.onBlockAddedEvent(event.BlockAdded);
+            this.onBlockAddedEvent(event.BlockAdded, apiVersion);
         } else if (event.FinalitySignature) {
             eventType = 'FinalitySignature';
             primaryEntityHash = event.FinalitySignature.signature;
             this.onFinalitySignatureEvent(event.FinalitySignature);
+        } else if (event.Step) {
+            eventType = 'Step';
+            primaryEntityHash = event.Step.era_id;
         }
 
         this.storeEntity('RawEvent', {
             sourceNodeId,
-            apiVersionId,
+            apiVersionId: apiVersion.id,
             eventType,
             primaryEntityHash,
             jsonBody
@@ -146,54 +149,75 @@ class Storage {
         }
     }
 
-    async onBlockAddedEvent(event) {
-        // If after https://github.com/CasperLabs/casper-node/pull/978 (note that version remained the same 1.0.0)
-        if (event.block) {
-            const deployCount = event.block.body.deploy_hashes.length;
-            const transferCount = event.block.body.transfer_hashes.length;
+    isVersionGreaterOrEqual(v1, v2) {
+        const v1Parts = v1.split('.').map(v => Number(v));
+        const v2Parts = v2.split('.').map(v => Number(v));
 
-            console.log(`Info: Processing BlockAdded event. BlockHash: ${event.block_hash}`);
+        return (v1Parts[0] > v2Parts[0]) ||
+            (v1Parts[0] === v2Parts[0] && v1Parts[1] > v2Parts[1]) ||
+            (v1Parts[0] === v2Parts[0] && v1Parts[1] === v2Parts[1] && v1Parts[2] > v2Parts[2]) ||
+            (v1Parts[0] === v2Parts[0] && v1Parts[1] === v2Parts[1] && v1Parts[2] === v2Parts[2]);
+    }
 
-            this.storeEntity('Block', {
-                blockHash: event.block.hash,
-                blockHeight: event.block.header.height,
-                parentHash: event.block.header.parent_hash,
-                timestamp: event.block.header.timestamp,
-                state: event.block.header.state_root_hash,
-                deployCount: deployCount,
-                transferCount: transferCount,
-                eraId: event.block.header.era_id,
-                proposer: event.block.body.proposer,
+    async onBlockAddedEvent(event, apiVersion) {
+        const deployCount = event.block.body.deploy_hashes.length;
+        const transferCount = event.block.body.transfer_hashes.length;
+
+        console.log(`Info: Processing BlockAdded event. BlockHash: ${event.block_hash}`);
+
+        this.storeEntity('Block', {
+            blockHash: event.block.hash,
+            blockHeight: event.block.header.height,
+            parentHash: event.block.header.parent_hash,
+            timestamp: event.block.header.timestamp,
+            state: event.block.header.state_root_hash,
+            deployCount: deployCount,
+            transferCount: transferCount,
+            eraId: event.block.header.era_id,
+            proposer: event.block.body.proposer,
+        });
+
+        if (event.block.header.era_end) {
+            this.storeEntity('Era', {
+                id: event.block.header.era_id,
+                endBlockHeight: event.block.header.height,
+                endTimestamp: event.block.header.timestamp,
+                protocolVersion: event.block.header.protocol_version,
             });
 
-            if (event.block.header.era_end) {
-                this.storeEntity('Era', {
-                    id: event.block.header.era_id,
-                    endBlockHeight: event.block.header.height,
-                    endTimestamp: event.block.header.timestamp,
-                    protocolVersion: event.block.header.protocol_version,
-                });
+            const eraSummary = await this.casperClient.getEraInfoBySwitchBlockHeight(event.block.header.height);
 
-                const eraSummary = await this.casperClient.getEraInfoBySwitchBlockHeight(event.block.header.height);
-
-                for (const reward of eraSummary.stored_value.EraInfo.seigniorage_allocations) {
-                    if (reward.Validator) {
-                        this.storeEntity('ValidatorReward', {
-                            eraId: eraSummary.era_id,
-                            publicKey: reward.Validator.validator_public_key,
-                            amount: reward.Validator.amount,
-                        });
-                    }
-                    else if (reward.Delegator) {
-                        this.storeEntity('DelegatorReward', {
-                            eraId: eraSummary.era_id,
-                            publicKey: reward.Delegator.delegator_public_key,
-                            validatorPublicKey: reward.Delegator.validator_public_key,
-                            amount: reward.Delegator.amount,
-                        });
-                    }
+            for (const reward of eraSummary.stored_value.EraInfo.seigniorage_allocations) {
+                if (reward.Validator) {
+                    this.storeEntity('ValidatorReward', {
+                        eraId: eraSummary.era_id,
+                        publicKey: reward.Validator.validator_public_key,
+                        amount: reward.Validator.amount,
+                    });
                 }
+                else if (reward.Delegator) {
+                    this.storeEntity('DelegatorReward', {
+                        eraId: eraSummary.era_id,
+                        publicKey: reward.Delegator.delegator_public_key,
+                        validatorPublicKey: reward.Delegator.validator_public_key,
+                        amount: reward.Delegator.amount,
+                    });
+                }
+            }
 
+            if (this.isVersionGreaterOrEqual(apiVersion.version, '1.2.0')) {
+                for (let validator of event.block.header.era_end.next_era_validator_weights) {
+                    this.storeEntity('EraValidator', {
+                        eraId: event.block.header.era_id + 1,
+                        publicKeyHex: validator.validator,
+                        weight: validator.weight,
+                        rewards: 0,
+                        hasEquivocation: 0,
+                        wasActive: 0,
+                    });
+                }
+            }
+            else {
                 for (let publicKeyHex in event.block.header.era_end.next_era_validator_weights) {
                     this.storeEntity('EraValidator', {
                         eraId: event.block.header.era_id + 1,
@@ -204,8 +228,26 @@ class Storage {
                         wasActive: 0,
                     });
                 }
+            }
 
-                const updatedValidators = [];
+            const updatedValidators = [];
+            if (this.isVersionGreaterOrEqual(apiVersion.version, '1.2.0')) {
+                for (let validator of event.block.header.era_end.era_report.rewards) {
+                    updatedValidators.push(validator.validator);
+
+                    this.models.EraValidator.update({
+                        rewards: validator.amount,
+                        hasEquivocation: event.block.header.era_end.era_report.equivocators.includes(validator.validator),
+                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(validator.validator),
+                    }, {
+                        where: {
+                            eraId: event.block.header.era_id,
+                            publicKeyHex: validator.validator,
+                        }
+                    });
+                }
+            }
+            else {
                 for (let publicKeyHex in event.block.header.era_end.era_report.rewards) {
                     updatedValidators.push(publicKeyHex);
 
@@ -220,81 +262,40 @@ class Storage {
                         }
                     });
                 }
-
-                for (let publicKeyHex of event.block.header.era_end.era_report.equivocators) {
-                    if (updatedValidators.includes(publicKeyHex)) {
-                        continue;
-                    }
-
-                    updatedValidators.push(publicKeyHex);
-
-                    this.models.EraValidator.update({
-                        hasEquivocation: true,
-                        wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
-                    }, {
-                        where: {
-                            eraId: event.block.header.era_id,
-                            publicKeyHex: publicKeyHex,
-                        }
-                    });
-                }
-
-                for (let publicKeyHex of event.block.header.era_end.era_report.inactive_validators) {
-                    if (updatedValidators.includes(publicKeyHex)) {
-                        continue;
-                    }
-
-                    this.models.EraValidator.update({
-                        wasActive: false,
-                    }, {
-                        where: {
-                            eraId: event.block.header.era_id,
-                            publicKeyHex: publicKeyHex,
-                        }
-                    });
-                }
             }
 
-            // Update deploys.
-            // @todo Remove this with the next release (backward compatibility)
-            // await this.models.Deploy.update({
-            //     timestamp: event.block.header.timestamp,
-            //     blockHash: event.block.hash
-            // }, {
-            //     where: {
-            //         deployHash: event.block.body.deploy_hashes
-            //     }
-            // });
-        }
-        else {
-            let deploysStr = event.block_header.deploy_hashes.join(', ');
-            let deployCount = event.block_header.deploy_hashes.length;
-            console.log(
-                `Info: Processing BlockAdded event. BlockHash: ${event.block_hash}, ` +
-                `Deploys: [${deploysStr}].`
-            );
+            for (let publicKeyHex of event.block.header.era_end.era_report.equivocators) {
+                if (updatedValidators.includes(publicKeyHex)) {
+                    continue;
+                }
 
-            this.storeEntity('Block', {
-                blockHash: event.block_hash,
-                blockHeight: event.block_header.height,
-                parentHash: event.block_header.parent_hash,
-                timestamp: event.block_header.timestamp,
-                state: event.block_header.state_root_hash,
-                deployCount: deployCount,
-                eraId: event.block_header.era_id,
-                proposer: event.block_header.proposer,
-            });
+                updatedValidators.push(publicKeyHex);
 
-            // Update deploys.
-            // @todo Remove this with the next release (backward compatibility)
-            // await this.models.Deploy.update({
-            //     timestamp: event.block_header.timestamp,
-            //     blockHash: event.block_hash
-            // }, {
-            //     where: {
-            //         deployHash: event.block_header.deploy_hashes
-            //     }
-            // });
+                this.models.EraValidator.update({
+                    hasEquivocation: true,
+                    wasActive: !event.block.header.era_end.era_report.inactive_validators.includes(publicKeyHex),
+                }, {
+                    where: {
+                        eraId: event.block.header.era_id,
+                        publicKeyHex: publicKeyHex,
+                    }
+                });
+            }
+
+            for (let publicKeyHex of event.block.header.era_end.era_report.inactive_validators) {
+                if (updatedValidators.includes(publicKeyHex)) {
+                    continue;
+                }
+
+                this.models.EraValidator.update({
+                    wasActive: false,
+                }, {
+                    where: {
+                        eraId: event.block.header.era_id,
+                        publicKeyHex: publicKeyHex,
+                    }
+                });
+            }
         }
 
         if(this.pubsub !== null) {
