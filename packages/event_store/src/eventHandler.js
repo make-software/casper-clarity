@@ -7,7 +7,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/eh-config.json')[env];
 
 // Tagging test
-function formNodeURL(lastEventId, sourceNode) {
+function formNodeURL(lastEventId, sourceNode = null) {
     const protocol = config.EH_STREAM_PROTOCOL;
     const domain = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
     const port = config.EH_STREAM_PORT;
@@ -21,22 +21,14 @@ function formNodeURL(lastEventId, sourceNode) {
             (path ? '/' + path : '');
     }
 
-    if (process.env.NODE_SWITCH_START_FROM_EVENT_ID && (lastEventId === null || lastEventId.sourceNodeId !== sourceNode.id)) {
-        console.log('Info: Catching up from event provided in the node switch configuration ' + process.env.NODE_SWITCH_START_FROM_EVENT_ID);
+    const forceStartFromNodeId = process.env[`NEW_NODE_START_FROM_EVENT_ID_${sourceNode.address.replace(/\./g, '_')}`];
+    if (lastEventId === null && forceStartFromNodeId) {
+        console.log('Info: Catching up from event provided in the force start from event id configuration ' + forceStartFromNodeId);
 
         return protocol + '://' + domain +
             (port ? ':' + port : '') +
             (path ? '/' + path : '') +
-            '?start_from=' + process.env.NODE_SWITCH_START_FROM_EVENT_ID;
-    }
-
-    if (process.env.FORCED_START_FROM_EVENT_ID) {
-        console.log('Info: Catching up from event provided in the forced configuration ' + process.env.FORCED_START_FROM_EVENT_ID);
-
-        return protocol + '://' + domain +
-            (port ? ':' + port : '') +
-            (path ? '/' + path : '') +
-            '?start_from=' + process.env.FORCED_START_FROM_EVENT_ID;
+            '?start_from=' + forceStartFromNodeId;
     }
 
     const startFromEventId = lastEventId
