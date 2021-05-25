@@ -105,7 +105,7 @@ class Storage {
                         sourcePurse: transferEvent.source,
                         targetPurse: transferEvent.target,
                         amount: transferEvent.amount,
-                        id: transferEvent.id,
+                        transferId: transferEvent.id,
                         timestamp: event.timestamp,
                     });
                 }
@@ -466,6 +466,15 @@ class Storage {
                 ['cost', 'timestamp', 'errorMessage'],
                 [['timestamp', 'DESC']]
             ),
+        });
+    }
+
+    async getRawDeployEvent(deployHash) {
+        return await this.models.RawEvent.findOne({
+            where: {
+                eventType: 'DeployProcessed',
+                primaryEntityHash: deployHash,
+            },
         });
     }
 

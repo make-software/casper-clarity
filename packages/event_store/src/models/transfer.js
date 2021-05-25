@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
 
         toJSON() {
             return {
+                "transferId": this.transferId,
                 "deployHash": this.deployHash,
                 "blockHash": this.blockHash,
                 "sourcePurse": this.sourcePurse,
@@ -19,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Transfer.init({
+        transferId: DataTypes.BIGINT,
         transferHash: DataTypes.STRING,
         deployHash: DataTypes.STRING,
         blockHash: DataTypes.STRING(64),

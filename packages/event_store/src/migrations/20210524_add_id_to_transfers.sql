@@ -1,0 +1,1 @@
+ALTER TABLE `Transfers` ADD `transferId` BIGINT AFTER `blockHash`;
