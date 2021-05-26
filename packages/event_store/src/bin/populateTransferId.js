@@ -27,8 +27,7 @@ async function populateTransferId() {
             .on('result', async function(transfer) {
                 streamingConnection.pause();
 
-                const rawDeployEvent = await storage.getRawDeployEvent(transfer.deployHash);
-                const event = JSON.parse(rawDeployEvent.jsonBody).DeployProcessed;
+                const event = await storage.findRawDeploy(transfer.deployHash);
 
                 console.log(`Info: Processing DeployProcessed event. DeployHash: ${event.deploy_hash}.`);
 

@@ -469,13 +469,15 @@ class Storage {
         });
     }
 
-    async getRawDeployEvent(deployHash) {
-        return await this.models.RawEvent.findOne({
+    async findRawDeploy(deployHash) {
+        const rawEvent = await this.models.RawEvent.findOne({
             where: {
                 eventType: 'DeployProcessed',
                 primaryEntityHash: deployHash,
             },
         });
+
+        return rawEvent ? JSON.parse(rawEvent.jsonBody).DeployProcessed : null;
     }
 
     async findTransfers(criteria, limit, offset, orderBy, orderDirection) {

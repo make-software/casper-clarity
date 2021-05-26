@@ -182,6 +182,15 @@ let httpServer = (models) => {
         }
     });
 
+    app.get(['/deploys/:deployHash/raw'], async (req, res, next) => {
+        let deploy = await storage.findRawDeploy(req.params.deployHash);
+        if (deploy === null) {
+            res.status(404).send("Deploy not found.");
+        } else {
+            res.send(JSON.stringify(deploy));
+        }
+    });
+
     app.get('/deploys/:deployHash/transfers', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
             {deployHash: req.params.deployHash},
