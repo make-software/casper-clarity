@@ -311,9 +311,11 @@ let httpServer = (models) => {
             .sub(genesisTokensAmount);
 
         res.send(JSON.stringify({
-            total_supply: totalSupply.toString(),
-            circulating_supply: circulatingSupply.toString(),
-            timestamp: now
+            data: {
+                total_supply: totalSupply.toString(),
+                circulating_supply: circulatingSupply.toString(),
+                timestamp: now
+            }
         }));
     });
 
