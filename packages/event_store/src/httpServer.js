@@ -312,8 +312,9 @@ let httpServer = (models) => {
 
         res.send(JSON.stringify({
             data: {
-                total_supply: totalSupply.toString(),
-                circulating_supply: circulatingSupply.toString(),
+                token: 'CSPR',
+                total_supply: totalSupply.toNumber(),
+                circulating_supply: circulatingSupply.toNumber(),
                 timestamp: now
             }
         }));
