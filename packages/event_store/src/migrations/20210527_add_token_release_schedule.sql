@@ -4,7 +4,7 @@ CREATE TABLE `TokenReleaseSchedule` (
   PRIMARY KEY (`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-LOAD DATA LOCAL INFILE '/Users/ihor/Dropbox/Make/token_release_schedule.csv'
+LOAD DATA LOCAL INFILE '~/token_release_schedule.csv'
 INTO TABLE TokenReleaseSchedule
 FIELDS TERMINATED BY '\t'
 LINES TERMINATED BY '\n'
