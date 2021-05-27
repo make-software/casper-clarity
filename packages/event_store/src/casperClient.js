@@ -35,6 +35,22 @@ class CasperClient {
 
         return response.result.era_summary;
     }
+
+    async getLatestBlock() {
+        const response = await this.makeRpcRequest('chain_get_block');
+
+        return response.result.block;
+    }
+
+    async getStoredValue(stateRootHash, key) {
+        const response = await this.makeRpcRequest('state_get_item', {
+            state_root_hash: stateRootHash,
+            key
+        });
+
+        return response.result.stored_value;
+    }
+
 }
 
 module.exports = CasperClient;

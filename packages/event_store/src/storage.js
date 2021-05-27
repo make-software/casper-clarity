@@ -562,6 +562,15 @@ class Storage {
             order: [['created', 'DESC']]
         });
     }
+
+    async findReleaseSchedule(date) {
+        return await this.models.TokenReleaseSchedule.findOne({
+            where: {
+                date: {[Op.gt]: date},
+            },
+            order: [['date', 'ASC']]
+        });
+    }
 }
 
 module.exports = Storage;

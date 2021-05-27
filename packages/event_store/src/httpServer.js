@@ -2,6 +2,8 @@ const express = require('express');
 const paginate = require('express-paginate');
 const cors = require('cors');
 const Storage = require('./storage');
+const CasperClient = require('./casperClient');
+const { BigNumber } = require('@ethersproject/bignumber');
 
 let httpServer = (models) => {
     const app = express();
@@ -286,6 +288,33 @@ let httpServer = (models) => {
             req.query.order_by,
             req.query.order_direction
         ));
+    });
+
+    // Supply
+    app.get('/supply', async (req, res, next) => {
+        const motesToCSPRRate = 1000000000;
+        const genesisTokensAmount = BigNumber.from('10000000000');
+
+        // Get total supply
+        const casperClient = new CasperClient(process.env.NODE_ADDRESS)
+        const latestBlock = await casperClient.getLatestBlock();
+        const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, 'uref-8032100a1dcc56acf84d5fc9c968ce8caa5f2835ed665a2ae2186141e9946214-007');
+        const totalSupply = BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);
+
+        // Get circulating supply
+        const now = Date.now();
+        const releaseSchedule = await storage.findReleaseSchedule(now);
+        const releasedGenesisTokensAmount = BigNumber.from(releaseSchedule.amount);
+
+        const circulatingSupply = releasedGenesisTokensAmount
+            .add(totalSupply)
+            .sub(genesisTokensAmount);
+
+        res.send(JSON.stringify({
+            total_supply: totalSupply.toString(),
+            circulating_supply: circulatingSupply.toString(),
+            timestamp: now
+        }));
     });
 
     app.use(function (req,res,next){

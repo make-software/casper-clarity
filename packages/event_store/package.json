@@ -12,6 +12,7 @@
     "start-event-handler": "node src/eventHandler.js"
   },
   "dependencies": {
+    "@ethersproject/bignumber": "^5.2.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",
