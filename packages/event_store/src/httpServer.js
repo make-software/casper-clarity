@@ -291,6 +291,7 @@ let httpServer = (models) => {
     });
 
     // Supply
+    // @deprecated
     app.get('/supply', async (req, res, next) => {
         const motesToCSPRRate = 1000000000;
         const genesisTokensAmount = BigNumber.from('10000000000');
@@ -320,11 +321,59 @@ let httpServer = (models) => {
         }));
     });
 
+    const getTotalSupply = async () => {
+        const motesToCSPRRate = 1000000000;
+        const casperClient = new CasperClient(process.env.NODE_ADDRESS);
+        const latestBlock = await casperClient.getLatestBlock();
+        const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, process.env.TOTAL_SUPPLY_UREF);
+        return BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);;
+    };
+
+    app.get('/total-supply', async (req, res, next) => {
+        const totalSupply = await getTotalSupply();
+
+        if (req.query.as_scalar) {
+            res.send(totalSupply.toString());
+        }
+        else {
+            res.send(JSON.stringify({
+                data: {
+                    amount: totalSupply.toNumber(),
+                    timestamp: Date.now(),
+                }
+            }));
+        }
+    });
+
+    app.get('/circulating-supply', async (req, res, next) => {
+        const totalSupply = await getTotalSupply();
+        const genesisTokensAmount = BigNumber.from('10000000000');
+        const seniorageAmount = totalSupply.sub(genesisTokensAmount);
+
+        const now = Date.now();
+        const releaseSchedule = await storage.findReleaseSchedule(now);
+        const releasedGenesisTokensAmount = BigNumber.from(releaseSchedule.amount);
+
+        const circulatingSupply = releasedGenesisTokensAmount.add(seniorageAmount);
+
+        if (req.query.as_scalar) {
+            res.send(circulatingSupply.toString());
+        }
+        else {
+            res.send(JSON.stringify({
+                data: {
+                    amount: circulatingSupply.toNumber(),
+                    timestamp: now,
+                }
+            }));
+        }
+    });
+
     app.use(function (req,res,next){
         res.status(400).send('Bad Request');
     });
 
     return app;
-}
+};
 
 module.exports = httpServer;
