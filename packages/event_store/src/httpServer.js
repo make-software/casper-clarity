@@ -291,62 +291,15 @@ let httpServer = (models) => {
     });
 
     // Supply
-    // @deprecated
-    app.get('/supply', async (req, res, next) => {
-        const motesToCSPRRate = 1000000000;
-        const genesisTokensAmount = BigNumber.from('10000000000');
-
-        // Get total supply
-        const casperClient = new CasperClient(process.env.NODE_ADDRESS);
-        const latestBlock = await casperClient.getLatestBlock();
-        const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, process.env.TOTAL_SUPPLY_UREF);
-        const totalSupply = BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);
-
-        // Get circulating supply
-        const now = Date.now();
-        const releaseSchedule = await storage.findReleaseSchedule(now);
-        const releasedGenesisTokensAmount = BigNumber.from(releaseSchedule.amount);
-
-        const circulatingSupply = releasedGenesisTokensAmount
-            .add(totalSupply)
-            .sub(genesisTokensAmount);
-
-        res.send(JSON.stringify({
-            data: {
-                token: 'CSPR',
-                total_supply: totalSupply.toNumber(),
-                circulating_supply: circulatingSupply.toNumber(),
-                timestamp: now
-            }
-        }));
-    });
-
     const getTotalSupply = async () => {
         const motesToCSPRRate = 1000000000;
         const casperClient = new CasperClient(process.env.NODE_ADDRESS);
         const latestBlock = await casperClient.getLatestBlock();
         const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, process.env.TOTAL_SUPPLY_UREF);
-        return BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);;
+        return BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);
     };
 
-    app.get('/total-supply', async (req, res, next) => {
-        const totalSupply = await getTotalSupply();
-
-        if (req.query.as_scalar) {
-            res.send(totalSupply.toString());
-        }
-        else {
-            res.send(JSON.stringify({
-                data: {
-                    amount: totalSupply.toNumber(),
-                    timestamp: Date.now(),
-                }
-            }));
-        }
-    });
-
-    app.get('/circulating-supply', async (req, res, next) => {
-        const totalSupply = await getTotalSupply();
+    const getCirculatingSupply = async (totalSupply) => {
         const genesisTokensAmount = BigNumber.from('10000000000');
         const seniorageAmount = totalSupply.sub(genesisTokensAmount);
 
@@ -354,17 +307,46 @@ let httpServer = (models) => {
         const releaseSchedule = await storage.findReleaseSchedule(now);
         const releasedGenesisTokensAmount = BigNumber.from(releaseSchedule.amount);
 
-        const circulatingSupply = releasedGenesisTokensAmount.add(seniorageAmount);
+        return releasedGenesisTokensAmount.add(seniorageAmount);
+    };
+
+    app.get('/supply', async (req, res, next) => {
+        const totalSupply = await getTotalSupply();
+        const circulatingSupply = await getCirculatingSupply(totalSupply);
+
+        res.send(JSON.stringify({
+            data: {
+                token: 'CSPR',
+                total: totalSupply.toNumber(),
+                circulating: circulatingSupply.toNumber(),
+                timestamp: Date.now()
+            }
+        }));
+    });
+
+    app.get('/supply/total', async (req, res, next) => {
+        const totalSupply = await getTotalSupply();
+
+        if (req.query.as_scalar) {
+            res.send(totalSupply.toString());
+        }
+        else {
+            res.send(JSON.stringify({
+                data: totalSupply.toNumber()
+            }));
+        }
+    });
+
+    app.get('/supply/circulating', async (req, res, next) => {
+        const totalSupply = await getTotalSupply();
+        const circulatingSupply = await getCirculatingSupply(totalSupply);
 
         if (req.query.as_scalar) {
             res.send(circulatingSupply.toString());
         }
         else {
             res.send(JSON.stringify({
-                data: {
-                    amount: circulatingSupply.toNumber(),
-                    timestamp: now,
-                }
+                data: circulatingSupply.toNumber()
             }));
         }
     });
