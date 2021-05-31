@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
                 "publicKey": this.publicKey,
                 "validatorPublicKey": this.validatorPublicKey,
                 "amount": this.amount,
+                "timestamp": this.timestamp,
             }
         }
     }
@@ -28,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
         },
         amount: DataTypes.BIGINT,
+        timestamp: DataTypes.DATE,
     }, {
         indexes: [
             { fields: [ 'validatorPublicKey' ] },

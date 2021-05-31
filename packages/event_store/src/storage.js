@@ -193,6 +193,7 @@ class Storage {
                         eraId: eraSummary.era_id,
                         publicKey: reward.Validator.validator_public_key,
                         amount: reward.Validator.amount,
+                        timestamp: event.block.header.timestamp,
                     });
                 }
                 else if (reward.Delegator) {
@@ -201,6 +202,7 @@ class Storage {
                         publicKey: reward.Delegator.delegator_public_key,
                         validatorPublicKey: reward.Delegator.validator_public_key,
                         amount: reward.Delegator.amount,
+                        timestamp: event.block.header.timestamp,
                     });
                 }
             }

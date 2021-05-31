@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
                 "eraId": this.eraId,
                 "publicKey": this.publicKey,
                 "amount": this.amount,
+                "timestamp": this.timestamp,
             }
         }
     }
@@ -23,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
         },
         amount: DataTypes.BIGINT,
+        timestamp: DataTypes.DATE,
     }, {
         sequelize,
         timestamps: false,
