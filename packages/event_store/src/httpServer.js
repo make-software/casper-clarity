@@ -241,21 +241,29 @@ let httpServer = (models) => {
     // Validators
     app.get('/validators/:publicKey/total-rewards', async (req, res, next) => {
         const result = await storage.getTotalValidatorRewards(req.params.publicKey);
-        if (Number.isNaN(result)) {
-            res.send('0');
+        const preparedResult = Number.isNaN(result) ? 0 : result;
+
+        if (req.query.as_scalar) {
+            res.send(preparedResult.toString());
         }
         else {
-            res.send(result.toString());
+            res.send(JSON.stringify({
+                data: preparedResult
+            }));
         }
     });
 
     app.get('/validators/:publicKey/total-delegator-rewards', async (req, res, next) => {
         const result = await storage.getTotalValidatorDelegatorRewards(req.params.publicKey);
-        if (Number.isNaN(result)) {
-            res.send('0');
+        const preparedResult = Number.isNaN(result) ? 0 : result;
+
+        if (req.query.as_scalar) {
+            res.send(preparedResult.toString());
         }
         else {
-            res.send(result.toString());
+            res.send(JSON.stringify({
+                data: preparedResult
+            }));
         }
     });
 
