@@ -20,40 +20,9 @@ let httpServer = (models) => {
         if (req.query.with_amounts_in_currency_id && paginatedResult.rows.length > 0) {
             // Adding amounts in requested currency @todo Extract into a separate function
             if (!paginatedResult.rows[0].timestamp) {
-                res.status(404).send('Cannot added ');
+                res.status(400).send('Cannot add amounts in the requested currency');
                 return;
             }
-
-            let minTimestamp, maxTimestamp;
-            for (let row of paginatedResult.rows) {
-                if (!minTimestamp || row.timestamp < minTimestamp) {
-                    minTimestamp = row.timestamp;
-                }
-
-                if (!maxTimestamp || row.timestamp > maxTimestamp) {
-                    maxTimestamp = row.timestamp;
-                }
-            }
-
-            minTimestamp.setMinutes(minTimestamp.getMinutes() - 5);
-            maxTimestamp.setMinutes(maxTimestamp.getMinutes() + 5);
-
-            const rates = await storage.findCurrencyRatesInDateRange(
-                req.query.with_amounts_in_currency_id,
-                minTimestamp,
-                maxTimestamp
-            );
-
-            let fiveMinutes = 1000 * 60 * 5;
-            const latestRates = await storage.findCurrencyRatesInDateRange(
-                req.query.with_amounts_in_currency_id,
-                new Date( Date.now() - fiveMinutes),
-                Date.now()
-            );
-
-            const currentRate = latestRates.length > 0 ? latestRates[0] : null;
-
-            let currentDiff, bestDiff;
 
             let amountField;
             const availableAmountFields = [
@@ -63,11 +32,57 @@ let httpServer = (models) => {
             ];
 
             for (let field of availableAmountFields) {
-                if (jsonRecords[0][field]) {
+                if (paginatedResult.rows[0][field]) {
                     amountField = field;
+                    break;
                 }
             }
 
+            if (!amountField) {
+                res.status(400).send('There is no amount field in the request data');
+                return;
+            }
+
+            let oneMinute = 1000 * 60;
+
+            const formatDate = (date) => {
+                return date.getFullYear() + '-' +
+                    ('0' + (date.getMonth() + 1)).slice(-2) + '-' +
+                    ('0' + date.getDate()).slice(-2) + ' ' +
+                    ('0' + date.getHours()).slice(-2) + ':' +
+                    ('0' + date.getMinutes()).slice(-2) + ':00';
+            };
+
+            const minutes = new Set();
+            for (let row of paginatedResult.rows) {
+                minutes.add(formatDate(new Date( row.timestamp - oneMinute * 2)));
+                minutes.add(formatDate(new Date( row.timestamp - oneMinute)));
+                minutes.add(formatDate(new Date( row.timestamp)));
+                minutes.add(formatDate(new Date( row.timestamp + oneMinute)));
+                minutes.add(formatDate(new Date( row.timestamp + oneMinute * 2)));
+            }
+
+            const rates = await storage.findCurrencyRatesForDates(
+                req.query.with_amounts_in_currency_id,
+                Array.from(minutes.values())
+            );
+
+            const now = Date.now();
+            const lastFiveMinutes = [
+                formatDate(new Date( now - oneMinute * 4)),
+                formatDate(new Date( now - oneMinute * 3)),
+                formatDate(new Date( now - oneMinute * 2)),
+                formatDate(new Date( now - oneMinute)),
+                formatDate(new Date( now)),
+            ];
+            const latestRates = await storage.findCurrencyRatesForDates(
+                req.query.with_amounts_in_currency_id,
+                lastFiveMinutes
+            );
+
+            const currentRate = latestRates.length > 0 ? latestRates[0] : null;
+
+            let currentDiff, bestDiff;
             let amount, csprAmount;
             for (let i in paginatedResult.rows) {
                 amount = jsonRecords[i][amountField];
@@ -84,7 +99,7 @@ let httpServer = (models) => {
                 bestDiff = -(new Date(0,0,0)).valueOf();
                 for (let j = 0; j < rates.length; ++j) {
                     currentDiff = Math.abs(paginatedResult.rows[i].timestamp - rates[j].created);
-                    if (currentDiff < bestDiff && currentDiff < fiveMinutes) {
+                    if (currentDiff < bestDiff) {
                         bestDiff = currentDiff;
                         jsonRecords[i]['currency_' + amountField] = csprAmount * rates[j].rate;
                     }

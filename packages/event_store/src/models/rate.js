@@ -26,6 +26,8 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         tableName: 'rates'
     });
+
+    Rate.removeAttribute('id');
     
     return Rate;
 };

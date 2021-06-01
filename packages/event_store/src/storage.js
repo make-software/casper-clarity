@@ -561,7 +561,17 @@ class Storage {
                     }
                 ]
             },
-            order: [['created', 'DESC']]
+            order: [['created', 'ASC']]
+        });
+    }
+
+    async findCurrencyRatesForDates(currencyId, dates) {
+        return await this.models.Rate.findAll({
+            where: {
+                currency_id: currencyId,
+                created: {[Op.in]: dates},
+            },
+            order: [['created', 'ASC']]
         });
     }
 
