@@ -323,14 +323,17 @@ let httpServer = (models) => {
     };
 
     const getCirculatingSupply = async (totalSupply) => {
-        const genesisTokensAmount = BigNumber.from('10000000000');
-        const seniorageAmount = totalSupply.sub(genesisTokensAmount);
+        const genesisTokensAmount = 10000000000;
+        const seigniorageAmount = totalSupply.sub(genesisTokensAmount);
 
         const now = Date.now();
         const releaseSchedule = await storage.findReleaseSchedule(now);
-        const releasedGenesisTokensAmount = BigNumber.from(releaseSchedule.amount);
+        const releasedGenesisTokensAmount = releaseSchedule.amount;
 
-        return releasedGenesisTokensAmount.add(seniorageAmount);
+        const releasedSeigniorageProportion = releasedGenesisTokensAmount / genesisTokensAmount;
+        const releasedSeigniorageAmount = seigniorageAmount * releasedSeigniorageProportion;
+
+        return BigNumber.from(Math.round(releasedGenesisTokensAmount + releasedSeigniorageAmount));
     };
 
     app.get('/supply', async (req, res, next) => {
