@@ -1,6 +1,7 @@
-const sequelize = require("sequelize");
-
+const sequelize = require('sequelize');
 const { Op } = sequelize;
+
+const { formatDate } = require('./utility');
 
 class Storage {
     constructor(models, casperClient, pubsub = null) {
@@ -548,6 +549,11 @@ class Storage {
         });
     }
 
+    async getTotalDelegatorRewards(publicKey) {
+        return await this.models.DelegatorReward
+            .sum('amount', {where: {publicKey}});
+    }
+
     async findCurrencyRatesInDateRange(currencyId, from, to) {
         return await this.models.Rate.findAll({
             where: {
@@ -573,6 +579,26 @@ class Storage {
             },
             order: [['created', 'ASC']]
         });
+    }
+
+    async getLatestRate(currencyId) {
+        const now = Date.now();
+        const oneMinute = 1000 * 60;
+
+        const lastFiveMinutes = [
+            formatDate(new Date( now - oneMinute * 4)),
+            formatDate(new Date( now - oneMinute * 3)),
+            formatDate(new Date( now - oneMinute * 2)),
+            formatDate(new Date( now - oneMinute)),
+            formatDate(new Date( now)),
+        ];
+
+        const latestRates = await this.findCurrencyRatesForDates(
+            currencyId,
+            lastFiveMinutes
+        );
+
+        return latestRates.length > 0 ? latestRates[0] : null;
     }
 
     async findReleaseSchedule(date) {

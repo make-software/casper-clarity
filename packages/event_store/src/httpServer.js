@@ -4,6 +4,7 @@ const cors = require('cors');
 const Storage = require('./storage');
 const CasperClient = require('./casperClient');
 const { BigNumber } = require('@ethersproject/bignumber');
+const { formatDate } = require('./utility');
 
 let httpServer = (models) => {
     const app = express();
@@ -45,14 +46,6 @@ let httpServer = (models) => {
 
             let oneMinute = 1000 * 60;
 
-            const formatDate = (date) => {
-                return date.getFullYear() + '-' +
-                    ('0' + (date.getMonth() + 1)).slice(-2) + '-' +
-                    ('0' + date.getDate()).slice(-2) + ' ' +
-                    ('0' + date.getHours()).slice(-2) + ':' +
-                    ('0' + date.getMinutes()).slice(-2) + ':00';
-            };
-
             const minutes = new Set();
             for (let row of paginatedResult.rows) {
                 minutes.add(formatDate(new Date( row.timestamp - oneMinute * 2)));
@@ -67,20 +60,7 @@ let httpServer = (models) => {
                 Array.from(minutes.values())
             );
 
-            const now = Date.now();
-            const lastFiveMinutes = [
-                formatDate(new Date( now - oneMinute * 4)),
-                formatDate(new Date( now - oneMinute * 3)),
-                formatDate(new Date( now - oneMinute * 2)),
-                formatDate(new Date( now - oneMinute)),
-                formatDate(new Date( now)),
-            ];
-            const latestRates = await storage.findCurrencyRatesForDates(
-                req.query.with_amounts_in_currency_id,
-                lastFiveMinutes
-            );
-
-            const currentRate = latestRates.length > 0 ? latestRates[0] : null;
+            const currentRate = await storage.getLatestRate(req.query.with_amounts_in_currency_id);
 
             let currentDiff, bestDiff;
             let amount, csprAmount;
@@ -313,6 +293,20 @@ let httpServer = (models) => {
         ));
     });
 
+    app.get('/delegators/:publicKey/total-rewards', async (req, res, next) => {
+        const result = await storage.getTotalDelegatorRewards(req.params.publicKey);
+        const preparedResult = Number.isNaN(result) ? 0 : result;
+
+        if (req.query.as_scalar) {
+            res.send(preparedResult.toString());
+        }
+        else {
+            res.send(JSON.stringify({
+                data: preparedResult
+            }));
+        }
+    });
+
     // Supply
     const getTotalSupply = async () => {
         const motesToCSPRRate = 1000000000;
@@ -373,6 +367,20 @@ let httpServer = (models) => {
         else {
             res.send(JSON.stringify({
                 data: circulatingSupply.toNumber()
+            }));
+        }
+    });
+
+    // Rate
+    app.get('/rates/:currencyId/amount', async (req, res, next) => {
+        const currentRate = await storage.getLatestRate(req.params.currencyId);
+
+        if (req.query.as_scalar) {
+            res.send(currentRate.rate.toString());
+        }
+        else {
+            res.send(JSON.stringify({
+                data: currentRate.rate
             }));
         }
     });
