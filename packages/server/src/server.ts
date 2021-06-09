@@ -217,6 +217,7 @@ app.get('/config.js', (_, res) => {
     csprLiveUrl: process.env.CSPR_LIVE_URL,
     clarityUrl: process.env.CLARITY_URL,
     transfer_cost: process.env.TRANSFER_COST,
+    transfer_min_amount: process.env.TRANSFER_MIN_AMOUNT,
     delegate_cost: process.env.DELEGATE_COST,
     delegate_delay: process.env.DELEGATE_DELAY,
     undelegate_cost: process.env.UNDELEGATE_COST,
