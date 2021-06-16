@@ -210,8 +210,10 @@ app.get('/config.js', (_, res) => {
       // connect to window.origin and be handled by nginx.
       url: process.env.UI_GRPC_URL
     },
+    networkName: process.env.NETWORK_NAME,
     eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL,
     withFaucet: process.env.NO_FAUCET !== '1',
+    faucetApiUrl: process.env.FAUCET_API_URL,
     withCsprLiveNotice: process.env.WITH_CSPR_LIVE_NOTICE === '1',
     csprLiveName: process.env.CSPR_LIVE_NAME,
     csprLiveUrl: process.env.CSPR_LIVE_URL,
