@@ -33,14 +33,14 @@ let httpServer = (models) => {
             ];
 
             for (let field of availableAmountFields) {
-                if (paginatedResult.rows[0][field]) {
+                if (paginatedResult.rows[0][field] !== undefined) {
                     amountField = field;
                     break;
                 }
             }
 
             if (!amountField) {
-                res.status(400).send('There is no amount field in the request data');
+                res.status(400).send('There is no amount field in the requested data');
                 return;
             }
 
@@ -88,7 +88,7 @@ let httpServer = (models) => {
                     }
                 }
 
-                if (!jsonRecords[i]['currency_' + amountField]) {
+                if (jsonRecords[i]['currency_' + amountField] === undefined) {
                     jsonRecords[i]['currency_' + amountField] = null;
                 }
 
