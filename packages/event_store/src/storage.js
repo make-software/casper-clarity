@@ -484,8 +484,27 @@ class Storage {
     }
 
     async findTransfers(criteria, limit, offset, orderBy, orderDirection) {
+        let where = this.buildWhere(criteria, ['blockHash', 'deployHash', 'transferId']);
+        if (criteria['accountHash']) {
+            where = {
+                [Op.and]: [
+                    where,
+                    {
+                        [Op.or]: [
+                            {
+                                fromAccount: criteria['accountHash']
+                            },
+                            {
+                                toAccount: criteria['accountHash']
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
         return await this.models.Transfer.findAndCountAll({
-            where: this.buildWhere(criteria, ['blockHash', 'deployHash']),
+            where: where,
             order: this.buildOrder(
                 orderBy,
                 orderDirection,

@@ -37,7 +37,8 @@ module.exports = (sequelize, DataTypes) => {
             { fields: [ 'deployHash' ] },
             { fields: [ 'blockHash' ] },
             { fields: [ 'fromAccount' ] },
-            { fields: [ 'toAccount' ] }
+            { fields: [ 'toAccount' ] },
+            { fields: [ 'transferId' ] }
         ]
     });
 

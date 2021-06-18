@@ -148,7 +148,10 @@ let httpServer = (models) => {
 
     app.get('/blocks/:blockHash/transfers', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
-            {blockHash: req.params.blockHash},
+            {
+                ...req.query,
+                blockHash: req.params.blockHash
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -190,7 +193,10 @@ let httpServer = (models) => {
 
     app.get('/deploys/:deployHash/transfers', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
-            {deployHash: req.params.deployHash},
+            {
+                ...req.query,
+                deployHash: req.params.deployHash
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -213,8 +219,22 @@ let httpServer = (models) => {
     });
 
     app.get('/accounts/:accountHash/transfers', async (req, res, next) => {
-        await sendPreparedPaginatedResponse(req, res, await storage.findAccountTransfers(
-            req.params.accountHash,
+        await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
+            {
+                ...req.query,
+                accountHash: req.params.accountHash
+            },
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
+    // Transfers
+    app.get('/transfers', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.findTransfers(
+            req.query,
             req.query.limit,
             req.skip,
             req.query.order_by,
