@@ -26,9 +26,9 @@ class Storage {
         }
     }
 
-    async onEventId(sourceNodeId, apiVersionId, id) {
-        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}, protocol version ${apiVersionId}`);
-        this.storeEntity('EventId', { sourceNodeId, apiVersionId, id });
+    async onEventId(sourceNodeId, apiVersionId, eventStreamId, id) {
+        console.log(`Info: Processing id ${id} from source node ${sourceNodeId}, stream path ${eventStreamId}, protocol version ${apiVersionId}`);
+        this.storeEntity('EventId', { sourceNodeId, apiVersionId, eventStreamId, id });
     }
 
     async onEvent(sourceNodeId, apiVersion, jsonBody) {
@@ -354,9 +354,22 @@ class Storage {
         return await this.storeEntity('ApiVersion', { version });
     }
 
-    async getLastEventId(sourceNodeId, apiVersionId) {
+    async findEventStreamByPathOrCreate(path) {
+        const found = await this.models.EventStream.findOne({
+            where: { path }
+        });
+
+        if (found) {
+            return found;
+        }
+
+        return await this.storeEntity('EventStream', { path });
+    }
+
+
+    async getLastEventId(sourceNodeId, apiVersionId, eventStreamId) {
         const eventId = await this.models.EventId.findOne({
-            where: { sourceNodeId, apiVersionId },
+            where: { sourceNodeId, apiVersionId, eventStreamId },
             order: [[ 'id', 'DESC' ]],
         });
 

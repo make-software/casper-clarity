@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
                 "id": this.id,
                 "sourceNodeId": this.sourceNodeId,
                 "apiVersionId": this.apiVersionId,
+                "eventStreamId": this.eventStreamId,
             }
         }
     };
@@ -19,6 +20,10 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         apiVersionId: {
+            type: DataTypes.INTEGER,
+            primaryKey: true
+        },
+        eventStreamId: {
             type: DataTypes.INTEGER,
             primaryKey: true
         },

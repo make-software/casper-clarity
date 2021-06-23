@@ -7,11 +7,11 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/eh-config.json')[env];
 
 // Tagging test
-function formNodeURL(lastEventId, sourceNode = null) {
+function formNodeURL(sourceNode, eventStream, lastEventId) {
     const protocol = config.EH_STREAM_PROTOCOL;
     const domain = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
     const port = config.EH_STREAM_PORT;
-    const path = process.env.NODE_PATH ? process.env.NODE_PATH : config.EH_STREAM_PATH;
+    const path = eventStream.path;
 
     // @todo Remove duplicate code
     if (false === lastEventId) {
@@ -54,8 +54,11 @@ async function runEventHandler() {
         const sourceNodeAddress = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
         const sourceNode = await storage.findSourceNodeByAddressOrCreate(sourceNodeAddress);
 
+        const eventStreamPath = process.env.NODE_EVENT_STREAM_PATH ? process.env.NODE_EVENT_STREAM_PATH : config.EH_STREAM_PATH;
+        const eventStream = await storage.findEventStreamByPathOrCreate(eventStreamPath);
+
         const prefetchStream = readline.createInterface({
-            input: got.stream(formNodeURL(false)),
+            input: got.stream(formNodeURL(sourceNode, eventStream, false)),
             crlfDelay: Infinity
         });
 
@@ -80,12 +83,12 @@ async function runEventHandler() {
         }
 
         const apiVersion = await storage.findApiVersionByVersionOrCreate(apiVersionVersion);
-        const lastEventId = await storage.getLastEventId(sourceNode.id, apiVersion.id);
+        const lastEventId = await storage.getLastEventId(sourceNode.id, apiVersion.id, eventStream.id);
 
         // @todo Retry on failed connection
         console.log('Info: Connecting to the event stream');
         const stream = readline.createInterface({
-            input: got.stream(formNodeURL(lastEventId, sourceNode)),
+            input: got.stream(formNodeURL(sourceNode, eventStream, lastEventId)),
             crlfDelay: Infinity
         });
 
@@ -104,7 +107,7 @@ async function runEventHandler() {
 
             try {
                 if (eventString.startsWith('id')) {
-                    await storage.onEventId(sourceNode.id, apiVersion.id, eventString.substr(3));
+                    await storage.onEventId(sourceNode.id, apiVersion.id, eventStream.id, eventString.substr(3));
                 }
                 else if (eventString.startsWith('data')) {
                     await storage.onEvent(sourceNode.id, apiVersion, eventString.substr(5));
