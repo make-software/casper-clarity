@@ -359,11 +359,11 @@ let httpServer = (models) => {
 
     // Supply
     const getTotalSupply = async () => {
-        const motesToCSPRRate = 1000000000;
+        const motesToCSPRRate = '1000000000';
         const casperClient = new CasperClient(process.env.NODE_ADDRESS);
         const latestBlock = await casperClient.getLatestBlock();
         const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, process.env.TOTAL_SUPPLY_UREF);
-        return BigNumber.from(totalSupplyInMotes.CLValue.parsed).div(motesToCSPRRate);
+        return BigNumber.from(totalSupplyInMotes.CLValue.parsed.toString()).div(motesToCSPRRate);
     };
 
     const getCirculatingSupply = async (totalSupply) => {
@@ -372,7 +372,7 @@ let httpServer = (models) => {
 
         const now = Date.now();
         const releaseSchedule = await storage.findReleaseSchedule(now);
-        const releasedGenesisTokensAmount = releaseSchedule.amount;
+        const releasedGenesisTokensAmount = parseInt(releaseSchedule.amount);
 
         const releasedSeigniorageProportion = releasedGenesisTokensAmount / genesisTokensAmount;
         const releasedSeigniorageAmount = seigniorageAmount * releasedSeigniorageProportion;
