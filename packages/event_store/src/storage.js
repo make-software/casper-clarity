@@ -1,5 +1,5 @@
 const sequelize = require('sequelize');
-const { Op } = sequelize;
+const { Op, QueryTypes } = sequelize;
 
 const { formatDate } = require('./utility');
 
@@ -393,7 +393,7 @@ class Storage {
 
     async findBlocks(criteria, limit, offset, orderBy, orderDirection) {
         return await this.models.Block.findAndCountAll({
-            where: this.buildWhere(criteria, ['proposer']),
+            where: this.buildWhere(criteria, ['proposer', 'eraId', 'blockHeight', 'blockHash']),
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
@@ -460,7 +460,7 @@ class Storage {
 
     async getDeploys(criteria, limit, offset, orderBy, orderDirection) {
         return await this.models.Deploy.findAndCountAll({
-            where: this.buildWhere(criteria, ['blockHash']),
+            where: this.buildWhere(criteria, ['blockHash', 'account']),
             limit: limit,
             offset: offset,
             order: this.buildOrder(
@@ -531,13 +531,27 @@ class Storage {
     }
 
     async getTotalValidatorRewards(publicKey) {
-        return await this.models.ValidatorReward
-            .sum('amount', {where: {publicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `ValidatorRewards` WHERE publicKey = $1', {
+                bind: [publicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async getTotalValidatorDelegatorRewards(validatorPublicKey) {
-        return await this.models.DelegatorReward
-            .sum('amount', {where: {validatorPublicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `DelegatorRewards` WHERE validatorPublicKey = $1', {
+                bind: [validatorPublicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async findValidatorRewards(criteria, limit, offset, orderBy, orderDirection) {
@@ -546,7 +560,7 @@ class Storage {
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
-                ['eraId', 'amount'],
+                ['eraId', 'amount', 'timestamp'],
                 [['eraId', 'DESC']]
             ),
             limit: limit,
@@ -562,15 +576,22 @@ class Storage {
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
-                ['eraId', 'amount'],
+                ['eraId', 'amount', 'timestamp'],
                 [['eraId', 'DESC']]
             ),
         });
     }
 
     async getTotalDelegatorRewards(publicKey) {
-        return await this.models.DelegatorReward
-            .sum('amount', {where: {publicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `DelegatorRewards` WHERE publicKey = $1', {
+                bind: [publicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async findCurrencyRatesInDateRange(currencyId, from, to) {

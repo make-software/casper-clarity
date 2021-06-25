@@ -21,7 +21,7 @@ let httpServer = (models) => {
         if (req.query.with_amounts_in_currency_id && paginatedResult.rows.length > 0) {
             // Adding amounts in requested currency @todo Extract into a separate function
             if (!paginatedResult.rows[0].timestamp) {
-                res.status(400).send('Cannot add amounts in the requested currency');
+                res.status(400).send({error: {message: 'Cannot add amounts in the requested currency'}});
                 return;
             }
 
@@ -40,7 +40,7 @@ let httpServer = (models) => {
             }
 
             if (!amountField) {
-                res.status(400).send('There is no amount field in the requested data');
+                res.status(400).send({error: {message: 'There is no amount field in the requested data'}});
                 return;
             }
 
@@ -68,7 +68,7 @@ let httpServer = (models) => {
                 amount = jsonRecords[i][amountField];
                 if (typeof amount === 'string') {
                     csprAmount = parseFloat(
-                        amount.substr(0, amount.length  - 9) + '.' + amount.substr(-9)
+                        amount.substr(0, amount.length  - 9) + '.'  + '0'.repeat(Math.max(9 - amount.length, 0)) + amount.substr(-9)
                     )
                 }
                 else {
@@ -115,7 +115,7 @@ let httpServer = (models) => {
     // Blocks
     app.get('/blocks', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findBlocks(
-            {},
+            req.query,
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -125,7 +125,6 @@ let httpServer = (models) => {
 
     app.get([
         '/block/:blockHash', // @deprecated
-        '/blocks/:blockHash',
     ], async (req, res, next) => {
         let block = await storage.findBlockByHash(req.params.blockHash);
         if (block === null) {
@@ -136,9 +135,24 @@ let httpServer = (models) => {
         }
     });
 
+    app.get([
+        '/blocks/:blockHash',
+    ], async (req, res, next) => {
+        let block = await storage.findBlockByHash(req.params.blockHash);
+        if (block === null) {
+            res.status(404).send({error: {message: "Block not found."}});
+        } else {
+            let deploys = await storage.findDeployHashesByBlockHash(block.blockHash);
+            res.send({data: await block.toJSON(deploys)});
+        }
+    });
+
     app.get('/blocks/:blockHash/deploys', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.getDeploys(
-            {blockHash: req.params.blockHash},
+            {
+                ...req.query,
+                blockHash: req.params.blockHash
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -162,7 +176,7 @@ let httpServer = (models) => {
     // Deploys
     app.get('/deploys', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.getDeploys(
-            {},
+            req.query,
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -172,7 +186,6 @@ let httpServer = (models) => {
 
     app.get([
         '/deploy/:deployHash', // @deprecated
-        '/deploys/:deployHash',
     ], async (req, res, next) => {
         let deploy = await storage.findDeployByHash(req.params.deployHash);
         if (deploy === null) {
@@ -182,12 +195,23 @@ let httpServer = (models) => {
         }
     });
 
+    app.get([
+        '/deploys/:deployHash',
+    ], async (req, res, next) => {
+        let deploy = await storage.findDeployByHash(req.params.deployHash);
+        if (deploy === null) {
+            res.status(404).send({error: {message: "Deploy not found."}});
+        } else {
+            res.send({data: await deploy.toJSON()});
+        }
+    });
+
     app.get(['/deploys/:deployHash/raw'], async (req, res, next) => {
         let deploy = await storage.findRawDeploy(req.params.deployHash);
         if (deploy === null) {
-            res.status(404).send("Deploy not found.");
+            res.status(404).send({error: {message: "Deploy not found."}});
         } else {
-            res.send(JSON.stringify(deploy));
+            res.send({data: JSON.stringify(deploy)});
         }
     });
 
@@ -209,8 +233,11 @@ let httpServer = (models) => {
         '/accountDeploys/:account', // @deprecated
         '/accounts/:account/deploys',
     ], async (req, res, next) => {
-        await sendPreparedPaginatedResponse(req, res, await storage.findDeploysByAccount(
-            req.params.account,
+        await sendPreparedPaginatedResponse(req, res, await storage.getDeploys(
+            {
+                ...req.query,
+                account: req.params.account
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -256,35 +283,36 @@ let httpServer = (models) => {
     // Validators
     app.get('/validators/:publicKey/total-rewards', async (req, res, next) => {
         const result = await storage.getTotalValidatorRewards(req.params.publicKey);
-        const preparedResult = Number.isNaN(result) ? 0 : result;
 
         if (req.query.as_scalar) {
-            res.send(preparedResult.toString());
+            res.send(result);
         }
         else {
             res.send(JSON.stringify({
-                data: preparedResult
+                data: result
             }));
         }
     });
 
     app.get('/validators/:publicKey/total-delegator-rewards', async (req, res, next) => {
         const result = await storage.getTotalValidatorDelegatorRewards(req.params.publicKey);
-        const preparedResult = Number.isNaN(result) ? 0 : result;
 
         if (req.query.as_scalar) {
-            res.send(preparedResult.toString());
+            res.send(result);
         }
         else {
             res.send(JSON.stringify({
-                data: preparedResult
+                data: result
             }));
         }
     });
 
     app.get('/validators/:publicKeyHex/blocks', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findBlocks(
-            {proposer: req.params.publicKeyHex},
+            {
+                ...req.query,
+                proposer: req.params.publicKeyHex
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -305,7 +333,10 @@ let httpServer = (models) => {
     // Delegators
     app.get('/delegators/:publicKey/rewards', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findDelegatorRewards(
-            {publicKey: req.params.publicKey},
+            {
+                ...req.query,
+                publicKey: req.params.publicKey
+            },
             req.query.limit,
             req.skip,
             req.query.order_by,
@@ -315,14 +346,13 @@ let httpServer = (models) => {
 
     app.get('/delegators/:publicKey/total-rewards', async (req, res, next) => {
         const result = await storage.getTotalDelegatorRewards(req.params.publicKey);
-        const preparedResult = Number.isNaN(result) ? 0 : result;
 
         if (req.query.as_scalar) {
-            res.send(preparedResult.toString());
+            res.send(result);
         }
         else {
             res.send(JSON.stringify({
-                data: preparedResult
+                data: result
             }));
         }
     });
@@ -406,7 +436,7 @@ let httpServer = (models) => {
     });
 
     app.use(function (req,res,next){
-        res.status(400).send('Bad Request');
+        res.status(400).send({error: {message: 'Bad Request'}});
     });
 
     return app;

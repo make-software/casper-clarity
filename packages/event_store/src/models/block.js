@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
                 "deployCount": this.deployCount,
                 "transferCount": this.transferCount,
                 "height": this.blockHeight,
+                "blockHeight": this.blockHeight,
             };
 
             if (deploys) {
