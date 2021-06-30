@@ -402,13 +402,15 @@ let httpServer = (models) => {
         // If a genesis account transferred to other genesis accounts more tokens than it had
         // in the balance on genesis then we should adjust the amount of the genesis tokens that
         // became circulating by that overflow value
-        let internalTransfersOverflowCorrection = BigNumber.from(0);
-        for (const transfer of internalGenesisAccountTransfers) {
-            if (indexedGenesisBalances[transfer.fromAccount].lte(0)) {
-                internalTransfersOverflowCorrection = internalTransfersOverflowCorrection
-                    .add(indexedGenesisBalances[transfer.fromAccount]);
-            }
-        }
+        // The following correction is removed under assumption that it's not needed in the near future
+        // and the approach will be reevaluated with time to be more accurate
+        // let internalTransfersOverflowCorrection = BigNumber.from(0);
+        // for (const transfer of internalGenesisAccountTransfers) {
+        //     if (indexedGenesisBalances[transfer.fromAccount].lte(0)) {
+        //         internalTransfersOverflowCorrection = internalTransfersOverflowCorrection
+        //             .add(indexedGenesisBalances[transfer.fromAccount]);
+        //     }
+        // }
 
         // Calculate genesis tokens transferred out of the genesis accounts
         let releasedGenesisMotesAmount = BigNumber.from(0);
@@ -440,7 +442,7 @@ let httpServer = (models) => {
         }
 
         return releasedGenesisMotesAmount
-            .add(internalTransfersOverflowCorrection)
+            // .add(internalTransfersOverflowCorrection)
             .div(motesToCSPRRate)
             .toNumber();
     };
