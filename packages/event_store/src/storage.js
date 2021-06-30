@@ -695,7 +695,8 @@ class Storage {
                 [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
             ],
             where: {
-                'isInternal': 1
+                'isInternal': 1,
+                'isIgnoredInCirculatingSupply': 0,
             },
             group: ['fromAccount', 'toAccount'],
         });
@@ -708,9 +709,34 @@ class Storage {
                 [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
             ],
             where: {
-                'isInternal': 0
+                'isInternal': 0,
+                'isIgnoredInCirculatingSupply': 0,
             },
             group: ['fromAccount'],
+        });
+    }
+
+    async findGenesisAccountsTransfers(criteria, limit, offset, orderBy, orderDirection) {
+        let where = this.buildWhere(criteria, [
+            'blockHash',
+            'deployHash',
+            'transferId',
+            'fromAccount',
+            'toAccount',
+            'isInternal',
+            'isIgnoredInCirculatingSupply',
+        ]);
+
+        return await this.models.GenesisAccountTransfer.findAndCountAll({
+            where: where,
+            order: this.buildOrder(
+                orderBy,
+                orderDirection,
+                ['amount', 'timestamp'],
+                [['timestamp', 'DESC']]
+            ),
+            limit: limit,
+            offset: offset,
         });
     }
 

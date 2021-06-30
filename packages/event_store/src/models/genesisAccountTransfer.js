@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
                 "fromAccount": this.fromAccount,
                 "toAccount": this.toAccount,
                 "isInternal": this.isInternal,
+                "isIgnoredInCirculatingSupply": this.isIgnoredInCirculatingSupply,
                 "timestamp": this.timestamp
             }
         }
@@ -37,13 +38,17 @@ module.exports = (sequelize, DataTypes) => {
         targetPurse: DataTypes.STRING,
         amount: DataTypes.BIGINT,
         isInternal: DataTypes.TINYINT,
+        isIgnoredInCirculatingSupply: DataTypes.TINYINT,
         timestamp: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'GenesisAccountTransfer',
         timestamps: false,
         indexes: [ 
-            { fields: [ 'fromAccount', 'isInternal', 'toAccount' ] },
+            {
+                name: 'search_idx',
+                fields: [ 'fromAccount', 'isInternal', 'isIgnoredInCirculatingSupply', 'toAccount' ]
+            },
         ]
     });
 

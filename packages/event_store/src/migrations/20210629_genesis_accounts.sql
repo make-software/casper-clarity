@@ -10,14 +10,15 @@ CREATE TABLE `GenesisAccountTransfers` (
   `transferId` bigint(20) DEFAULT NULL,
   `deployHash` varchar(64) NOT NULL,
   `transferHash` varchar(255) NOT NULL,
-  `blockHash` varchar(64) DEFAULT NULL,
+  `blockHash` varchar(64) NOT NULL,
   `fromAccount` varchar(64) DEFAULT NULL,
   `toAccount` varchar(64) DEFAULT NULL,
   `sourcePurse` varchar(255) DEFAULT NULL,
   `targetPurse` varchar(255) DEFAULT NULL,
-  `amount` bigint(20) DEFAULT NULL,
-  `isInternal` tinyint(4) DEFAULT 0,
+  `amount` bigint(20) NOT NULL,
+  `isInternal` tinyint(4) NOT NULL DEFAULT 0,
+  `isIgnoredInCirculatingSupply` tinyint(4) NOT NULL DEFAULT 0,
   `timestamp` datetime DEFAULT NULL,
   PRIMARY KEY (`deployHash`,`transferHash`),
-  KEY `genesis_account_transfers_from_account_is_internal_to_account` (`fromAccount`,`isInternal`,`toAccount`)
+  KEY `search_idx` (`fromAccount`,`isInternal`,`isIgnoredInCirculatingSupply`,`toAccount`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

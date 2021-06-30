@@ -269,6 +269,17 @@ let httpServer = (models) => {
         ));
     });
 
+    // Genesis accounts transfers
+    app.get('/genesis-accounts-transfers', async (req, res, next) => {
+        await sendPreparedPaginatedResponse(req, res, await storage.findGenesisAccountsTransfers(
+            req.query,
+            req.query.limit,
+            req.skip,
+            req.query.order_by,
+            req.query.order_direction
+        ));
+    });
+
     // Era validators
     app.get('/era-validators', async (req, res, next) => {
         await sendPreparedPaginatedResponse(req, res, await storage.findEraValidators(
