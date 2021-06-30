@@ -121,20 +121,16 @@ class Storage {
 
                     this.storeEntity('Transfer', transfer);
 
-                    if (this.withGenesisAccountsTracking) {
-                        if (this.genesisAccountHashesMap.hasOwnProperty(transfer.fromAccount)) {
-                            if (this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount)) {
-                                // Internal transfer
-                                this.storeEntity('GenesisAccountTransfer', {
-                                    ...transfer,
-                                    isInternal: 1
-                                });
-                            }
-                            else {
-                                // Outside transfer
-                                this.storeEntity('GenesisAccountTransfer', transfer);
-                            }
-                        }
+                    if (
+                        this.withGenesisAccountsTracking &&
+                        this.genesisAccountHashesMap.hasOwnProperty(transfer.fromAccount)
+                    ) {
+                        // If the genesis accounts tracking is enabled and the transfer comes
+                        // from a genesis account then let's track the transfer separately
+                        this.storeEntity('GenesisAccountTransfer', {
+                            ...transfer,
+                            isInternal: this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount) ? 1 : 0
+                        });
                     }
                 }
 
