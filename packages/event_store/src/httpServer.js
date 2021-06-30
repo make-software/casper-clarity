@@ -358,12 +358,80 @@ let httpServer = (models) => {
     });
 
     // Supply
+    const motesToCSPRRate = '1000000000';
+
     const getTotalSupply = async () => {
-        const motesToCSPRRate = '1000000000';
         const casperClient = new CasperClient(process.env.NODE_ADDRESS);
         const latestBlock = await casperClient.getLatestBlock();
         const totalSupplyInMotes = await casperClient.getStoredValue(latestBlock.header.state_root_hash, process.env.TOTAL_SUPPLY_UREF);
         return BigNumber.from(totalSupplyInMotes.CLValue.parsed.toString()).div(motesToCSPRRate);
+    };
+
+    const getReleasedGenesisAccountTokens = async () => {
+        const genesisAccounts = await storage.getGenesisAccounts();
+
+        // Index genesis account motes by account hashes
+        const indexedGenesisBalances = {};
+        for (const genesisAccount of genesisAccounts) {
+            indexedGenesisBalances[genesisAccount.accountHash] = BigNumber.from(genesisAccount.balance);
+        }
+
+        // Rebalance genesis account balances based on the transfers between genesis accounts
+        const internalGenesisAccountTransfers = await storage.getTokensMovedBetweenGenesisAccounts();
+        for (const transfer of internalGenesisAccountTransfers) {
+            // Note, that here we can also count a transfer of non-genesis tokens (since they are fungible)
+            // It is addressed in the transfer overflow correction logic
+            indexedGenesisBalances[transfer.fromAccount] = indexedGenesisBalances[transfer.fromAccount]
+                .sub(transfer.amount);
+
+            indexedGenesisBalances[transfer.toAccount] = indexedGenesisBalances[transfer.toAccount]
+                .add(transfer.amount);
+        }
+
+        // If a genesis account transferred to other genesis accounts more tokens than it had
+        // in the balance on genesis then we should adjust the amount of the genesis tokens that
+        // became circulating by that overflow value
+        let internalTransfersOverflowCorrection = BigNumber.from(0);
+        for (const transfer of internalGenesisAccountTransfers) {
+            if (indexedGenesisBalances[transfer.fromAccount].lte(0)) {
+                internalTransfersOverflowCorrection = internalTransfersOverflowCorrection
+                    .add(indexedGenesisBalances[transfer.fromAccount]);
+            }
+        }
+
+        // Calculate genesis tokens transferred out of the genesis accounts
+        let releasedGenesisMotesAmount = BigNumber.from(0);
+
+        const externalGenesisAccountTransfers = await storage.getTokensMovedOutOfGenesisAccounts();
+        for (const transfer of externalGenesisAccountTransfers) {
+            if (indexedGenesisBalances[transfer.fromAccount].lte(0)) {
+                // If no genesis tokens left in the account then do nothing
+                continue;
+            }
+
+            if (indexedGenesisBalances[transfer.fromAccount].gte(transfer.amount)) {
+                // If genesis token amount is greater than the transfer amount then
+                // increase the circulating genesis tokens by this amount
+                releasedGenesisMotesAmount = releasedGenesisMotesAmount
+                    .add(transfer.amount);
+
+                indexedGenesisBalances[transfer.fromAccount] = indexedGenesisBalances[transfer.fromAccount]
+                    .sub(transfer.amount);
+            }
+            else {
+                // Otherwise increase the circulating genesis tokens by the account balance remainder
+                releasedGenesisMotesAmount = releasedGenesisMotesAmount
+                    .add(indexedGenesisBalances[transfer.fromAccount]);
+
+                indexedGenesisBalances[transfer.fromAccount] = indexedGenesisBalances[transfer.fromAccount]
+                    .sub(indexedGenesisBalances[transfer.fromAccount]);
+            }
+        }
+
+        return releasedGenesisMotesAmount
+            .add(internalTransfersOverflowCorrection)
+            .div(motesToCSPRRate)
+            .toNumber();
     };
 
     const getCirculatingSupply = async (totalSupply) => {
@@ -372,7 +440,10 @@ let httpServer = (models) => {
 
         const now = Date.now();
         const releaseSchedule = await storage.findReleaseSchedule(now);
-        const releasedGenesisTokensAmount = parseInt(releaseSchedule.amount);
+        let releasedGenesisTokensAmount = releaseSchedule ? parseInt(releaseSchedule.amount) : 0;
+        if (process.env.TRACK_GENESIS_TOKENS === '1') {
+            releasedGenesisTokensAmount += await getReleasedGenesisAccountTokens();
+        }
 
         const releasedSeigniorageProportion = releasedGenesisTokensAmount / genesisTokensAmount;
         const releasedSeigniorageAmount = seigniorageAmount * releasedSeigniorageProportion;

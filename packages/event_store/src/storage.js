@@ -8,6 +8,14 @@ class Storage {
         this.models = models;
         this.casperClient = casperClient;
         this.pubsub = pubsub;
+
+        this.withGenesisAccountsTracking = false;
+        this.genesisAccountHashesMap = {};
+    }
+
+    async enableGenesisAccountsTracking() {
+        this.withGenesisAccountsTracking = true;
+        this.genesisAccountHashesMap = await this.getGenesisAccountHashesMap();
     }
 
     async storeEntity(model, entity) {
@@ -95,7 +103,8 @@ class Storage {
             for (let transform of result.effect.transforms) {
                 if (transferHashes.includes(transform.key)) {
                     let transferEvent = transform.transform.WriteTransfer;
-                    this.storeEntity('Transfer', {
+
+                    let transfer = {
                         transferHash: transform.key,
                         deployHash: deployData.deployHash,
                         blockHash: deployData.blockHash,
@@ -108,7 +117,25 @@ class Storage {
                         amount: transferEvent.amount,
                         transferId: transferEvent.id,
                         timestamp: event.timestamp,
-                    });
+                    };
+
+                    this.storeEntity('Transfer', transfer);
+
+                    if (this.withGenesisAccountsTracking) {
+                        if (this.genesisAccountHashesMap.hasOwnProperty(transfer.fromAccount)) {
+                            if (this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount)) {
+                                // Internal transfer
+                                this.storeEntity('GenesisAccountTransfer', {
+                                    ...transfer,
+                                    isInternal: 1
+                                });
+                            }
+                            else {
+                                // Outside transfer
+                                this.storeEntity('GenesisAccountTransfer', transfer);
+                            }
+                        }
+                    }
                 }
 
                 if (transform.transform) {
@@ -649,6 +676,48 @@ class Storage {
             order: [['date', 'ASC']]
         });
     }
+
+    async getGenesisAccountHashesMap() {
+        const genesisAccountHashesMap = {};
+        const genesisAccounts = await this.models.GenesisAccount.findAll();
+        for (const genesisAccount of genesisAccounts) {
+            genesisAccountHashesMap[genesisAccount.accountHash] = true;
+        }
+
+        return genesisAccountHashesMap;
+    }
+
+    async getGenesisAccounts() {
+        return this.models.GenesisAccount.findAll();
+    }
+
+    async getTokensMovedBetweenGenesisAccounts() {
+        return this.models.GenesisAccountTransfer.findAll({
+            attributes: [
+                'fromAccount',
+                'toAccount',
+                [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
+            ],
+            where: {
+                'isInternal': 1
+            },
+            group: ['fromAccount', 'toAccount'],
+        });
+    }
+
+    async getTokensMovedOutOfGenesisAccounts() {
+        return this.models.GenesisAccountTransfer.findAll({
+            attributes: [
+                'fromAccount',
+                [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
+            ],
+            where: {
+                'isInternal': 0
+            },
+            group: ['fromAccount'],
+        });
+    }
+
 }
 
 module.exports = Storage;

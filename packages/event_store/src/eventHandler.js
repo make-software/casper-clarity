@@ -51,6 +51,10 @@ async function runEventHandler() {
         const casperClient = new CasperClient(process.env.NODE_ADDRESS);
         const storage = new Storage(models, casperClient);
 
+        if (process.env.TRACK_GENESIS_TOKENS === '1') {
+            await storage.enableGenesisAccountsTracking();
+        }
+
         const sourceNodeAddress = process.env.NODE_ADDRESS ? process.env.NODE_ADDRESS : config.EH_STREAM_DOMAIN;
         const sourceNode = await storage.findSourceNodeByAddressOrCreate(sourceNodeAddress);
 
