@@ -445,14 +445,14 @@ let httpServer = (models) => {
             .toNumber();
     };
 
-    const getCirculatingSupply = async (totalSupply) => {
+    const getCirculatingSupply = async (totalSupply, withReleasedGenesisTokens) => {
         const genesisTokensAmount = 10000000000;
         const seigniorageAmount = totalSupply.sub(genesisTokensAmount);
 
         const now = Date.now();
         const releaseSchedule = await storage.findReleaseSchedule(now);
         let releasedGenesisTokensAmount = releaseSchedule ? parseInt(releaseSchedule.amount) : 0;
-        if (process.env.TRACK_GENESIS_TOKENS === '1') {
+        if (withReleasedGenesisTokens) {
             releasedGenesisTokensAmount += await getReleasedGenesisAccountTokens();
         }
 
@@ -464,7 +464,11 @@ let httpServer = (models) => {
 
     app.get('/supply', async (req, res, next) => {
         const totalSupply = await getTotalSupply();
-        const circulatingSupply = await getCirculatingSupply(totalSupply);
+
+        const withReleasedGenesisTokens = process.env.TRACK_GENESIS_TOKENS === '1' ||
+            req.query.track_genesis_tokens === '1';
+
+        const circulatingSupply = await getCirculatingSupply(totalSupply, withReleasedGenesisTokens);
 
         res.send(JSON.stringify({
             data: {
