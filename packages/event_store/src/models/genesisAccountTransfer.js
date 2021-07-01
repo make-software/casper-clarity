@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
                 "fromAccount": this.fromAccount,
                 "toAccount": this.toAccount,
                 "isInternal": this.isInternal,
-                "isIgnoredInCirculatingSupply": this.isIgnoredInCirculatingSupply,
+                "isIgnored": this.isIgnored,
+                "isReviewed": this.isReviewed,
                 "timestamp": this.timestamp
             }
         }
@@ -38,7 +39,8 @@ module.exports = (sequelize, DataTypes) => {
         targetPurse: DataTypes.STRING,
         amount: DataTypes.BIGINT,
         isInternal: DataTypes.TINYINT,
-        isIgnoredInCirculatingSupply: DataTypes.TINYINT,
+        isIgnored: DataTypes.TINYINT,
+        isReviewed: DataTypes.TINYINT,
         timestamp: DataTypes.DATE,
     }, {
         sequelize,
@@ -47,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [ 
             {
                 name: 'search_idx',
-                fields: [ 'fromAccount', 'isInternal', 'isIgnoredInCirculatingSupply', 'toAccount' ]
+                fields: [ 'fromAccount', 'isInternal', 'isIgnored', 'toAccount' ]
             },
         ]
     });

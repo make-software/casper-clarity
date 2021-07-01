@@ -17,8 +17,9 @@ CREATE TABLE `GenesisAccountTransfers` (
   `targetPurse` varchar(255) DEFAULT NULL,
   `amount` bigint(20) NOT NULL,
   `isInternal` tinyint(4) NOT NULL DEFAULT 0,
-  `isIgnoredInCirculatingSupply` tinyint(4) NOT NULL DEFAULT 0,
+  `isIgnored` tinyint(4) NOT NULL DEFAULT 0,
+  `isReviewed` tinyint(4) NOT NULL DEFAULT 0,
   `timestamp` datetime DEFAULT NULL,
   PRIMARY KEY (`deployHash`,`transferHash`),
-  KEY `search_idx` (`fromAccount`,`isInternal`,`isIgnoredInCirculatingSupply`,`toAccount`)
+  KEY `search_idx` (`fromAccount`,`isInternal`,`isIgnored`,`toAccount`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

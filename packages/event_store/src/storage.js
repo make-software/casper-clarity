@@ -1,5 +1,6 @@
 const sequelize = require('sequelize');
 const { Op, QueryTypes } = sequelize;
+const { BigNumber } = require('@ethersproject/bignumber');
 
 const { formatDate } = require('./utility');
 
@@ -129,7 +130,9 @@ class Storage {
                         // from a genesis account then let's track the transfer separately
                         this.storeEntity('GenesisAccountTransfer', {
                             ...transfer,
-                            isInternal: this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount) ? 1 : 0
+                            isInternal: this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount) ? 1 : 0,
+                            isIgnored: BigNumber.from(transfer.amount).gte('5000000000000000'), // 5 million tokens
+                            isReviewed: 0,
                         });
                     }
                 }
@@ -696,7 +699,7 @@ class Storage {
             ],
             where: {
                 'isInternal': 1,
-                'isIgnoredInCirculatingSupply': 0,
+                'isIgnored': 0,
             },
             group: ['fromAccount', 'toAccount'],
         });
@@ -710,7 +713,7 @@ class Storage {
             ],
             where: {
                 'isInternal': 0,
-                'isIgnoredInCirculatingSupply': 0,
+                'isIgnored': 0,
             },
             group: ['fromAccount'],
         });
@@ -724,7 +727,8 @@ class Storage {
             'fromAccount',
             'toAccount',
             'isInternal',
-            'isIgnoredInCirculatingSupply',
+            'isIgnored',
+            'isReviewed',
         ]);
 
         return await this.models.GenesisAccountTransfer.findAndCountAll({
