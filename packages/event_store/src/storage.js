@@ -384,6 +384,7 @@ class Storage {
         const eventId = await this.models.EventId.findOne({
             where: { sourceNodeId, apiVersionId },
             order: [[ 'id', 'DESC' ]],
+            limit: 1,
         });
 
         return eventId;
