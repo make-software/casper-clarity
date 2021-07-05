@@ -497,7 +497,11 @@ let httpServer = (models) => {
 
     app.get('/supply/circulating', async (req, res, next) => {
         const totalSupply = await getTotalSupply();
-        const circulatingSupply = await getCirculatingSupply(totalSupply);
+
+        const withReleasedGenesisTokens = process.env.TRACK_GENESIS_TOKENS === '1' ||
+            req.query.track_genesis_tokens === '1';
+
+        const circulatingSupply = await getCirculatingSupply(totalSupply, withReleasedGenesisTokens);
 
         if (req.query.as_scalar) {
             res.send(circulatingSupply.toString());
