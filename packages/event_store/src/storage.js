@@ -604,7 +604,7 @@ class Storage {
                 orderBy,
                 orderDirection,
                 ['eraId', 'amount', 'timestamp'],
-                [['eraId', 'DESC']]
+                [['eraId', 'DESC'], ['validatorPublicKey', 'ASC']]
             ),
         });
     }
