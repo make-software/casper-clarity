@@ -1,5 +1,6 @@
 const sequelize = require('sequelize');
-const { Op } = sequelize;
+const { Op, QueryTypes } = sequelize;
+const { BigNumber } = require('@ethersproject/bignumber');
 
 const { formatDate } = require('./utility');
 
@@ -8,6 +9,14 @@ class Storage {
         this.models = models;
         this.casperClient = casperClient;
         this.pubsub = pubsub;
+
+        this.withGenesisAccountsTracking = false;
+        this.genesisAccountHashesMap = {};
+    }
+
+    async enableGenesisAccountsTracking() {
+        this.withGenesisAccountsTracking = true;
+        this.genesisAccountHashesMap = await this.getGenesisAccountHashesMap();
     }
 
     async storeEntity(model, entity) {
@@ -95,7 +104,8 @@ class Storage {
             for (let transform of result.effect.transforms) {
                 if (transferHashes.includes(transform.key)) {
                     let transferEvent = transform.transform.WriteTransfer;
-                    this.storeEntity('Transfer', {
+
+                    let transfer = {
                         transferHash: transform.key,
                         deployHash: deployData.deployHash,
                         blockHash: deployData.blockHash,
@@ -108,7 +118,23 @@ class Storage {
                         amount: transferEvent.amount,
                         transferId: transferEvent.id,
                         timestamp: event.timestamp,
-                    });
+                    };
+
+                    this.storeEntity('Transfer', transfer);
+
+                    if (
+                        this.withGenesisAccountsTracking &&
+                        this.genesisAccountHashesMap.hasOwnProperty(transfer.fromAccount)
+                    ) {
+                        // If the genesis accounts tracking is enabled and the transfer comes
+                        // from a genesis account then let's track the transfer separately
+                        this.storeEntity('GenesisAccountTransfer', {
+                            ...transfer,
+                            isInternal: this.genesisAccountHashesMap.hasOwnProperty(transfer.toAccount) ? 1 : 0,
+                            isIgnored: BigNumber.from(transfer.amount).gte('5000000000000000'), // 5 million tokens
+                            isReviewed: 0,
+                        });
+                    }
                 }
 
                 if (transform.transform) {
@@ -371,6 +397,7 @@ class Storage {
         const eventId = await this.models.EventId.findOne({
             where: { sourceNodeId, apiVersionId, eventStreamId },
             order: [[ 'id', 'DESC' ]],
+            limit: 1,
         });
 
         return eventId;
@@ -406,7 +433,7 @@ class Storage {
 
     async findBlocks(criteria, limit, offset, orderBy, orderDirection) {
         return await this.models.Block.findAndCountAll({
-            where: this.buildWhere(criteria, ['proposer']),
+            where: this.buildWhere(criteria, ['proposer', 'eraId', 'blockHeight', 'blockHash']),
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
@@ -473,7 +500,7 @@ class Storage {
 
     async getDeploys(criteria, limit, offset, orderBy, orderDirection) {
         return await this.models.Deploy.findAndCountAll({
-            where: this.buildWhere(criteria, ['blockHash']),
+            where: this.buildWhere(criteria, ['blockHash', 'account']),
             limit: limit,
             offset: offset,
             order: this.buildOrder(
@@ -544,13 +571,27 @@ class Storage {
     }
 
     async getTotalValidatorRewards(publicKey) {
-        return await this.models.ValidatorReward
-            .sum('amount', {where: {publicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `ValidatorRewards` WHERE publicKey = $1', {
+                bind: [publicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async getTotalValidatorDelegatorRewards(validatorPublicKey) {
-        return await this.models.DelegatorReward
-            .sum('amount', {where: {validatorPublicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `DelegatorRewards` WHERE validatorPublicKey = $1', {
+                bind: [validatorPublicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async findValidatorRewards(criteria, limit, offset, orderBy, orderDirection) {
@@ -559,7 +600,7 @@ class Storage {
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
-                ['eraId', 'amount'],
+                ['eraId', 'amount', 'timestamp'],
                 [['eraId', 'DESC']]
             ),
             limit: limit,
@@ -575,15 +616,22 @@ class Storage {
             order: this.buildOrder(
                 orderBy,
                 orderDirection,
-                ['eraId', 'amount'],
-                [['eraId', 'DESC']]
+                ['eraId', 'amount', 'timestamp'],
+                [['eraId', 'DESC'], ['validatorPublicKey', 'ASC']]
             ),
         });
     }
 
     async getTotalDelegatorRewards(publicKey) {
-        return await this.models.DelegatorReward
-            .sum('amount', {where: {publicKey}});
+        const result = await this.models.sequelize.query(
+            'SELECT CAST(SUM(amount) AS char) AS total FROM `DelegatorRewards` WHERE publicKey = $1', {
+                bind: [publicKey],
+                type: QueryTypes.SELECT,
+                plain: true
+            }
+        );
+
+        return result.total === null ? '0' : result.total;
     }
 
     async findCurrencyRatesInDateRange(currencyId, from, to) {
@@ -641,6 +689,75 @@ class Storage {
             order: [['date', 'ASC']]
         });
     }
+
+    async getGenesisAccountHashesMap() {
+        const genesisAccountHashesMap = {};
+        const genesisAccounts = await this.models.GenesisAccount.findAll();
+        for (const genesisAccount of genesisAccounts) {
+            genesisAccountHashesMap[genesisAccount.accountHash] = true;
+        }
+
+        return genesisAccountHashesMap;
+    }
+
+    async getGenesisAccounts() {
+        return this.models.GenesisAccount.findAll();
+    }
+
+    async getTokensMovedBetweenGenesisAccounts() {
+        return this.models.GenesisAccountTransfer.findAll({
+            attributes: [
+                'fromAccount',
+                'toAccount',
+                [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
+            ],
+            where: {
+                'isInternal': 1,
+                'isIgnored': 0,
+            },
+            group: ['fromAccount', 'toAccount'],
+        });
+    }
+
+    async getTokensMovedOutOfGenesisAccounts() {
+        return this.models.GenesisAccountTransfer.findAll({
+            attributes: [
+                'fromAccount',
+                [sequelize.fn('sum', sequelize.col('amount')), 'amount'],
+            ],
+            where: {
+                'isInternal': 0,
+                'isIgnored': 0,
+            },
+            group: ['fromAccount'],
+        });
+    }
+
+    async findGenesisAccountsTransfers(criteria, limit, offset, orderBy, orderDirection) {
+        let where = this.buildWhere(criteria, [
+            'blockHash',
+            'deployHash',
+            'transferId',
+            'fromAccount',
+            'toAccount',
+            'isInternal',
+            'isIgnored',
+            'isReviewed',
+        ]);
+
+        return await this.models.GenesisAccountTransfer.findAndCountAll({
+            where: where,
+            order: this.buildOrder(
+                orderBy,
+                orderDirection,
+                ['amount', 'timestamp'],
+                [['timestamp', 'DESC']]
+            ),
+            limit: limit,
+            offset: offset,
+        });
+    }
+
 }
 
 module.exports = Storage;

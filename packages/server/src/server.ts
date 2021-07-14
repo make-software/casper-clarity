@@ -195,29 +195,37 @@ if (process.env.JSON_RPC_PROXY === 'true') {
 // Render the `config.js` file dynamically.
 app.get('/config.js', (_, res) => {
   const conf = {
-    auth0: config.auth0,
+    auth0: config.auth0, // @deprecated
     auth: {
+      // @deprecated
       mock: {
         enabled: isMock
       }
     },
     network: {
+      // @deprecated
       name: networkName,
       chainName
     },
     grpc: {
+      // @deprecated
       // In production we can leave this empty and then it should
       // connect to window.origin and be handled by nginx.
       url: process.env.UI_GRPC_URL
     },
-    networkName: process.env.NETWORK_NAME,
-    eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL,
-    withFaucet: process.env.NO_FAUCET !== '1',
-    faucetApiUrl: process.env.FAUCET_API_URL,
-    withCsprLiveNotice: process.env.WITH_CSPR_LIVE_NOTICE === '1',
-    csprLiveName: process.env.CSPR_LIVE_NAME,
-    csprLiveUrl: process.env.CSPR_LIVE_URL,
-    clarityUrl: process.env.CLARITY_URL,
+    networkName: process.env.NETWORK_NAME, // @deprecated
+    eventStoreUrl: process.env.REACT_APP_EVENT_STORE_URL, // @deprecated
+    withFaucet: process.env.NO_FAUCET !== '1', // @deprecated
+    faucetApiUrl: process.env.FAUCET_API_URL, // @deprecated
+    withCsprLiveNotice: process.env.WITH_CSPR_LIVE_NOTICE === '1', // @deprecated
+    csprLiveName: process.env.CSPR_LIVE_NAME, // @deprecated
+    csprLiveUrl: process.env.CSPR_LIVE_URL, // @deprecated
+    clarityUrl: process.env.CLARITY_URL, // @deprecated
+    network_name: process.env.NETWORK_NAME,
+    event_store_url: process.env.REACT_APP_EVENT_STORE_URL,
+    with_faucet: process.env.NO_FAUCET !== '1',
+    faucet_api_url: process.env.FAUCET_API_URL,
+    with_ledger: process.env.WITH_LEDGER === '1',
     transfer_cost: process.env.TRANSFER_COST,
     transfer_min_amount: process.env.TRANSFER_MIN_AMOUNT,
     delegate_cost: process.env.DELEGATE_COST,

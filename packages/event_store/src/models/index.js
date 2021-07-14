@@ -12,7 +12,8 @@ let sequelize;
 
 config.dialectOptions = {
     connectTimeout: 60000,
-    supportBigNumbers: true
+    supportBigNumbers: true,
+    bigNumberStrings: true,
 };
 
 // A hacky way to figure out if the running process is the event handler
