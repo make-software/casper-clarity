@@ -29,5 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         indexes: []
     });
 
+    RawUnrecognizedEvent.removeAttribute('id');
+
     return RawUnrecognizedEvent;
 };

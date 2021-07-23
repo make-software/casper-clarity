@@ -1,4 +1,4 @@
-CREATE TABLE `StreamPaths` (
+CREATE TABLE `EventStreams` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `path` varchar(32) DEFAULT NULL,
     `createdAt` datetime NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE `StreamPaths` (
     UNIQUE KEY `stream_path_path` (`path`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-INSERT INTO StreamPaths (path, createdAt, updatedAt) VALUES ('events', now(), now());
+INSERT INTO EventStreams (path, createdAt, updatedAt) VALUES ('events', now(), now());
 
 RENAME TABLE EventIds TO EventIdsPreMultipleStreams;
 
