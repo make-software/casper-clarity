@@ -43,36 +43,59 @@ class Storage {
     async onEvent(sourceNodeId, apiVersion, jsonBody) {
         const event = JSON.parse(jsonBody);
 
-        let eventType,
-            primaryEntityHash;
-
-        if (event.ApiVersion) {
-            eventType = 'ApiVersion';
-            primaryEntityHash = event.ApiVersion;
+        if (event.DeployAccepted) {
+            this.storeEntity('RawDeployAcceptedEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                deployHash: event.DeployAccepted.hash,
+                jsonBody,
+            });
         } else if (event.DeployProcessed) {
-            eventType = 'DeployProcessed';
-            primaryEntityHash = event.DeployProcessed.deploy_hash;
+            this.storeEntity('RawDeployProcessedEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                deployHash: event.DeployProcessed.deploy_hash,
+                jsonBody,
+            });
+
             this.onDeployProcessedEvent(event.DeployProcessed);
         } else if (event.BlockAdded) {
-            eventType = 'BlockAdded';
-            primaryEntityHash = event.BlockAdded.block_hash;
+            this.storeEntity('RawBlockAddedEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                blockHeight: event.BlockAdded.block.header.height,
+                jsonBody,
+            });
+
             this.onBlockAddedEvent(event.BlockAdded, apiVersion);
         } else if (event.FinalitySignature) {
-            eventType = 'FinalitySignature';
-            primaryEntityHash = event.FinalitySignature.signature;
+            this.storeEntity('RawFinalitySignatureEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                signature: event.FinalitySignature.signature,
+                jsonBody,
+            });
+
             this.onFinalitySignatureEvent(event.FinalitySignature);
         } else if (event.Step) {
-            eventType = 'Step';
-            primaryEntityHash = event.Step.era_id;
+            this.storeEntity('RawStepEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                eraId: event.Step.era_id,
+                jsonBody,
+            });
         }
+        else {
+            const keys = Object.keys(event);
+            const eventType = keys.length > 0 ? keys[0] : '';
 
-        this.storeEntity('RawEvent', {
-            sourceNodeId,
-            apiVersionId: apiVersion.id,
-            eventType,
-            primaryEntityHash,
-            jsonBody
-        });
+            this.storeEntity('RawUnrecognizedEvent', {
+                sourceNodeId,
+                apiVersionId: apiVersion.id,
+                eventType,
+                jsonBody,
+            });
+        }
     }
 
     async onDeployProcessedEvent(event) {
