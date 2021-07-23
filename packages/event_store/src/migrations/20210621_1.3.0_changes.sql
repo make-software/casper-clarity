@@ -7,9 +7,9 @@ CREATE TABLE `StreamPaths` (
     UNIQUE KEY `stream_path_path` (`path`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-INSERT INTO EventStreams (path, createdAt, updatedAt) VALUES ('events', now(), now());
+INSERT INTO StreamPaths (path, createdAt, updatedAt) VALUES ('events', now(), now());
 
-RENAME TABLE EventsIds TO EventIdsPreMultipleStreams;
+RENAME TABLE EventIds TO EventIdsPreMultipleStreams;
 
 CREATE TABLE `EventIds` (
   `sourceNodeId` int(11) NOT NULL,
