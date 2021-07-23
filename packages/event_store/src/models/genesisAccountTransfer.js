@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
                 "isInternal": this.isInternal,
                 "isIgnored": this.isIgnored,
                 "isReviewed": this.isReviewed,
-                "timestamp": this.timestamp
+                "timestamp": this.timestamp,
+                "description": this.description,
             }
         }
     };
@@ -41,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         isInternal: DataTypes.TINYINT,
         isIgnored: DataTypes.TINYINT,
         isReviewed: DataTypes.TINYINT,
+        description: DataTypes.TEXT('medium'),
         timestamp: DataTypes.DATE,
     }, {
         sequelize,

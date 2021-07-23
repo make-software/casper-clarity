@@ -1,0 +1,1 @@
+ALTER TABLE `GenesisAccountTransfers` ADD `description` MEDIUMTEXT NOT NULL AFTER `isReviewed`;
