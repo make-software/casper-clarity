@@ -21,7 +21,7 @@ CREATE TABLE `EventIds` (
   PRIMARY KEY (`sourceNodeId`,`apiVersionId`,`eventStreamId`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `RawDeployAceptedEvents` (
+CREATE TABLE `RawDeployAcceptedEvents` (
   `sourceNodeId` tinyint(4) DEFAULT NULL,
   `apiVersionId` mediumint(9) DEFAULT NULL,
   `deployHash` varchar(64) NOT NULL,
