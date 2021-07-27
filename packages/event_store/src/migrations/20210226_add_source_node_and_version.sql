@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `SourceNodes` (
    `id` int(11) NOT NULL AUTO_INCREMENT,
    `address` varchar(15) DEFAULT NULL,
@@ -41,3 +44,6 @@ VALUES
 ALTER TABLE `RawEvents` ADD `sourceNodeId` int(11) NOT NULL AFTER `eventHash`;
 ALTER TABLE `RawEvents` ADD `apiVersionId` int(11) NOT NULL AFTER `sourceNodeId`;
 UPDATE RawEvents SET sourceNodeId = 1, apiVersionId=1;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back
