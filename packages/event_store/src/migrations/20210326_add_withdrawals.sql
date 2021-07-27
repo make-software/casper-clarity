@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `Withdrawals` (
     `key` varchar(74) NOT NULL,
     `deployHash` varchar(64) NOT NULL,
@@ -11,3 +14,6 @@ CREATE TABLE `Withdrawals` (
     `updatedAt` datetime NOT NULL,
     KEY `withdrawals_validator_public_key` (`validatorPublicKey`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back

@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `EventStreams` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `path` varchar(32) DEFAULT NULL,
@@ -73,3 +76,6 @@ CREATE TABLE `RawUnrecognizedEvents` (
   `jsonBody` mediumtext,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back

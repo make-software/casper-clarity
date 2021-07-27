@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 INSERT INTO GenesisAccounts(publicKey, accountHash, type, balance)
 VALUES
     ('01ee8b5ec54251a9f2f92edbbf328fcdb78449ae2cca2743d591f1b7e83b6d9049', '608b12ea61283eecd066a06644bafcbb65fa8057aa53d57db3c951d5c45bb6e2', 'validator', 1000000000),

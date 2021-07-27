@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `Eras` (
     `id` int(11) NOT NULL,
     `endBlockHeight` int(11) DEFAULT NULL,
@@ -20,3 +23,6 @@ CREATE TABLE `EraValidators` (
      PRIMARY KEY (`eraId`,`publicKeyHex`),
      KEY `publicKeyHexIdx` (`publicKeyHex`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back

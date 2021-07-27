@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 RENAME TABLE RawEvents TO RawEvents_20210323;
 
 CREATE TABLE `RawEvents` (
@@ -13,3 +16,6 @@ CREATE TABLE `RawEvents` (
 
 INSERT IGNORE INTO RawEvents(sourceNodeId, apiVersionId, eventType, primaryEntityHash, jsonBody, createdAt, updatedAt)
 SELECT sourceNodeId, apiVersionId, eventType, primaryEntityHash, jsonBody, createdAt, updatedAt from RawEvents_20210323;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back
