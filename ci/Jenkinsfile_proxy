@@ -1,0 +1,102 @@
+pipeline {
+
+  agent any
+
+  environment {
+    DR = credentials('DR')
+    registry = '$DR/make/k8s/clarity'
+    VER = '1.0.1'
+    app = 'node-proxy'
+    dockerImage = '/$app'
+    GIT_HASH = GIT_COMMIT.take(7)
+  }
+
+  stages {
+
+    stage('Clone casper-infra repo') {
+      environment {
+        GIT_CREDS_USR = credentials('repo-git-user')
+        GIT_CREDS_PSW = credentials('repo-git-pass')
+      }
+      steps {
+        sh "git clone https://$GIT_CREDS_USR:$GIT_CREDS_PSW@bitbucket.org/makellc/casper-infra.git"
+        sh 'git config --global user.email \'jenkins@make.servies\''
+        sh 'git config --global user.name "Jenkins CI"'
+      }
+    }
+
+    stage('Get Version') {
+      steps {     
+        script {          
+          env.VER_ORG = sh(script:"./package.json | grep version | head -n1 | sed 's/[^. 0-9]//g'|xargs", returnStdout: true).trim()
+          echo "Explorer version = ${env.VER_ORG}"
+        }
+      }
+    }
+
+    stage('Build Proxy image') {
+      when {
+        anyOf {
+          branch "master"
+        }
+      }  
+      steps {
+        script {
+          sh "until docker ps; do sleep 3; done && docker build -t $registry$dockerImage:${env.VER}-${env.GIT_HASH} -f Dockerfile.node-proxy . "
+        } 
+      }
+    }
+
+    stage('Push image') {
+      steps {
+          script {                    
+              docker.withRegistry('https://${DR}', 'ecr:us-east-1:make-ecr') {
+                  sh "docker push $registry$dockerImage:${env.VER}-${env.GIT_HASH}"                                     
+              }
+          }    
+      }    
+    }
+
+    // stage('DEV') {
+    //   environment {
+    //     env = 'dev'
+    //   }
+    //   steps {        
+    //     dir(path: 'casper-infra') {
+    //       sh 'cd ./kubernetes/environment/$env/$app && pwd && ls -la && sed -i "s|/$app.*|/$app:$VER-$GIT_HASH|g" $app.yaml'
+    //       sh 'git commit -am "$app-$env v$VER releasing from branch $BRANCH_NAME" && git push --force || echo \'no changes\''
+    //     }
+    //   }
+    // } 
+
+    stage('STG') {
+      environment {
+        env = 'stg'
+      }
+      steps {    
+        //input message: "Deployment on: \n\t ENV: Staging\n\t VERSION: ${VER}\n\t Approve?"    
+        dir(path: 'casper-infra') {
+          sh 'cd ./kubernetes/environment/$env/$app && pwd && ls -la && sed -i "s|/$app.*|/$app:$VER-$GIT_HASH|g" $app.yaml'
+          sh 'git commit -am "$app-$env v$VER releasing from branch $BRANCH_NAME" && git push --force || echo \'no changes\''
+        }
+      }
+    }  
+
+ }
+    // post {        
+    //     success {
+    //       script {
+    //         if (env.BRANCH_NAME == 'dev' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'rc-1/*') 
+    //         slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    //       }
+    //     }
+
+    //     failure {
+    //       script {
+    //         if (env.BRANCH_NAME == 'dev' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'rc-1/*') 
+    //         slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    //       }
+    //     } 
+    // } 
+}    
+
