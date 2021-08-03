@@ -280,7 +280,8 @@ app.post('/api/faucet', (req, res) => {
 
   // Send the deploy to the node and return the deploy hash to the browser.
   storedFaucetService
-    .callStoredFaucet(accountPublicKeyHash)
+    // .callStoredFaucet(accountPublicKeyHash) // we switched to the WASM contract because of the security fix introduced in 1.3
+    .callBytesFaucet(accountPublicKeyHash)
     .then(deployHash => {
       const response = {
         deployHashBase16: Buffer.from(deployHash).toString('hex')
