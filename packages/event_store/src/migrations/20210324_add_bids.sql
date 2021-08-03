@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `Bids` (
     `key` varchar(74) NOT NULL,
     `deployHash` varchar(64) NOT NULL,
@@ -14,3 +17,6 @@ CREATE TABLE `Bids` (
     PRIMARY KEY (`deployHash`,`key`),
     KEY `bids_validator_public_key` (`validatorPublicKey`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back

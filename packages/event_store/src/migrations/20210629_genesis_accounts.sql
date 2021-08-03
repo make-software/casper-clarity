@@ -1,3 +1,6 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
 CREATE TABLE `GenesisAccounts` (
   `publicKey` varchar(68) NOT NULL,
   `accountHash` varchar(64) NOT NULL,
@@ -23,3 +26,6 @@ CREATE TABLE `GenesisAccountTransfers` (
   PRIMARY KEY (`deployHash`,`transferHash`),
   KEY `search_idx` (`fromAccount`,`isInternal`,`isIgnored`,`toAccount`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back
