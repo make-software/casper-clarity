@@ -1,6 +1,6 @@
 {
   "name": "event-store",
-  "version": "0.0.2",
+  "version": "0.0.40",
   "private": true,
   "scripts": {
     "dev-start-web-server": "NODE_ENV=development node src/eventStore.js",
