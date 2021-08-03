@@ -37,7 +37,8 @@ pipeline {
     stage('Build Proxy image') {
       when {
         anyOf {
-          branch "master"
+          branch "master";
+          branch "rc-1*"
         }
       }  
       steps {
@@ -57,24 +58,25 @@ pipeline {
       }    
     }
 
-    // stage('DEV') {
-    //   environment {
-    //     env = 'dev'
-    //   }
-    //   steps {        
-    //     dir(path: 'casper-infra') {
-    //       sh 'cd ./kubernetes/environment/$env/$app && pwd && ls -la && sed -i "s|/$app.*|/$app:$VER-$GIT_HASH|g" $app.yaml'
-    //       sh 'git commit -am "$app-$env v$VER releasing from branch $BRANCH_NAME" && git push --force || echo \'no changes\''
-    //     }
-    //   }
-    // } 
+    stage('DEV') {
+      when { branch 'master' } 
+        environment {
+          env = 'dev'
+        }
+      steps {        
+        dir(path: 'casper-infra') {
+          sh 'cd ./kubernetes/environment/$env/$app && pwd && ls -la && sed -i "s|/$app.*|/$app:$VER-$GIT_HASH|g" $app.yaml'
+          sh 'git commit -am "$app-$env v$VER releasing from branch $BRANCH_NAME" && git push --force || echo \'no changes\''
+        }
+      }
+    } 
 
     stage('STG') {
-      environment {
-        env = 'stg'
-      }
+      when { branch 'rc-1*' }
+        environment {
+          env = 'stg'
+        }
       steps {    
-        //input message: "Deployment on: \n\t ENV: Staging\n\t VERSION: ${VER}\n\t Approve?"    
         dir(path: 'casper-infra') {
           sh 'cd ./kubernetes/environment/$env/$app && pwd && ls -la && sed -i "s|/$app.*|/$app:$VER-$GIT_HASH|g" $app.yaml'
           sh 'git commit -am "$app-$env v$VER releasing from branch $BRANCH_NAME" && git push --force || echo \'no changes\''
