@@ -19,7 +19,7 @@ Runs the server and the UI in development mode. The UI will proxy to the server 
 
 ### `npm run build`
 
-Build artifacts into the `dist` directory
+Build artifacts into the `dist` directory.
 
 ### `npm run test`
 
