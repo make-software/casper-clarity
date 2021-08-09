@@ -51,6 +51,12 @@ class CasperClient {
         return response.result.stored_value;
     }
 
+    async getAuctionInfo() {
+        const response = await this.makeRpcRequest('state_get_auction_info');
+
+        return response.result.auction_state;
+    }
+
 }
 
 module.exports = CasperClient;
