@@ -226,6 +226,7 @@ app.get('/config.js', (_, res) => {
     with_faucet: process.env.NO_FAUCET !== '1',
     faucet_api_url: process.env.FAUCET_API_URL,
     with_ledger: process.env.WITH_LEDGER === '1',
+    with_ledger_delegations: process.env.WITH_LEDGER_DELEGATIONS === '1',
     transfer_cost: process.env.TRANSFER_COST,
     transfer_min_amount: process.env.TRANSFER_MIN_AMOUNT,
     delegate_cost: process.env.DELEGATE_COST,
